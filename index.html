@@ -202,11 +202,26 @@
         }
 
         function showUpdateBanner() {
-            document.getElementById('update-banner').style.display = 'block';
+            // Only show if there's actually a controller (not first install)
+            if (navigator.serviceWorker.controller) {
+                document.getElementById('update-banner').style.display = 'block';
+            }
         }
 
         function updateApp() {
-            window.location.reload();
+            // Hide banner
+            document.getElementById('update-banner').style.display = 'none';
+            // Force reload from server
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg && reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                    window.location.reload(true);
+                });
+            } else {
+                window.location.reload(true);
+            }
         }
 
         // Create and inject manifest
