@@ -2,117 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0ea5e9">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mixing Fluid Calculator</title>
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1peGluZyBGbHVpZCBDYWxjdWxhdG9yIiwKICAic2hvcnRfbmFtZSI6ICJNaXhDYWxjIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMDVhNWU5IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyUyMzA1YTVlOScvJTNFJTNDdGV4dCB4PSc1MCUyNScgeT0nNjAlMjUnIGZvbnQtc2l6ZT0nNTAnIGZpbGw9J3doaXRlJyUzRU0lM0MvdGV4dCUzRSUzQy9zdmclM0UiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.8) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(186, 230, 253, 0.6) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(224, 242, 254, 0.9) 0%, transparent 30%),
-                linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
             min-height: 100vh;
             padding: 20px;
-            padding-bottom: 40px;
         }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            color: #0c4a6e;
-            margin-bottom: 30px;
-            padding-top: 20px;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        /* Menu Page Styles */
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { text-align: center; color: #0c4a6e; margin-bottom: 30px; }
+        .page { display: none; }
+        .page.active { display: block; }
         .menu-card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
             padding: 24px;
+            margin-bottom: 16px;
             cursor: pointer;
-            transition: all 0.3s;
             border: 2px solid rgba(186, 230, 253, 0.5);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 12px rgba(12, 74, 110, 0.1);
         }
-
-        .menu-card:active {
-            transform: scale(0.98);
-        }
-
-        .menu-card:hover {
-            box-shadow: 0 8px 24px rgba(12, 74, 110, 0.2);
-            border-color: #7dd3fc;
-        }
-
-        .menu-card h3 {
-            color: #0369a1;
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-
-        .menu-card p {
-            color: #475569;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .history-btn {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid rgba(186, 230, 253, 0.5);
-            color: #0369a1;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-        }
-
-        /* Calculator Page Styles */
+        .menu-card h3 { color: #0369a1; margin-bottom: 8px; }
         .back-button {
             background: rgba(255, 255, 255, 0.7);
             color: #0369a1;
@@ -120,654 +32,279 @@
             padding: 10px 20px;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 14px;
             margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            display: inline-block;
         }
-
-        .back-button:active {
-            transform: scale(0.98);
-        }
-
         .card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 10px 40px rgba(12, 74, 110, 0.15);
-            margin-bottom: 20px;
-            border: 1px solid rgba(186, 230, 253, 0.5);
-            backdrop-filter: blur(10px);
         }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        input {
+        input, textarea {
             width: 100%;
             padding: 14px;
             border: 2px solid #e5e7eb;
             border-radius: 10px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            margin-bottom: 16px;
         }
-
-        input:focus {
-            outline: none;
-            border-color: #0ea5e9;
-        }
-
-        .button {
-            width: 100%;
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-        }
-
-        .button:active {
-            transform: scale(0.98);
-        }
-
-        .results {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 2px solid #e5e7eb;
-        }
-
         .result-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             padding: 12px 16px;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            background: #f0f9ff;
             border-radius: 10px;
             margin-bottom: 10px;
-            border: 1px solid rgba(186, 230, 253, 0.5);
         }
-
-        .result-label {
-            font-size: 14px;
-            color: #475569;
-        }
-
-        .result-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #0369a1;
-        }
-
-        .result-value.large {
-            font-size: 24px;
-        }
-
-        /* History Page Styles */
-        .history-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 40px rgba(12, 74, 110, 0.15);
-            border: 1px solid rgba(186, 230, 253, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .history-item {
-            padding: 16px;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(186, 230, 253, 0.5);
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .history-type {
-            font-weight: 600;
-            color: #0369a1;
-        }
-
-        .history-date {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        .history-details {
-            font-size: 13px;
-            color: #6b7280;
-            line-height: 1.6;
-        }
-
-        .clear-history {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 12px;
-        }
-
-        .empty-history {
-            text-align: center;
-            color: #9ca3af;
-            padding: 40px 20px;
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 10px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .card, .history-card {
-                padding: 20px;
-            }
-        }
+        .result-value { font-weight: 700; color: #0369a1; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Mixing Fluid Calculator</h1>
-            <p>Glycol & Water Mix Calculations</p>
+        <div class="header"><h1>Mixing Fluid Calculator</h1></div>
+        
+        <div class="page active" id="menu">
+            <div class="menu-card" onclick="showPage('increase')"><h3>Increase Mix</h3></div>
+            <div class="menu-card" onclick="showPage('decrease')"><h3>Decrease Mix</h3></div>
+            <div class="menu-card" onclick="showPage('volume')"><h3>Increase Volume</h3></div>
+            <div class="menu-card" onclick="showPage('tote')"><h3>Adding Tote</h3></div>
+            <div class="menu-card" onclick="showPage('history')"><h3>📋 History</h3></div>
+            <div class="menu-card" onclick="showPage('chart')"><h3>📊 Dilution Chart</h3></div>
+            <div class="menu-card" onclick="showPage('notes')"><h3>📝 Notes</h3></div>
         </div>
 
-        <!-- Main Menu Page -->
-        <div class="page active" id="menu-page">
-            <div class="menu-grid">
-                <div class="menu-card" onclick="showPage('increase')">
-                    <h3>Increase Mix</h3>
-                    <p>Calculate how much glycol to add to strengthen your mix to the desired percentage</p>
-                </div>
-
-                <div class="menu-card" onclick="showPage('decrease')">
-                    <h3>Decrease Mix</h3>
-                    <p>Calculate how much water to add to weaken your mix to the desired percentage</p>
-                </div>
-
-                <div class="menu-card" onclick="showPage('volume')">
-                    <h3>Increase Volume</h3>
-                    <p>Calculate how much glycol and water to add to reach your target volume and mix strength</p>
-                </div>
-
-                <div class="menu-card" onclick="showPage('tote')">
-                    <h3>Adding Tote</h3>
-                    <p>Calculate the resulting mix when combining fluid from a tote with your truck</p>
-                </div>
-            </div>
-
-            <button class="history-btn" onclick="showPage('history')">📋 View Calculation History</button>
-            <button class="history-btn" onclick="showPage('dilution')" style="margin-top: 12px;">📊 Dilution Reference Chart</button>
-        </div>
-
-        <!-- Increase Mix Calculator -->
-        <div class="page" id="increase-page">
-            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+        <div class="page" id="increase">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
-                <h2 style="margin-bottom: 20px; color: #0369a1;">Increase Mix</h2>
-                <div class="form-group">
-                    <label>Current Mix (%)</label>
-                    <input type="number" id="inc-current-mix" step="0.1" placeholder="e.g., 28" oninput="calculateIncrease()">
-                </div>
-                <div class="form-group">
-                    <label>Desired Mix (%)</label>
-                    <input type="number" id="inc-desired-mix" step="0.1" placeholder="e.g., 33" oninput="calculateIncrease()">
-                </div>
-                <div class="form-group">
-                    <label>Current Volume (gallons)</label>
-                    <input type="number" id="inc-current-volume" step="0.1" placeholder="e.g., 1500" oninput="calculateIncrease()">
-                </div>
-                
-                <div class="results" id="inc-results" style="display: none;">
-                    <div class="result-item">
-                        <span class="result-label">Glycol to Add</span>
-                        <span class="result-value large" id="inc-glycol"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">New Total Volume</span>
-                        <span class="result-value" id="inc-total"></span>
-                    </div>
-                </div>
+                <h2>Increase Mix</h2>
+                <input type="number" id="inc-cur" placeholder="Current Mix %" oninput="calcInc()">
+                <input type="number" id="inc-des" placeholder="Desired Mix %" oninput="calcInc()">
+                <input type="number" id="inc-vol" placeholder="Current Volume" oninput="calcInc()">
+                <div id="inc-result"></div>
             </div>
         </div>
 
-        <!-- Decrease Mix Calculator -->
-        <div class="page" id="decrease-page">
-            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+        <div class="page" id="decrease">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
-                <h2 style="margin-bottom: 20px; color: #0369a1;">Decrease Mix</h2>
-                <div class="form-group">
-                    <label>Current Mix (%)</label>
-                    <input type="number" id="dec-current-mix" step="0.1" placeholder="e.g., 55" oninput="calculateDecrease()">
-                </div>
-                <div class="form-group">
-                    <label>Desired Mix (%)</label>
-                    <input type="number" id="dec-desired-mix" step="0.1" placeholder="e.g., 35" oninput="calculateDecrease()">
-                </div>
-                <div class="form-group">
-                    <label>Current Volume (gallons)</label>
-                    <input type="number" id="dec-current-volume" step="0.1" placeholder="e.g., 700" oninput="calculateDecrease()">
-                </div>
-                
-                <div class="results" id="dec-results" style="display: none;">
-                    <div class="result-item">
-                        <span class="result-label">Water to Add</span>
-                        <span class="result-value large" id="dec-water"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">New Total Volume</span>
-                        <span class="result-value" id="dec-total"></span>
-                    </div>
-                </div>
+                <h2>Decrease Mix</h2>
+                <input type="number" id="dec-cur" placeholder="Current Mix %" oninput="calcDec()">
+                <input type="number" id="dec-des" placeholder="Desired Mix %" oninput="calcDec()">
+                <input type="number" id="dec-vol" placeholder="Current Volume" oninput="calcDec()">
+                <div id="dec-result"></div>
             </div>
         </div>
 
-        <!-- Increase Volume Calculator -->
-        <div class="page" id="volume-page">
-            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+        <div class="page" id="volume">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
-                <h2 style="margin-bottom: 20px; color: #0369a1;">Increase Volume</h2>
-                <div class="form-group">
-                    <label>Current Mix (%)</label>
-                    <input type="number" id="vol-current-mix" step="0.1" placeholder="e.g., 38" oninput="calculateVolume()">
-                </div>
-                <div class="form-group">
-                    <label>Wanted Mix (%)</label>
-                    <input type="number" id="vol-wanted-mix" step="0.1" placeholder="e.g., 42" oninput="calculateVolume()">
-                </div>
-                <div class="form-group">
-                    <label>Current Volume (gallons)</label>
-                    <input type="number" id="vol-current-volume" step="0.1" placeholder="e.g., 1350" oninput="calculateVolume()">
-                </div>
-                <div class="form-group">
-                    <label>Wanted Volume (gallons)</label>
-                    <input type="number" id="vol-wanted-volume" step="0.1" placeholder="e.g., 1700" oninput="calculateVolume()">
-                </div>
-                
-                <div class="results" id="vol-results" style="display: none;">
-                    <div class="result-item">
-                        <span class="result-label">Glycol to Add</span>
-                        <span class="result-value" id="vol-glycol"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">Water to Add</span>
-                        <span class="result-value" id="vol-water"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">Total Volume to Add</span>
-                        <span class="result-value large" id="vol-add"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">% Glycol in Mix</span>
-                        <span class="result-value" id="vol-percent"></span>
-                    </div>
-                </div>
+                <h2>Increase Volume</h2>
+                <input type="number" id="vol-cur" placeholder="Current Mix %" oninput="calcVol()">
+                <input type="number" id="vol-want" placeholder="Wanted Mix %" oninput="calcVol()">
+                <input type="number" id="vol-curv" placeholder="Current Volume" oninput="calcVol()">
+                <input type="number" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()">
+                <div id="vol-result"></div>
             </div>
         </div>
 
-        <!-- Adding Tote Calculator -->
-        <div class="page" id="tote-page">
-            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+        <div class="page" id="tote">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
-                <h2 style="margin-bottom: 20px; color: #0369a1;">Adding Tote</h2>
-                <div class="form-group">
-                    <label>Truck Mix (%)</label>
-                    <input type="number" id="tote-truck-mix" step="0.1" placeholder="e.g., 40" oninput="calculateTote()">
-                </div>
-                <div class="form-group">
-                    <label>Truck Volume (gallons)</label>
-                    <input type="number" id="tote-truck-volume" step="0.1" placeholder="e.g., 1300" oninput="calculateTote()">
-                </div>
-                <div class="form-group">
-                    <label>Tote Mix (%)</label>
-                    <input type="number" id="tote-tote-mix" step="0.1" placeholder="e.g., 42" oninput="calculateTote()">
-                </div>
-                <div class="form-group">
-                    <label>Tote Volume (gallons)</label>
-                    <input type="number" id="tote-tote-volume" step="0.1" placeholder="e.g., 110" oninput="calculateTote()">
-                </div>
-                
-                <div class="results" id="tote-results" style="display: none;">
-                    <div class="result-item">
-                        <span class="result-label">New Mix</span>
-                        <span class="result-value large" id="tote-new-mix"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">Total Volume</span>
-                        <span class="result-value" id="tote-total"></span>
-                    </div>
-                </div>
+                <h2>Adding Tote</h2>
+                <input type="number" id="tote-tm" placeholder="Truck Mix %" oninput="calcTote()">
+                <input type="number" id="tote-tv" placeholder="Truck Volume" oninput="calcTote()">
+                <input type="number" id="tote-ttm" placeholder="Tote Mix %" oninput="calcTote()">
+                <input type="number" id="tote-ttv" placeholder="Tote Volume" oninput="calcTote()">
+                <div id="tote-result"></div>
             </div>
         </div>
 
-        <!-- History Page -->
-        <div class="page" id="history-page">
-            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
-            <div class="history-card">
-                <h2 style="margin-bottom: 20px; color: #374151;">Calculation History</h2>
+        <div class="page" id="notes">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
+            <div class="card">
+                <h2>Field Notes</h2>
+                <textarea id="notes-area" rows="15" placeholder="Type notes here..." oninput="saveNotes()"></textarea>
+                <div id="notes-status" style="color: #9ca3af; font-size: 13px;">Auto-saved</div>
+            </div>
+        </div>
+
+        <div class="page" id="history">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
+            <div class="card">
+                <h2>Calculation History</h2>
                 <div id="history-list"></div>
-                <button class="clear-history" onclick="clearHistory()">Clear History</button>
+                <button onclick="clearHistory()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 12px; cursor: pointer;">Clear History</button>
             </div>
         </div>
 
-        <!-- Dilution Chart Page -->
-        <div class="page" id="dilution-page">
-            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
-            <div class="history-card">
-                <h2 style="margin-bottom: 12px; color: #374151;">Safetemp ES Plus</h2>
-                <p style="margin-bottom: 20px; color: #6b7280; font-size: 14px;">Dilution and LOUT Reference Chart</p>
-                
-                <div style="overflow-x: auto; margin-bottom: 20px;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <div class="page" id="chart">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
+            <div class="card">
+                <h2 style="margin-bottom: 12px;">Safetemp ES Plus</h2>
+                <p style="margin-bottom: 16px; color: #6b7280; font-size: 14px;">Dilution and LOUT Chart</p>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
-                            <tr style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white;">
-                                <th style="padding: 10px; text-align: left; border: 1px solid #7dd3fc;">Dilution<br>(Fluid/Water)</th>
-                                <th style="padding: 10px; text-align: left; border: 1px solid #7dd3fc;">Refractive Index<br>@ 20°C</th>
-                                <th style="padding: 10px; text-align: left; border: 1px solid #7dd3fc;">Freeze Point</th>
-                                <th style="padding: 10px; text-align: left; border: 1px solid #7dd3fc;">LOUT</th>
+                            <tr style="background: #0ea5e9; color: white;">
+                                <th style="padding: 8px; border: 1px solid #7dd3fc;">Dilution</th>
+                                <th style="padding: 8px; border: 1px solid #7dd3fc;">Refractive Index</th>
+                                <th style="padding: 8px; border: 1px solid #7dd3fc;">Freeze Point</th>
+                                <th style="padding: 8px; border: 1px solid #7dd3fc;">LOUT</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">100%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.4230-1.4260</td><td style="padding: 8px; border: 1px solid #e5e7eb; color: #dc2626; font-weight: 600;">DO NOT USE</td><td style="padding: 8px; border: 1px solid #e5e7eb; color: #dc2626; font-weight: 600;">DO NOT USE</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">90% / 10%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.4156-1.4186</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-39°C / -38°F</td><td style="padding: 8px; border: 1px solid #e5e7eb; color: #dc2626; font-weight: 600;">DO NOT USE</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">80% / 20%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.4079-1.4106</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-39°C / -38°F</td><td style="padding: 8px; border: 1px solid #e5e7eb; color: #dc2626; font-weight: 600;">DO NOT USE</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">70% / 30%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3996-1.4026</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-43°C / -45°F</td><td style="padding: 8px; border: 1px solid #e5e7eb; color: #dc2626; font-weight: 600;">DO NOT USE</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">65% / 35%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3953-1.3983</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-41.5°C / -43°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-31°C / -24°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">60% / 40%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3911-1.3941</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-40°C / -40°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-30°C / -22°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">59% / 41%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3905-1.3910</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-39°C / -39°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-29°C / -21°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">58% / 42%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3899-1.3904</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-39°C / -38°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-29°C / -20°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">57% / 43%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3893-1.3898</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-38°C / -36°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-28°C / -18°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">56% / 44%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3886-1.3892</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-37°C / -34°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-27°C / -16°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">55% / 45%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3879-1.3885</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-36°C / -32°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-26°C / -14°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">54% / 46%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3872-1.3878</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-34°C / -29°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-24°C / -11°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">53% / 47%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3865-1.3871</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-32°C / -26°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-22°C / -8°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">52% / 48%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3858-1.3864</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-31°C / -23°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-21°C / -5°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">51% / 49%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3851-1.3857</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-29°C / -20°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-19°C / -2°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">50% / 50%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3820-1.3850</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-27°C / -17°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-17°C / +1°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">49% / 51%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3811-1.3819</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-26°C / -15°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-16°C / +3°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">48% / 52%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3803-1.3810</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-25°C / -13°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-15°C / +5°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">47% / 53%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3795-1.3802</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-24°C / -11°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-14°C / +7°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">46% / 54%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3787-1.3794</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-23°C / -9°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-13°C / +9°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">45% / 55%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3779-1.3786</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-22°C / -8°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-12°C / +10°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">44% / 56%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3771-1.3778</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-21°C / -6°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-11°C / +12°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">43% / 57%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3763-1.3770</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-21°C / -5°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-11°C / +13°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">42% / 58%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3755-1.3762</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-19°C / -3°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-9°C / +15°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">41% / 59%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3747-1.3754</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-19°C / -2°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-9°C / +16°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">40% / 60%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3716-1.3746</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-18°C / 0°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-8°C / +18°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">39% / 61%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3707-1.3715</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-17°C / +2°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-7°C / +20°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">38% / 62%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3699-1.3706</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-16°C / +3°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-6°C / +21°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">37% / 63%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3691-1.3698</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-15°C / +5°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-5°C / +23°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">36% / 64%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3682-1.3690</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-14°C / +6°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-4°C / +24°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">35% / 65%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3673-1.3681</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-13°C / +7°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-3°C / +25°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">34% / 66%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3664-1.3672</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-13°C / +8°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-3°C / +26°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">33% / 67%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3655-1.3663</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-13°C / +9°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-3°C / +27°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">32% / 68%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3646-1.3654</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-12°C / +10°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-2°C / +28°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">31% / 69%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3637-1.3645</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-12°C / +11°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-2°C / +29°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">30% / 70%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3606-1.3636</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-11°C / +12°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-1°C / +30°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">29% / 71%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3600-1.3605</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-11°C / +12°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-1°C / +30°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">28% / 72%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3593-1.3599</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-11°C / +13°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-1°C / +31°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">27% / 73%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3587-1.3592</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-11°C / +13°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-1°C / +31°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">26% / 74%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3580-1.3586</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-10°C / +14°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">0°C / +32°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">25% / 75%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3573-1.3579</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-10°C / +14°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">0°C / +32°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">24% / 76%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3565-1.3573</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-9°C / +15°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">+1°C / +33°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">23% / 77%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3557-1.3565</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-8°C / +18°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">+2°C / +36°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">22% / 78%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3549-1.3557</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-8°C / +18°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">+2°C / +36°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">21% / 79%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3541-1.3549</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-7°C / +19°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">+3°C / +37°F</td></tr>
-                            <tr><td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;">20% / 80%</td><td style="padding: 8px; border: 1px solid #e5e7eb;">1.3511-1.3541</td><td style="padding: 8px; border: 1px solid #e5e7eb;">-7°C / +19°F</td><td style="padding: 8px; border: 1px solid #e5e7eb;">+3°C / +37°F</td></tr>
-                        </tbody>
+                        <tbody id="chart-body"></tbody>
                     </table>
-                </div>
-
-                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 16px; border-radius: 8px; margin-top: 20px;">
-                    <h3 style="color: #0369a1; font-size: 16px; margin-bottom: 8px;">Legend</h3>
-                    <p style="color: #475569; font-size: 13px; line-height: 1.6; margin-bottom: 8px;"><strong>LOUT:</strong> Lowest Operating Use Temperature - the minimum safe operating temperature for the fluid mixture.</p>
-                    <p style="color: #475569; font-size: 13px; line-height: 1.6; margin-bottom: 8px;"><strong>Freeze Point:</strong> Temperature at which the fluid begins to freeze.</p>
-                    <p style="color: #475569; font-size: 13px; line-height: 1.6;"><strong>Refractive Index:</strong> Used to measure fluid concentration with a refractometer.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Page navigation
-        function showPage(pageName) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            document.getElementById(pageName + '-page').classList.add('active');
-            
-            if (pageName === 'history') {
-                displayHistory();
-            }
+        const chartData = [
+            ['100%','1.4230-1.4260','DO NOT USE','DO NOT USE'],['90%/10%','1.4156-1.4186','-39°C/-38°F','DO NOT USE'],
+            ['80%/20%','1.4079-1.4106','-39°C/-38°F','DO NOT USE'],['70%/30%','1.3996-1.4026','-43°C/-45°F','DO NOT USE'],
+            ['65%/35%','1.3953-1.3983','-41.5°C/-43°F','-31°C/-24°F'],['60%/40%','1.3911-1.3941','-40°C/-40°F','-30°C/-22°F'],
+            ['59%/41%','1.3905-1.3910','-39°C/-39°F','-29°C/-21°F'],['58%/42%','1.3899-1.3904','-39°C/-38°F','-29°C/-20°F'],
+            ['57%/43%','1.3893-1.3898','-38°C/-36°F','-28°C/-18°F'],['56%/44%','1.3886-1.3892','-37°C/-34°F','-27°C/-16°F'],
+            ['55%/45%','1.3879-1.3885','-36°C/-32°F','-26°C/-14°F'],['54%/46%','1.3872-1.3878','-34°C/-29°F','-24°C/-11°F'],
+            ['53%/47%','1.3865-1.3871','-32°C/-26°F','-22°C/-8°F'],['52%/48%','1.3858-1.3864','-31°C/-23°F','-21°C/-5°F'],
+            ['51%/49%','1.3851-1.3857','-29°C/-20°F','-19°C/-2°F'],['50%/50%','1.3820-1.3850','-27°C/-17°F','-17°C/+1°F'],
+            ['49%/51%','1.3811-1.3819','-26°C/-15°F','-16°C/+3°F'],['48%/52%','1.3803-1.3810','-25°C/-13°F','-15°C/+5°F'],
+            ['47%/53%','1.3795-1.3802','-24°C/-11°F','-14°C/+7°F'],['46%/54%','1.3787-1.3794','-23°C/-9°F','-13°C/+9°F'],
+            ['45%/55%','1.3779-1.3786','-22°C/-8°F','-12°C/+10°F'],['44%/56%','1.3771-1.3778','-21°C/-6°F','-11°C/+12°F'],
+            ['43%/57%','1.3763-1.3770','-21°C/-5°F','-11°C/+13°F'],['42%/58%','1.3755-1.3762','-19°C/-3°F','-9°C/+15°F'],
+            ['41%/59%','1.3747-1.3754','-19°C/-2°F','-9°C/+16°F'],['40%/60%','1.3716-1.3746','-18°C/0°F','-8°C/+18°F'],
+            ['39%/61%','1.3707-1.3715','-17°C/+2°F','-7°C/+20°F'],['38%/62%','1.3699-1.3706','-16°C/+3°F','-6°C/+21°F'],
+            ['37%/63%','1.3691-1.3698','-15°C/+5°F','-5°C/+23°F'],['36%/64%','1.3682-1.3690','-14°C/+6°F','-4°C/+24°F'],
+            ['35%/65%','1.3673-1.3681','-13°C/+7°F','-3°C/+25°F'],['34%/66%','1.3664-1.3672','-13°C/+8°F','-3°C/+26°F'],
+            ['33%/67%','1.3655-1.3663','-13°C/+9°F','-3°C/+27°F'],['32%/68%','1.3646-1.3654','-12°C/+10°F','-2°C/+28°F'],
+            ['31%/69%','1.3637-1.3645','-12°C/+11°F','-2°C/+29°F'],['30%/70%','1.3606-1.3636','-11°C/+12°F','-1°C/+30°F'],
+            ['29%/71%','1.3600-1.3605','-11°C/+12°F','-1°C/+30°F'],['28%/72%','1.3593-1.3599','-11°C/+13°F','-1°C/+31°F'],
+            ['27%/73%','1.3587-1.3592','-11°C/+13°F','-1°C/+31°F'],['26%/74%','1.3580-1.3586','-10°C/+14°F','0°C/+32°F'],
+            ['25%/75%','1.3573-1.3579','-10°C/+14°F','0°C/+32°F'],['24%/76%','1.3565-1.3573','-9°C/+15°F','+1°C/+33°F'],
+            ['23%/77%','1.3557-1.3565','-8°C/+18°F','+2°C/+36°F'],['22%/78%','1.3549-1.3557','-8°C/+18°F','+2°C/+36°F'],
+            ['21%/79%','1.3541-1.3549','-7°C/+19°F','+3°C/+37°F'],['20%/80%','1.3511-1.3541','-7°C/+19°F','+3°C/+37°F']
+        ];
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page).classList.add('active');
+            if (page === 'notes') loadNotes();
+            if (page === 'history') displayHistory();
+            if (page === 'chart') loadChart();
         }
 
-        // History management
-        function getHistory() {
-            const history = localStorage.getItem('mixingHistory');
-            return history ? JSON.parse(history) : [];
+        function loadChart() {
+            const tbody = document.getElementById('chart-body');
+            if (tbody.innerHTML) return;
+            tbody.innerHTML = chartData.map(row => 
+                `<tr>${row.map((cell, i) => 
+                    `<td style="padding: 6px; border: 1px solid #e5e7eb; background: ${i === 0 ? '#f9fafb' : 'white'}; ${cell.includes('DO NOT USE') ? 'color: #dc2626; font-weight: 600;' : ''}">${cell}</td>`
+                ).join('')}</tr>`
+            ).join('');
         }
 
         function saveToHistory(type, data) {
-            const history = getHistory();
-            history.unshift({
-                type,
-                data,
-                timestamp: new Date().toISOString()
-            });
-            if (history.length > 50) history.pop();
-            localStorage.setItem('mixingHistory', JSON.stringify(history));
+            const hist = JSON.parse(localStorage.getItem('mixHist') || '[]');
+            hist.unshift({type, data, time: new Date().toISOString()});
+            if (hist.length > 50) hist.pop();
+            localStorage.setItem('mixHist', JSON.stringify(hist));
         }
 
         function displayHistory() {
-            const history = getHistory();
-            const container = document.getElementById('history-list');
-            
-            if (history.length === 0) {
-                container.innerHTML = '<div class="empty-history">No calculations yet</div>';
-                return;
-            }
-
-            container.innerHTML = history.map(item => {
-                const date = new Date(item.timestamp);
-                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-                
+            const hist = JSON.parse(localStorage.getItem('mixHist') || '[]');
+            const list = document.getElementById('history-list');
+            if (!hist.length) { list.innerHTML = '<p style="color: #9ca3af; padding: 40px 20px; text-align: center;">No calculations yet</p>'; return; }
+            list.innerHTML = hist.map(h => {
+                const date = new Date(h.time).toLocaleString();
                 let details = '';
-                switch(item.type) {
-                    case 'Increase Mix':
-                        details = `${item.data.currentMix}% → ${item.data.desiredMix}% | Add ${item.data.glycol} gal glycol`;
-                        break;
-                    case 'Decrease Mix':
-                        details = `${item.data.currentMix}% → ${item.data.desiredMix}% | Add ${item.data.water} gal water`;
-                        break;
-                    case 'Increase Volume':
-                        details = `${item.data.currentVolume} → ${item.data.wantedVolume} gal | Add ${item.data.totalAdd} gal (${item.data.percentGlycol}% glycol)`;
-                        break;
-                    case 'Adding Tote':
-                        details = `Truck: ${item.data.truckMix}% + Tote: ${item.data.toteMix}% = ${item.data.newMix}%`;
-                        break;
-                }
-
-                return `
-                    <div class="history-item">
-                        <div class="history-header">
-                            <span class="history-type">${item.type}</span>
-                            <span class="history-date">${dateStr}</span>
-                        </div>
-                        <div class="history-details">${details}</div>
-                    </div>
-                `;
+                if (h.type === 'Inc') details = `${h.data.c}% → ${h.data.d}% | Add ${h.data.g} gal glycol`;
+                else if (h.type === 'Dec') details = `${h.data.c}% → ${h.data.d}% | Add ${h.data.w} gal water`;
+                else if (h.type === 'Vol') details = `${h.data.cv} → ${h.data.wv} gal | Add ${h.data.t} gal`;
+                else if (h.type === 'Tote') details = `${h.data.tm}% + ${h.data.ttm}% = ${h.data.nm}%`;
+                return `<div style="padding: 12px; background: #f0f9ff; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="font-weight: 600; color: #0369a1;">${h.type}</div>
+                    <div style="font-size: 13px; color: #6b7280;">${details}</div>
+                    <div style="font-size: 11px; color: #9ca3af;">${date}</div>
+                </div>`;
             }).join('');
         }
 
         function clearHistory() {
-            if (confirm('Clear all calculation history?')) {
-                localStorage.removeItem('mixingHistory');
-                displayHistory();
-            }
+            if (confirm('Clear all history?')) { localStorage.removeItem('mixHist'); displayHistory(); }
         }
 
-        // Calculations
-        function calculateIncrease() {
-            const currentMix = parseFloat(document.getElementById('inc-current-mix').value);
-            const desiredMix = parseFloat(document.getElementById('inc-desired-mix').value);
-            const currentVolume = parseFloat(document.getElementById('inc-current-volume').value);
-
-            if (isNaN(currentMix) || isNaN(desiredMix) || isNaN(currentVolume)) {
-                document.getElementById('inc-results').style.display = 'none';
-                return;
-            }
-
-            const formula = (desiredMix - currentMix) / (100 - desiredMix);
-            const glycolToAdd = currentVolume * formula;
-            const totalVolume = currentVolume + glycolToAdd;
-
-            document.getElementById('inc-glycol').textContent = glycolToAdd.toFixed(2) + ' gal';
-            document.getElementById('inc-total').textContent = totalVolume.toFixed(2) + ' gal';
-            document.getElementById('inc-results').style.display = 'block';
-
-            saveToHistory('Increase Mix', {
-                currentMix,
-                desiredMix,
-                currentVolume,
-                glycol: glycolToAdd.toFixed(2),
-                total: totalVolume.toFixed(2)
-            });
+        function calcInc() {
+            const cur = parseFloat(document.getElementById('inc-cur').value);
+            const des = parseFloat(document.getElementById('inc-des').value);
+            const vol = parseFloat(document.getElementById('inc-vol').value);
+            if (!cur || !des || !vol) { document.getElementById('inc-result').innerHTML = ''; return; }
+            const glycol = vol * ((des - cur) / (100 - des));
+            const total = vol + glycol;
+            document.getElementById('inc-result').innerHTML = 
+                `<div class="result-item"><span>Glycol to Add</span><span class="result-value">${glycol.toFixed(2)} gal</span></div>
+                <div class="result-item"><span>Total Volume</span><span class="result-value">${total.toFixed(2)} gal</span></div>`;
+            saveToHistory('Inc', {c: cur, d: des, v: vol, g: glycol.toFixed(2)});
         }
 
-        function calculateDecrease() {
-            const currentMix = parseFloat(document.getElementById('dec-current-mix').value);
-            const desiredMix = parseFloat(document.getElementById('dec-desired-mix').value);
-            const currentVolume = parseFloat(document.getElementById('dec-current-volume').value);
-
-            if (isNaN(currentMix) || isNaN(desiredMix) || isNaN(currentVolume)) {
-                document.getElementById('dec-results').style.display = 'none';
-                return;
-            }
-
-            const formula = (currentMix - desiredMix) / desiredMix;
-            const waterToAdd = currentVolume * formula;
-            const totalVolume = currentVolume + waterToAdd;
-
-            document.getElementById('dec-water').textContent = waterToAdd.toFixed(2) + ' gal';
-            document.getElementById('dec-total').textContent = totalVolume.toFixed(2) + ' gal';
-            document.getElementById('dec-results').style.display = 'block';
-
-            saveToHistory('Decrease Mix', {
-                currentMix,
-                desiredMix,
-                currentVolume,
-                water: waterToAdd.toFixed(2),
-                total: totalVolume.toFixed(2)
-            });
+        function calcDec() {
+            const cur = parseFloat(document.getElementById('dec-cur').value);
+            const des = parseFloat(document.getElementById('dec-des').value);
+            const vol = parseFloat(document.getElementById('dec-vol').value);
+            if (!cur || !des || !vol) { document.getElementById('dec-result').innerHTML = ''; return; }
+            const water = vol * ((cur - des) / des);
+            const total = vol + water;
+            document.getElementById('dec-result').innerHTML = 
+                `<div class="result-item"><span>Water to Add</span><span class="result-value">${water.toFixed(2)} gal</span></div>
+                <div class="result-item"><span>Total Volume</span><span class="result-value">${total.toFixed(2)} gal</span></div>`;
+            saveToHistory('Dec', {c: cur, d: des, v: vol, w: water.toFixed(2)});
         }
 
-        function calculateVolume() {
-            const currentMix = parseFloat(document.getElementById('vol-current-mix').value) / 100;
-            const wantedMix = parseFloat(document.getElementById('vol-wanted-mix').value) / 100;
-            const currentVolume = parseFloat(document.getElementById('vol-current-volume').value);
-            const wantedVolume = parseFloat(document.getElementById('vol-wanted-volume').value);
-
-            if (isNaN(currentMix) || isNaN(wantedMix) || isNaN(currentVolume) || isNaN(wantedVolume)) {
-                document.getElementById('vol-results').style.display = 'none';
-                return;
-            }
-
-            const glycolAmount = (wantedVolume * wantedMix) - (currentVolume * currentMix);
-            const waterAmount = wantedVolume - (currentVolume * currentMix) - (wantedVolume * wantedMix);
-            const volumeToAdd = glycolAmount + waterAmount;
-            const percentGlycol = (glycolAmount / volumeToAdd) * 100;
-
-            document.getElementById('vol-glycol').textContent = glycolAmount.toFixed(2) + ' gal';
-            document.getElementById('vol-water').textContent = waterAmount.toFixed(2) + ' gal';
-            document.getElementById('vol-add').textContent = volumeToAdd.toFixed(2) + ' gal';
-            document.getElementById('vol-percent').textContent = percentGlycol.toFixed(2) + '%';
-            document.getElementById('vol-results').style.display = 'block';
-
-            saveToHistory('Increase Volume', {
-                currentMix: (currentMix * 100).toFixed(1),
-                wantedMix: (wantedMix * 100).toFixed(1),
-                currentVolume,
-                wantedVolume,
-                totalAdd: volumeToAdd.toFixed(2),
-                percentGlycol: percentGlycol.toFixed(2)
-            });
+        function calcVol() {
+            const cur = parseFloat(document.getElementById('vol-cur').value) / 100;
+            const want = parseFloat(document.getElementById('vol-want').value) / 100;
+            const curv = parseFloat(document.getElementById('vol-curv').value);
+            const wantv = parseFloat(document.getElementById('vol-wantv').value);
+            if (!cur || !want || !curv || !wantv) { document.getElementById('vol-result').innerHTML = ''; return; }
+            const glycol = (wantv * want) - (curv * cur);
+            const water = wantv - (curv * cur) - (wantv * want);
+            const total = glycol + water;
+            const percent = (glycol / total) * 100;
+            document.getElementById('vol-result').innerHTML = 
+                `<div class="result-item"><span>Glycol to Add</span><span class="result-value">${glycol.toFixed(2)} gal</span></div>
+                <div class="result-item"><span>Water to Add</span><span class="result-value">${water.toFixed(2)} gal</span></div>
+                <div class="result-item"><span>Total to Add</span><span class="result-value">${total.toFixed(2)} gal</span></div>
+                <div class="result-item"><span>% Glycol</span><span class="result-value">${percent.toFixed(2)}%</span></div>`;
+            saveToHistory('Vol', {cv: curv, wv: wantv, t: total.toFixed(2)});
         }
 
-        function calculateTote() {
-            const truckMix = parseFloat(document.getElementById('tote-truck-mix').value) / 100;
-            const truckVolume = parseFloat(document.getElementById('tote-truck-volume').value);
-            const toteMix = parseFloat(document.getElementById('tote-tote-mix').value) / 100;
-            const toteVolume = parseFloat(document.getElementById('tote-tote-volume').value);
-
-            if (isNaN(truckMix) || isNaN(truckVolume) || isNaN(toteMix) || isNaN(toteVolume)) {
-                document.getElementById('tote-results').style.display = 'none';
-                return;
-            }
-
-            const newMix = ((truckVolume * truckMix) + (toteVolume * toteMix)) / (truckVolume + toteVolume);
-            const totalVolume = truckVolume + toteVolume;
-
-            document.getElementById('tote-new-mix').textContent = (newMix * 100).toFixed(2) + '%';
-            document.getElementById('tote-total').textContent = totalVolume.toFixed(2) + ' gal';
-            document.getElementById('tote-results').style.display = 'block';
-
-            saveToHistory('Adding Tote', {
-                truckMix: (truckMix * 100).toFixed(1),
-                toteMix: (toteMix * 100).toFixed(1),
-                truckVolume,
-                toteVolume,
-                newMix: (newMix * 100).toFixed(2),
-                total: totalVolume.toFixed(2)
-            });
+        function calcTote() {
+            const tm = parseFloat(document.getElementById('tote-tm').value) / 100;
+            const tv = parseFloat(document.getElementById('tote-tv').value);
+            const ttm = parseFloat(document.getElementById('tote-ttm').value) / 100;
+            const ttv = parseFloat(document.getElementById('tote-ttv').value);
+            if (!tm || !tv || !ttm || !ttv) { document.getElementById('tote-result').innerHTML = ''; return; }
+            const newMix = ((tv * tm) + (ttv * ttm)) / (tv + ttv);
+            const total = tv + ttv;
+            document.getElementById('tote-result').innerHTML = 
+                `<div class="result-item"><span>New Mix</span><span class="result-value">${(newMix * 100).toFixed(2)}%</span></div>
+                <div class="result-item"><span>Total Volume</span><span class="result-value">${total.toFixed(2)} gal</span></div>`;
+            saveToHistory('Tote', {tm: (tm*100).toFixed(1), ttm: (ttm*100).toFixed(1), nm: (newMix*100).toFixed(2)});
         }
 
-        // Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    self.addEventListener('install', (e) => {
-                        e.waitUntil(
-                            caches.open('mixing-calc-v1').then((cache) => {
-                                return cache.addAll(['/']);
-                            })
-                        );
-                    });
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(
-                            caches.match(e.request).then((response) => {
-                                return response || fetch(e.request);
-                            })
-                        );
-                    });
-                `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl);
-            });
+        function loadNotes() {
+            document.getElementById('notes-area').value = localStorage.getItem('fieldNotes') || '';
+        }
+
+        function saveNotes() {
+            localStorage.setItem('fieldNotes', document.getElementById('notes-area').value);
+            const status = document.getElementById('notes-status');
+            status.textContent = 'Saving...';
+            status.style.color = '#0ea5e9';
+            setTimeout(() => {
+                status.textContent = 'Saved ✓';
+                status.style.color = '#10b981';
+                setTimeout(() => { status.style.color = '#9ca3af'; }, 2000);
+            }, 500);
         }
     </script>
 </body>
