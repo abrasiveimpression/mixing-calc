@@ -67,7 +67,7 @@
         <span>🎉 New version available!</span>
         <button onclick="updateApp()">Update Now</button>
     </div>
-    <div class="version-badge">v1.0.1</div>
+    <div class="version-badge">v1.0.0</div>
     <div class="container">
         <div class="header"><h1>Mixing Fluid Calculator</h1></div>
         
@@ -168,7 +168,7 @@
     </div>
 
     <script>
-        const APP_VERSION = '1.0.0'; // Update this when you make changes
+        const APP_VERSION = '1.0.1'; // Update this when you make changes
         
         // Service Worker Registration with Update Detection
         if ('serviceWorker' in navigator) {
@@ -182,6 +182,14 @@
                 .then((registration) => {
                     console.log('Service Worker registered successfully');
                     
+                    // Store current version to compare later
+                    const storedVersion = localStorage.getItem('appVersion');
+                    if (storedVersion !== APP_VERSION) {
+                        // Version changed, update storage
+                        localStorage.setItem('appVersion', APP_VERSION);
+                        console.log('App updated to version:', APP_VERSION);
+                    }
+                    
                     // Check for updates every time page loads
                     registration.update();
 
@@ -190,8 +198,13 @@
                         const newWorker = registration.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New version available
-                                showUpdateBanner();
+                                // New version available - only show if not just updated
+                                const lastUpdate = localStorage.getItem('lastUpdateTime');
+                                const now = Date.now();
+                                // Don't show banner if updated in last 5 seconds
+                                if (!lastUpdate || (now - parseInt(lastUpdate)) > 5000) {
+                                    showUpdateBanner();
+                                }
                             }
                         });
                     });
@@ -209,6 +222,8 @@
         }
 
         function updateApp() {
+            // Store update timestamp
+            localStorage.setItem('lastUpdateTime', Date.now().toString());
             // Hide banner
             document.getElementById('update-banner').style.display = 'none';
             // Force reload from server
@@ -217,7 +232,12 @@
                     if (reg && reg.waiting) {
                         reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                     }
-                    window.location.reload(true);
+                    // Clear all caches to force fresh load
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    }).then(() => {
+                        window.location.reload(true);
+                    });
                 });
             } else {
                 window.location.reload(true);
@@ -394,4 +414,3 @@
     </script>
 </body>
 </html>
-
