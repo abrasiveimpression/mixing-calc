@@ -299,22 +299,22 @@
         <!-- Main Menu Page -->
         <div class="page active" id="menu-page">
             <div class="menu-grid">
-                <div class="menu-card" onclick="showCalculator('increase')">
+                <div class="menu-card" onclick="showPage('increase')">
                     <h3>Increase Mix</h3>
                     <p>Calculate how much glycol to add to strengthen your mix to the desired percentage</p>
                 </div>
 
-                <div class="menu-card" onclick="showCalculator('decrease')">
+                <div class="menu-card" onclick="showPage('decrease')">
                     <h3>Decrease Mix</h3>
                     <p>Calculate how much water to add to weaken your mix to the desired percentage</p>
                 </div>
 
-                <div class="menu-card" onclick="showCalculator('volume')">
+                <div class="menu-card" onclick="showPage('volume')">
                     <h3>Increase Volume</h3>
                     <p>Calculate how much glycol and water to add to reach your target volume and mix strength</p>
                 </div>
 
-                <div class="menu-card" onclick="showCalculator('tote')">
+                <div class="menu-card" onclick="showPage('tote')">
                     <h3>Adding Tote</h3>
                     <p>Calculate the resulting mix when combining fluid from a tote with your truck</p>
                 </div>
@@ -330,17 +330,16 @@
                 <h2 style="margin-bottom: 20px; color: #0369a1;">Increase Mix</h2>
                 <div class="form-group">
                     <label>Current Mix (%)</label>
-                    <input type="number" id="inc-current-mix" step="0.1" placeholder="e.g., 28">
+                    <input type="number" id="inc-current-mix" step="0.1" placeholder="e.g., 28" oninput="calculateIncrease()">
                 </div>
                 <div class="form-group">
                     <label>Desired Mix (%)</label>
-                    <input type="number" id="inc-desired-mix" step="0.1" placeholder="e.g., 33">
+                    <input type="number" id="inc-desired-mix" step="0.1" placeholder="e.g., 33" oninput="calculateIncrease()">
                 </div>
                 <div class="form-group">
                     <label>Current Volume (gallons)</label>
-                    <input type="number" id="inc-current-volume" step="0.1" placeholder="e.g., 1500">
+                    <input type="number" id="inc-current-volume" step="0.1" placeholder="e.g., 1500" oninput="calculateIncrease()">
                 </div>
-                <button class="button" onclick="calculateIncrease()">Calculate</button>
                 
                 <div class="results" id="inc-results" style="display: none;">
                     <div class="result-item">
@@ -362,17 +361,16 @@
                 <h2 style="margin-bottom: 20px; color: #0369a1;">Decrease Mix</h2>
                 <div class="form-group">
                     <label>Current Mix (%)</label>
-                    <input type="number" id="dec-current-mix" step="0.1" placeholder="e.g., 55">
+                    <input type="number" id="dec-current-mix" step="0.1" placeholder="e.g., 55" oninput="calculateDecrease()">
                 </div>
                 <div class="form-group">
                     <label>Desired Mix (%)</label>
-                    <input type="number" id="dec-desired-mix" step="0.1" placeholder="e.g., 35">
+                    <input type="number" id="dec-desired-mix" step="0.1" placeholder="e.g., 35" oninput="calculateDecrease()">
                 </div>
                 <div class="form-group">
                     <label>Current Volume (gallons)</label>
-                    <input type="number" id="dec-current-volume" step="0.1" placeholder="e.g., 700">
+                    <input type="number" id="dec-current-volume" step="0.1" placeholder="e.g., 700" oninput="calculateDecrease()">
                 </div>
-                <button class="button" onclick="calculateDecrease()">Calculate</button>
                 
                 <div class="results" id="dec-results" style="display: none;">
                     <div class="result-item">
@@ -394,21 +392,20 @@
                 <h2 style="margin-bottom: 20px; color: #0369a1;">Increase Volume</h2>
                 <div class="form-group">
                     <label>Current Mix (%)</label>
-                    <input type="number" id="vol-current-mix" step="0.1" placeholder="e.g., 38">
+                    <input type="number" id="vol-current-mix" step="0.1" placeholder="e.g., 38" oninput="calculateVolume()">
                 </div>
                 <div class="form-group">
                     <label>Wanted Mix (%)</label>
-                    <input type="number" id="vol-wanted-mix" step="0.1" placeholder="e.g., 42">
+                    <input type="number" id="vol-wanted-mix" step="0.1" placeholder="e.g., 42" oninput="calculateVolume()">
                 </div>
                 <div class="form-group">
                     <label>Current Volume (gallons)</label>
-                    <input type="number" id="vol-current-volume" step="0.1" placeholder="e.g., 1350">
+                    <input type="number" id="vol-current-volume" step="0.1" placeholder="e.g., 1350" oninput="calculateVolume()">
                 </div>
                 <div class="form-group">
                     <label>Wanted Volume (gallons)</label>
-                    <input type="number" id="vol-wanted-volume" step="0.1" placeholder="e.g., 1700">
+                    <input type="number" id="vol-wanted-volume" step="0.1" placeholder="e.g., 1700" oninput="calculateVolume()">
                 </div>
-                <button class="button" onclick="calculateVolume()">Calculate</button>
                 
                 <div class="results" id="vol-results" style="display: none;">
                     <div class="result-item">
@@ -438,21 +435,20 @@
                 <h2 style="margin-bottom: 20px; color: #0369a1;">Adding Tote</h2>
                 <div class="form-group">
                     <label>Truck Mix (%)</label>
-                    <input type="number" id="tote-truck-mix" step="0.1" placeholder="e.g., 40">
+                    <input type="number" id="tote-truck-mix" step="0.1" placeholder="e.g., 40" oninput="calculateTote()">
                 </div>
                 <div class="form-group">
                     <label>Truck Volume (gallons)</label>
-                    <input type="number" id="tote-truck-volume" step="0.1" placeholder="e.g., 1300">
+                    <input type="number" id="tote-truck-volume" step="0.1" placeholder="e.g., 1300" oninput="calculateTote()">
                 </div>
                 <div class="form-group">
                     <label>Tote Mix (%)</label>
-                    <input type="number" id="tote-tote-mix" step="0.1" placeholder="e.g., 42">
+                    <input type="number" id="tote-tote-mix" step="0.1" placeholder="e.g., 42" oninput="calculateTote()">
                 </div>
                 <div class="form-group">
                     <label>Tote Volume (gallons)</label>
-                    <input type="number" id="tote-tote-volume" step="0.1" placeholder="e.g., 110">
+                    <input type="number" id="tote-tote-volume" step="0.1" placeholder="e.g., 110" oninput="calculateTote()">
                 </div>
-                <button class="button" onclick="calculateTote()">Calculate</button>
                 
                 <div class="results" id="tote-results" style="display: none;">
                     <div class="result-item">
@@ -489,10 +485,6 @@
             if (pageName === 'history') {
                 displayHistory();
             }
-        }
-
-        function showCalculator(calcType) {
-            showPage(calcType);
         }
 
         // History management
@@ -567,7 +559,7 @@
             const currentVolume = parseFloat(document.getElementById('inc-current-volume').value);
 
             if (isNaN(currentMix) || isNaN(desiredMix) || isNaN(currentVolume)) {
-                alert('Please fill in all fields');
+                document.getElementById('inc-results').style.display = 'none';
                 return;
             }
 
@@ -594,7 +586,7 @@
             const currentVolume = parseFloat(document.getElementById('dec-current-volume').value);
 
             if (isNaN(currentMix) || isNaN(desiredMix) || isNaN(currentVolume)) {
-                alert('Please fill in all fields');
+                document.getElementById('dec-results').style.display = 'none';
                 return;
             }
 
@@ -622,7 +614,7 @@
             const wantedVolume = parseFloat(document.getElementById('vol-wanted-volume').value);
 
             if (isNaN(currentMix) || isNaN(wantedMix) || isNaN(currentVolume) || isNaN(wantedVolume)) {
-                alert('Please fill in all fields');
+                document.getElementById('vol-results').style.display = 'none';
                 return;
             }
 
@@ -654,7 +646,7 @@
             const toteVolume = parseFloat(document.getElementById('tote-tote-volume').value);
 
             if (isNaN(truckMix) || isNaN(truckVolume) || isNaN(toteMix) || isNaN(toteVolume)) {
-                alert('Please fill in all fields');
+                document.getElementById('tote-results').style.display = 'none';
                 return;
             }
 
@@ -694,4 +686,11 @@
                         );
                     });
                 `;
-                const blob = new Blob
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl);
+            });
+        }
+    </script>
+</body>
+</html>
