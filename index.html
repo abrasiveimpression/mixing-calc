@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Mixing Fluid Calculator</title>
+    <link rel="manifest" id="manifest-placeholder">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -59,6 +63,11 @@
     </style>
 </head>
 <body>
+    <div id="update-banner" class="update-banner">
+        <span>🎉 New version available!</span>
+        <button onclick="updateApp()">Update Now</button>
+    </div>
+    <div class="version-badge">v1.0.0</div>
     <div class="container">
         <div class="header"><h1>Mixing Fluid Calculator</h1></div>
         
@@ -159,6 +168,67 @@
     </div>
 
     <script>
+        const APP_VERSION = '1.0.0'; // Update this when you make changes
+        
+        // Service Worker Registration with Update Detection
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                registerServiceWorker();
+            });
+        }
+
+        function registerServiceWorker() {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then((registration) => {
+                    console.log('Service Worker registered successfully');
+                    
+                    // Check for updates every time page loads
+                    registration.update();
+
+                    // Listen for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available
+                                showUpdateBanner();
+                            }
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+
+        function showUpdateBanner() {
+            document.getElementById('update-banner').style.display = 'block';
+        }
+
+        function updateApp() {
+            window.location.reload();
+        }
+
+        // Create and inject manifest
+        const manifestData = {
+            "name": "Mixing Fluid Calculator",
+            "short_name": "MixCalc",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#0ea5e9",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230ea5e9'/%3E%3Ctext x='50%25' y='60%25' font-size='50' text-anchor='middle' fill='white'%3EM%3C/text%3E%3C/svg%3E",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+
         const chartData = [
             ['100%','1.4230-1.4260','DO NOT USE','DO NOT USE'],['90%/10%','1.4156-1.4186','-39°C/-38°F','DO NOT USE'],
             ['80%/20%','1.4079-1.4106','-39°C/-38°F','DO NOT USE'],['70%/30%','1.3996-1.4026','-43°C/-45°F','DO NOT USE'],
