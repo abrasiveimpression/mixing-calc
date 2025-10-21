@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Mixing Fluid Calculator</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1peGluZyBGbHVpZCBDYWxjdWxhdG9yIiwKICAic2hvcnRfbmFtZSI6ICJNaXhDYWxjIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMDVhNWU5IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyUyMzA1YTVlOScvJTNFJTNDdGV4dCB4PSc1MCUyNScgeT0nNjAlMjUnIGZvbnQtc2l6ZT0nNTAnIGZpbGw9J3doaXRlJyUzRU0lM0MvdGV4dCUzRSUzQy9zdmclM0UiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(186, 230, 253, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(224, 242, 254, 0.9) 0%, transparent 30%),
+                linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #0c4a6e;
+            margin-bottom: 30px;
+            padding-top: 20px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Menu Page Styles */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(186, 230, 253, 0.5);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(12, 74, 110, 0.1);
+        }
+
+        .menu-card:active {
+            transform: scale(0.98);
+        }
+
+        .menu-card:hover {
+            box-shadow: 0 8px 24px rgba(12, 74, 110, 0.2);
+            border-color: #7dd3fc;
+        }
+
+        .menu-card h3 {
+            color: #0369a1;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .menu-card p {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .history-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(186, 230, 253, 0.5);
+            color: #0369a1;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Calculator Page Styles */
+        .back-button {
+            background: rgba(255, 255, 255, 0.7);
+            color: #0369a1;
+            border: 2px solid rgba(186, 230, 253, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            display: inline-block;
+        }
+
+        .back-button:active {
+            transform: scale(0.98);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(12, 74, 110, 0.15);
+            margin-bottom: 20px;
+            border: 1px solid rgba(186, 230, 253, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+        }
+
+        .button {
+            width: 100%;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .results {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(186, 230, 253, 0.5);
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0369a1;
+        }
+
+        .result-value.large {
+            font-size: 24px;
+        }
+
+        /* History Page Styles */
+        .history-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(12, 74, 110, 0.15);
+            border: 1px solid rgba(186, 230, 253, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .history-item {
+            padding: 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(186, 230, 253, 0.5);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-type {
+            font-weight: 600;
+            color: #0369a1;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .history-details {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .clear-history {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 20px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .card, .history-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mixing Fluid Calculator</h1>
+            <p>Glycol & Water Mix Calculations</p>
+        </div>
+
+        <!-- Main Menu Page -->
+        <div class="page active" id="menu-page">
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showCalculator('increase')">
+                    <h3>Increase Mix</h3>
+                    <p>Calculate how much glycol to add to strengthen your mix to the desired percentage</p>
+                </div>
+
+                <div class="menu-card" onclick="showCalculator('decrease')">
+                    <h3>Decrease Mix</h3>
+                    <p>Calculate how much water to add to weaken your mix to the desired percentage</p>
+                </div>
+
+                <div class="menu-card" onclick="showCalculator('volume')">
+                    <h3>Increase Volume</h3>
+                    <p>Calculate how much glycol and water to add to reach your target volume and mix strength</p>
+                </div>
+
+                <div class="menu-card" onclick="showCalculator('tote')">
+                    <h3>Adding Tote</h3>
+                    <p>Calculate the resulting mix when combining fluid from a tote with your truck</p>
+                </div>
+            </div>
+
+            <button class="history-btn" onclick="showPage('history')">📋 View Calculation History</button>
+        </div>
+
+        <!-- Increase Mix Calculator -->
+        <div class="page" id="increase-page">
+            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: #0369a1;">Increase Mix</h2>
+                <div class="form-group">
+                    <label>Current Mix (%)</label>
+                    <input type="number" id="inc-current-mix" step="0.1" placeholder="e.g., 28">
+                </div>
+                <div class="form-group">
+                    <label>Desired Mix (%)</label>
+                    <input type="number" id="inc-desired-mix" step="0.1" placeholder="e.g., 33">
+                </div>
+                <div class="form-group">
+                    <label>Current Volume (gallons)</label>
+                    <input type="number" id="inc-current-volume" step="0.1" placeholder="e.g., 1500">
+                </div>
+                <button class="button" onclick="calculateIncrease()">Calculate</button>
+                
+                <div class="results" id="inc-results" style="display: none;">
+                    <div class="result-item">
+                        <span class="result-label">Glycol to Add</span>
+                        <span class="result-value large" id="inc-glycol"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">New Total Volume</span>
+                        <span class="result-value" id="inc-total"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decrease Mix Calculator -->
+        <div class="page" id="decrease-page">
+            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: #0369a1;">Decrease Mix</h2>
+                <div class="form-group">
+                    <label>Current Mix (%)</label>
+                    <input type="number" id="dec-current-mix" step="0.1" placeholder="e.g., 55">
+                </div>
+                <div class="form-group">
+                    <label>Desired Mix (%)</label>
+                    <input type="number" id="dec-desired-mix" step="0.1" placeholder="e.g., 35">
+                </div>
+                <div class="form-group">
+                    <label>Current Volume (gallons)</label>
+                    <input type="number" id="dec-current-volume" step="0.1" placeholder="e.g., 700">
+                </div>
+                <button class="button" onclick="calculateDecrease()">Calculate</button>
+                
+                <div class="results" id="dec-results" style="display: none;">
+                    <div class="result-item">
+                        <span class="result-label">Water to Add</span>
+                        <span class="result-value large" id="dec-water"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">New Total Volume</span>
+                        <span class="result-value" id="dec-total"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Increase Volume Calculator -->
+        <div class="page" id="volume-page">
+            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: #0369a1;">Increase Volume</h2>
+                <div class="form-group">
+                    <label>Current Mix (%)</label>
+                    <input type="number" id="vol-current-mix" step="0.1" placeholder="e.g., 38">
+                </div>
+                <div class="form-group">
+                    <label>Wanted Mix (%)</label>
+                    <input type="number" id="vol-wanted-mix" step="0.1" placeholder="e.g., 42">
+                </div>
+                <div class="form-group">
+                    <label>Current Volume (gallons)</label>
+                    <input type="number" id="vol-current-volume" step="0.1" placeholder="e.g., 1350">
+                </div>
+                <div class="form-group">
+                    <label>Wanted Volume (gallons)</label>
+                    <input type="number" id="vol-wanted-volume" step="0.1" placeholder="e.g., 1700">
+                </div>
+                <button class="button" onclick="calculateVolume()">Calculate</button>
+                
+                <div class="results" id="vol-results" style="display: none;">
+                    <div class="result-item">
+                        <span class="result-label">Glycol to Add</span>
+                        <span class="result-value" id="vol-glycol"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Water to Add</span>
+                        <span class="result-value" id="vol-water"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Total Volume to Add</span>
+                        <span class="result-value large" id="vol-add"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">% Glycol in Mix</span>
+                        <span class="result-value" id="vol-percent"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adding Tote Calculator -->
+        <div class="page" id="tote-page">
+            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: #0369a1;">Adding Tote</h2>
+                <div class="form-group">
+                    <label>Truck Mix (%)</label>
+                    <input type="number" id="tote-truck-mix" step="0.1" placeholder="e.g., 40">
+                </div>
+                <div class="form-group">
+                    <label>Truck Volume (gallons)</label>
+                    <input type="number" id="tote-truck-volume" step="0.1" placeholder="e.g., 1300">
+                </div>
+                <div class="form-group">
+                    <label>Tote Mix (%)</label>
+                    <input type="number" id="tote-tote-mix" step="0.1" placeholder="e.g., 42">
+                </div>
+                <div class="form-group">
+                    <label>Tote Volume (gallons)</label>
+                    <input type="number" id="tote-tote-volume" step="0.1" placeholder="e.g., 110">
+                </div>
+                <button class="button" onclick="calculateTote()">Calculate</button>
+                
+                <div class="results" id="tote-results" style="display: none;">
+                    <div class="result-item">
+                        <span class="result-label">New Mix</span>
+                        <span class="result-value large" id="tote-new-mix"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Total Volume</span>
+                        <span class="result-value" id="tote-total"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Page -->
+        <div class="page" id="history-page">
+            <button class="back-button" onclick="showPage('menu')">← Back to Menu</button>
+            <div class="history-card">
+                <h2 style="margin-bottom: 20px; color: #374151;">Calculation History</h2>
+                <div id="history-list"></div>
+                <button class="clear-history" onclick="clearHistory()">Clear History</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Page navigation
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageName + '-page').classList.add('active');
+            
+            if (pageName === 'history') {
+                displayHistory();
+            }
+        }
+
+        function showCalculator(calcType) {
+            showPage(calcType);
+        }
+
+        // History management
+        function getHistory() {
+            const history = localStorage.getItem('mixingHistory');
+            return history ? JSON.parse(history) : [];
+        }
+
+        function saveToHistory(type, data) {
+            const history = getHistory();
+            history.unshift({
+                type,
+                data,
+                timestamp: new Date().toISOString()
+            });
+            if (history.length > 50) history.pop();
+            localStorage.setItem('mixingHistory', JSON.stringify(history));
+        }
+
+        function displayHistory() {
+            const history = getHistory();
+            const container = document.getElementById('history-list');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="empty-history">No calculations yet</div>';
+                return;
+            }
+
+            container.innerHTML = history.map(item => {
+                const date = new Date(item.timestamp);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                
+                let details = '';
+                switch(item.type) {
+                    case 'Increase Mix':
+                        details = `${item.data.currentMix}% → ${item.data.desiredMix}% | Add ${item.data.glycol} gal glycol`;
+                        break;
+                    case 'Decrease Mix':
+                        details = `${item.data.currentMix}% → ${item.data.desiredMix}% | Add ${item.data.water} gal water`;
+                        break;
+                    case 'Increase Volume':
+                        details = `${item.data.currentVolume} → ${item.data.wantedVolume} gal | Add ${item.data.totalAdd} gal (${item.data.percentGlycol}% glycol)`;
+                        break;
+                    case 'Adding Tote':
+                        details = `Truck: ${item.data.truckMix}% + Tote: ${item.data.toteMix}% = ${item.data.newMix}%`;
+                        break;
+                }
+
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-type">${item.type}</span>
+                            <span class="history-date">${dateStr}</span>
+                        </div>
+                        <div class="history-details">${details}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('Clear all calculation history?')) {
+                localStorage.removeItem('mixingHistory');
+                displayHistory();
+            }
+        }
+
+        // Calculations
+        function calculateIncrease() {
+            const currentMix = parseFloat(document.getElementById('inc-current-mix').value);
+            const desiredMix = parseFloat(document.getElementById('inc-desired-mix').value);
+            const currentVolume = parseFloat(document.getElementById('inc-current-volume').value);
+
+            if (isNaN(currentMix) || isNaN(desiredMix) || isNaN(currentVolume)) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const formula = (desiredMix - currentMix) / (100 - desiredMix);
+            const glycolToAdd = currentVolume * formula;
+            const totalVolume = currentVolume + glycolToAdd;
+
+            document.getElementById('inc-glycol').textContent = glycolToAdd.toFixed(2) + ' gal';
+            document.getElementById('inc-total').textContent = totalVolume.toFixed(2) + ' gal';
+            document.getElementById('inc-results').style.display = 'block';
+
+            saveToHistory('Increase Mix', {
+                currentMix,
+                desiredMix,
+                currentVolume,
+                glycol: glycolToAdd.toFixed(2),
+                total: totalVolume.toFixed(2)
+            });
+        }
+
+        function calculateDecrease() {
+            const currentMix = parseFloat(document.getElementById('dec-current-mix').value);
+            const desiredMix = parseFloat(document.getElementById('dec-desired-mix').value);
+            const currentVolume = parseFloat(document.getElementById('dec-current-volume').value);
+
+            if (isNaN(currentMix) || isNaN(desiredMix) || isNaN(currentVolume)) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const formula = (currentMix - desiredMix) / desiredMix;
+            const waterToAdd = currentVolume * formula;
+            const totalVolume = currentVolume + waterToAdd;
+
+            document.getElementById('dec-water').textContent = waterToAdd.toFixed(2) + ' gal';
+            document.getElementById('dec-total').textContent = totalVolume.toFixed(2) + ' gal';
+            document.getElementById('dec-results').style.display = 'block';
+
+            saveToHistory('Decrease Mix', {
+                currentMix,
+                desiredMix,
+                currentVolume,
+                water: waterToAdd.toFixed(2),
+                total: totalVolume.toFixed(2)
+            });
+        }
+
+        function calculateVolume() {
+            const currentMix = parseFloat(document.getElementById('vol-current-mix').value) / 100;
+            const wantedMix = parseFloat(document.getElementById('vol-wanted-mix').value) / 100;
+            const currentVolume = parseFloat(document.getElementById('vol-current-volume').value);
+            const wantedVolume = parseFloat(document.getElementById('vol-wanted-volume').value);
+
+            if (isNaN(currentMix) || isNaN(wantedMix) || isNaN(currentVolume) || isNaN(wantedVolume)) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const glycolAmount = (wantedVolume * wantedMix) - (currentVolume * currentMix);
+            const waterAmount = wantedVolume - (currentVolume * currentMix) - (wantedVolume * wantedMix);
+            const volumeToAdd = glycolAmount + waterAmount;
+            const percentGlycol = (glycolAmount / volumeToAdd) * 100;
+
+            document.getElementById('vol-glycol').textContent = glycolAmount.toFixed(2) + ' gal';
+            document.getElementById('vol-water').textContent = waterAmount.toFixed(2) + ' gal';
+            document.getElementById('vol-add').textContent = volumeToAdd.toFixed(2) + ' gal';
+            document.getElementById('vol-percent').textContent = percentGlycol.toFixed(2) + '%';
+            document.getElementById('vol-results').style.display = 'block';
+
+            saveToHistory('Increase Volume', {
+                currentMix: (currentMix * 100).toFixed(1),
+                wantedMix: (wantedMix * 100).toFixed(1),
+                currentVolume,
+                wantedVolume,
+                totalAdd: volumeToAdd.toFixed(2),
+                percentGlycol: percentGlycol.toFixed(2)
+            });
+        }
+
+        function calculateTote() {
+            const truckMix = parseFloat(document.getElementById('tote-truck-mix').value) / 100;
+            const truckVolume = parseFloat(document.getElementById('tote-truck-volume').value);
+            const toteMix = parseFloat(document.getElementById('tote-tote-mix').value) / 100;
+            const toteVolume = parseFloat(document.getElementById('tote-tote-volume').value);
+
+            if (isNaN(truckMix) || isNaN(truckVolume) || isNaN(toteMix) || isNaN(toteVolume)) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const newMix = ((truckVolume * truckMix) + (toteVolume * toteMix)) / (truckVolume + toteVolume);
+            const totalVolume = truckVolume + toteVolume;
+
+            document.getElementById('tote-new-mix').textContent = (newMix * 100).toFixed(2) + '%';
+            document.getElementById('tote-total').textContent = totalVolume.toFixed(2) + ' gal';
+            document.getElementById('tote-results').style.display = 'block';
+
+            saveToHistory('Adding Tote', {
+                truckMix: (truckMix * 100).toFixed(1),
+                toteMix: (toteMix * 100).toFixed(1),
+                truckVolume,
+                toteVolume,
+                newMix: (newMix * 100).toFixed(2),
+                total: totalVolume.toFixed(2)
+            });
+        }
+
+        // Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    self.addEventListener('install', (e) => {
+                        e.waitUntil(
+                            caches.open('mixing-calc-v1').then((cache) => {
+                                return cache.addAll(['/']);
+                            })
+                        );
+                    });
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            caches.match(e.request).then((response) => {
+                                return response || fetch(e.request);
+                            })
+                        );
+                    });
+                `;
+                const blob = new Blob
