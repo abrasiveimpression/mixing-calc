@@ -72,35 +72,27 @@
         }
         .update-banner {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 10px;
+            left: 10px;
             background: #0ea5e9;
             color: white;
-            padding: 8px 20px;
-            text-align: center;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
             z-index: 1000;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .update-banner button {
-            background: white;
-            color: #0ea5e9;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 6px;
-            margin-left: 12px;
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
         }
+        .update-banner:hover {
+            background: #0284c7;
+        }
     </style>
 </head>
 <body>
-    <div id="update-banner" class="update-banner">
-        <span>🎉 New version available!</span>
-        <button onclick="updateApp()">Update Now</button>
-    </div>
-    <div class="version-badge">v1.1.0</div>
+    <button class="update-banner" onclick="updateApp()">🔄 Update</button>
+    <div class="version-badge">v1.1.1</div>
     <div class="container">
         <div class="header"><h1>Mixing Fluid Calculator</h1></div>
         
@@ -322,27 +314,12 @@
         if('serviceWorker' in navigator){
             window.addEventListener('load',()=>{
                 navigator.serviceWorker.register('./service-worker.js')
-                .then(reg=>{
-                    reg.update();
-                    reg.addEventListener('updatefound',()=>{
-                        const newWorker=reg.installing;
-                        newWorker.addEventListener('statechange',()=>{
-                            if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
-                                const lastUpdate=localStorage.getItem('lastUpdateTime');
-                                const now=Date.now();
-                                if(!lastUpdate||(now-parseInt(lastUpdate))>5000){
-                                    document.getElementById('update-banner').style.display='block';
-                                }
-                            }
-                        });
-                    });
-                }).catch(e=>console.log('SW registration failed:',e));
+                .then(reg=>{reg.update();})
+                .catch(e=>console.log('SW registration failed:',e));
             });
         }
 
         function updateApp(){
-            localStorage.setItem('lastUpdateTime',Date.now().toString());
-            document.getElementById('update-banner').style.display='none';
             if('serviceWorker' in navigator){
                 navigator.serviceWorker.getRegistration().then(reg=>{
                     if(reg&&reg.waiting){
