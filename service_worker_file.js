@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mixing-calc-v1.0.4';
+const CACHE_NAME = 'mixing-calc-v1.1.1';
 const urlsToCache = [
     './',
     './index.html'
