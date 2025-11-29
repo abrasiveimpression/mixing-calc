@@ -70,10 +70,36 @@
             border-radius: 12px;
             font-size: 11px;
         }
+        .update-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #0ea5e9;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .update-banner button {
+            background: white;
+            color: #0ea5e9;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            margin-left: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.0.4</div>
+    <div id="update-banner" class="update-banner">
+        <button onclick="updateApp()">Update Now</button>
+    </div>
+    <div class="version-badge">v1.1.1</div>
     <div class="container">
         <div class="header"><h1>Mixing Fluid Calculator</h1></div>
         
@@ -290,6 +316,45 @@
         function loadAircraft(){const t=document.getElementById('aircraft-body');if(t.innerHTML)return;t.innerHTML=aircraftData.map(r=>`<tr>${r.map((c,i)=>`<td style="background:${i===0?'#f9fafb':'white'};font-size:10px;line-height:1.3;">${c}</td>`).join('')}</tr>`).join('');}
 
         function loadAirlines(){const t=document.getElementById('airlines-body');if(t.innerHTML)return;t.innerHTML=airlinesData.map(r=>`<tr>${r.map((c,i)=>`<td style="background:${i===0?'#f9fafb':'white'};">${c}</td>`).join('')}</tr>`).join('');}
+
+        // Service Worker
+        if('serviceWorker' in navigator){
+            window.addEventListener('load',()=>{
+                navigator.serviceWorker.register('./service-worker.js')
+                .then(reg=>{
+                    reg.update();
+                    reg.addEventListener('updatefound',()=>{
+                        const newWorker=reg.installing;
+                        newWorker.addEventListener('statechange',()=>{
+                            if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+                                const lastUpdate=localStorage.getItem('lastUpdateTime');
+                                const now=Date.now();
+                                if(!lastUpdate||(now-parseInt(lastUpdate))>5000){
+                                    document.getElementById('update-banner').style.display='block';
+                                }
+                            }
+                        });
+                    });
+                }).catch(e=>console.log('SW registration failed:',e));
+            });
+        }
+
+        function updateApp(){
+            localStorage.setItem('lastUpdateTime',Date.now().toString());
+            document.getElementById('update-banner').style.display='none';
+            if('serviceWorker' in navigator){
+                navigator.serviceWorker.getRegistration().then(reg=>{
+                    if(reg&&reg.waiting){
+                        reg.waiting.postMessage({type:'SKIP_WAITING'});
+                    }
+                    caches.keys().then(names=>{
+                        names.forEach(name=>caches.delete(name));
+                    }).then(()=>window.location.reload(true));
+                });
+            }else{
+                window.location.reload(true);
+            }
+        }
     </script>
 </body>
 </html>
