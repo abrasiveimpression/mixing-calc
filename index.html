@@ -33,15 +33,20 @@
         }
         .page { display: none; }
         .page.active { display: block; }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
         .menu-card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 16px;
+            padding: 20px;
             cursor: pointer;
             border: 2px solid rgba(186, 230, 253, 0.5);
+            text-align: center;
         }
-        .menu-card h3 { color: #0369a1; margin-bottom: 8px; }
+        .menu-card h3 { color: #0369a1; margin-bottom: 0; font-size: 16px; }
         .back-button {
             background: rgba(255, 255, 255, 0.7);
             color: #0369a1;
@@ -107,7 +112,7 @@
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.1.2</div>
+    <div class="version-badge">v1.1.1</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()">🔄 Update</button>
@@ -115,15 +120,17 @@
         </div>
         
         <div class="page active" id="menu">
-            <div class="menu-card" onclick="showPage('increase')"><h3>Increase Mix</h3></div>
-            <div class="menu-card" onclick="showPage('decrease')"><h3>Decrease Mix</h3></div>
-            <div class="menu-card" onclick="showPage('volume')"><h3>Increase Volume</h3></div>
-            <div class="menu-card" onclick="showPage('tote')"><h3>Adding Tote</h3></div>
-            <div class="menu-card" onclick="showPage('history')"><h3>📋 History</h3></div>
-            <div class="menu-card" onclick="showPage('dilution')"><h3>📊 Dilution Chart</h3></div>
-            <div class="menu-card" onclick="showPage('aircraft')"><h3>✈️ Aircraft Reference</h3></div>
-            <div class="menu-card" onclick="showPage('airlines')"><h3>🛫 Airline Codes</h3></div>
-            <div class="menu-card" onclick="showPage('notes')"><h3>📝 Notes</h3></div>
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showPage('increase')"><h3>Increase Mix</h3></div>
+                <div class="menu-card" onclick="showPage('decrease')"><h3>Decrease Mix</h3></div>
+                <div class="menu-card" onclick="showPage('volume')"><h3>Increase Volume</h3></div>
+                <div class="menu-card" onclick="showPage('tote')"><h3>Adding Tote</h3></div>
+                <div class="menu-card" onclick="showPage('history')"><h3>📋 History</h3></div>
+                <div class="menu-card" onclick="showPage('dilution')"><h3>📊 Dilution Chart</h3></div>
+                <div class="menu-card" onclick="showPage('aircraft')"><h3>✈️ Aircraft Reference</h3></div>
+                <div class="menu-card" onclick="showPage('airlines')"><h3>🛫 Airline Codes</h3></div>
+                <div class="menu-card" onclick="showPage('notes')"><h3>📝 Notes</h3></div>
+            </div>
         </div>
 
         <div class="page" id="increase">
@@ -153,8 +160,8 @@
             <div class="card">
                 <h2>Increase Volume</h2>
                 <input type="number" id="vol-cur" placeholder="Current Mix %" oninput="calcVol()">
-                <input type="number" id="vol-want" placeholder="Wanted Mix %" oninput="calcVol()">
                 <input type="number" id="vol-curv" placeholder="Current Volume" oninput="calcVol()">
+                <input type="number" id="vol-want" placeholder="Wanted Mix %" oninput="calcVol()">
                 <input type="number" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()">
                 <div id="vol-result"></div>
             </div>
@@ -248,18 +255,44 @@
         }
 
         function calcVol() {
-            const c=parseFloat(document.getElementById('vol-cur').value)/100;
-            const w=parseFloat(document.getElementById('vol-want').value)/100;
-            const cv=parseFloat(document.getElementById('vol-curv').value);
-            const wv=parseFloat(document.getElementById('vol-wantv').value);
-            if(!c||!w||!cv||!wv){document.getElementById('vol-result').innerHTML='';return;}
-            const g=(wv*w)-(cv*c),wa=wv-(cv*c)-(wv*w),t=g+wa,p=(g/t)*100;
+            const curMix=parseFloat(document.getElementById('vol-cur').value);
+            const curVol=parseFloat(document.getElementById('vol-curv').value);
+            const wantMix=parseFloat(document.getElementById('vol-want').value);
+            const wantVol=parseFloat(document.getElementById('vol-wantv').value);
+            if(!curMix||!curVol||!wantMix||!wantVol){document.getElementById('vol-result').innerHTML='';return;}
+            
+            // Convert percentages to decimals
+            const cm=curMix/100;
+            const wm=wantMix/100;
+            
+            // Column D calculations (Conc)
+            const d4=cm*curVol;
+            const d5=wm*wantVol;
+            const d6=d5-d4;
+            
+            // Column E calculations (H2O)
+            const e4=curVol-d4;
+            const e5=wantVol-d5;
+            const e6=e5-e4;
+            
+            // Results
+            const percentToAdd=(d6/d5)*100;
+            const volumeToAdd=d6+e6;
+            const typeIToAdd=d6;
+            const waterToAdd=e6;
+            
             document.getElementById('vol-result').innerHTML=
-                `<div class="result-item"><span>Glycol</span><span class="result-value">${g.toFixed(2)} gal</span></div>
-                <div class="result-item"><span>Water</span><span class="result-value">${wa.toFixed(2)} gal</span></div>
-                <div class="result-item"><span>Total</span><span class="result-value">${t.toFixed(2)} gal</span></div>
-                <div class="result-item"><span>% Glycol</span><span class="result-value">${p.toFixed(2)}%</span></div>`;
-            saveToHistory('Vol',{cv,wv,t:t.toFixed(2)});
+                `<div class="result-item"><span>% to Add</span><span class="result-value">${percentToAdd.toFixed(0)}%</span></div>
+                <div class="result-item"><span>Volume to Add</span><span class="result-value">${Math.round(volumeToAdd)} gal</span></div>
+                <div style="margin-top:16px;">
+                    <div style="background:#3b82f6;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
+                        Water to Add: ${Math.round(waterToAdd)} gal
+                    </div>
+                    <div style="background:#f97316;color:white;padding:12px;border-radius:8px;font-weight:600;text-align:center;">
+                        Type I to Add: ${Math.round(typeIToAdd)} gal
+                    </div>
+                </div>`;
+            saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0)});
         }
 
         function calcTote() {
@@ -354,4 +387,3 @@
     </script>
 </body>
 </html>
-
