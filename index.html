@@ -112,7 +112,7 @@
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.1.4</div>
+    <div class="version-badge">v1.1.5</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()">🔄 Update</button>
@@ -137,9 +137,9 @@
             <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
                 <h2>Increase Mix</h2>
-                <input type="number" id="inc-cur" placeholder="Current Mix %" oninput="calcInc()">
-                <input type="number" id="inc-des" placeholder="Desired Mix %" oninput="calcInc()">
-                <input type="number" id="inc-vol" placeholder="Current Volume" oninput="calcInc()">
+                <input type="number" inputmode="decimal" id="inc-cur" placeholder="Current Mix %" oninput="calcInc()">
+                <input type="number" inputmode="decimal" id="inc-des" placeholder="Desired Mix %" oninput="calcInc()">
+                <input type="number" inputmode="decimal" id="inc-vol" placeholder="Current Volume" oninput="calcInc()">
                 <div id="inc-result"></div>
             </div>
         </div>
@@ -148,9 +148,9 @@
             <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
                 <h2>Decrease Mix</h2>
-                <input type="number" id="dec-cur" placeholder="Current Mix %" oninput="calcDec()">
-                <input type="number" id="dec-des" placeholder="Desired Mix %" oninput="calcDec()">
-                <input type="number" id="dec-vol" placeholder="Current Volume" oninput="calcDec()">
+                <input type="number" inputmode="decimal" id="dec-cur" placeholder="Current Mix %" oninput="calcDec()">
+                <input type="number" inputmode="decimal" id="dec-des" placeholder="Desired Mix %" oninput="calcDec()">
+                <input type="number" inputmode="decimal" id="dec-vol" placeholder="Current Volume" oninput="calcDec()">
                 <div id="dec-result"></div>
             </div>
         </div>
@@ -159,10 +159,10 @@
             <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
                 <h2>Increase Volume</h2>
-                <input type="number" id="vol-cur" placeholder="Current Mix %" oninput="calcVol()">
-                <input type="number" id="vol-curv" placeholder="Current Volume" oninput="calcVol()">
-                <input type="number" id="vol-want" placeholder="Wanted Mix %" oninput="calcVol()">
-                <input type="number" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()">
+                <input type="number" inputmode="decimal" id="vol-cur" placeholder="Current Mix %" oninput="calcVol()">
+                <input type="number" inputmode="decimal" id="vol-curv" placeholder="Current Volume" oninput="calcVol()">
+                <input type="number" inputmode="decimal" id="vol-want" placeholder="Wanted Mix %" oninput="calcVol()">
+                <input type="number" inputmode="decimal" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()">
                 <div id="vol-result"></div>
             </div>
         </div>
@@ -171,10 +171,10 @@
             <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
                 <h2>Adding Tote</h2>
-                <input type="number" id="tote-tm" placeholder="Truck Mix %" oninput="calcTote()">
-                <input type="number" id="tote-tv" placeholder="Truck Volume" oninput="calcTote()">
-                <input type="number" id="tote-ttm" placeholder="Tote Mix %" oninput="calcTote()">
-                <input type="number" id="tote-ttv" placeholder="Tote Volume" oninput="calcTote()">
+                <input type="number" inputmode="decimal" id="tote-tm" placeholder="Truck Mix %" oninput="calcTote()">
+                <input type="number" inputmode="decimal" id="tote-tv" placeholder="Truck Volume" oninput="calcTote()">
+                <input type="number" inputmode="decimal" id="tote-ttm" placeholder="Tote Mix %" oninput="calcTote()">
+                <input type="number" inputmode="decimal" id="tote-ttv" placeholder="Tote Volume" oninput="calcTote()">
                 <div id="tote-result"></div>
             </div>
         </div>
