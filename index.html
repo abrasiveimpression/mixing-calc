@@ -91,28 +91,43 @@
             border-radius: 12px;
             font-size: 11px;
         }
-        .update-banner {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: #0ea5e9;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
+        .pdf-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: #f0f9ff;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: #0369a1;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .pdf-link:hover {
+            background: #e0f2fe;
+            border-color: #0ea5e9;
+        }
+        .pdf-icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        .pdf-info {
+            flex: 1;
+        }
+        .pdf-title {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 15px;
+            margin-bottom: 2px;
         }
-        .update-banner:hover {
-            background: #0284c7;
+        .pdf-desc {
+            font-size: 12px;
+            color: #6b7280;
         }
+
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.1.6</div>
+    <div class="version-badge">v1.2.0</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()">🔄 Update</button>
@@ -129,6 +144,7 @@
                 <div class="menu-card" onclick="showPage('dilution')"><h3>📊 Dilution Chart</h3></div>
                 <div class="menu-card" onclick="showPage('aircraft')"><h3>✈️ Aircraft Reference</h3></div>
                 <div class="menu-card" onclick="showPage('airlines')"><h3>🛫 Airline Codes</h3></div>
+                <div class="menu-card" onclick="showPage('pdfs')"><h3>📄 PDF Documents</h3></div>
                 <div class="menu-card" onclick="showPage('notes')"><h3>📝 Notes</h3></div>
             </div>
         </div>
@@ -212,6 +228,14 @@
             </div>
         </div>
 
+        <div class="page" id="pdfs">
+            <button class="back-button" onclick="showPage('menu')">← Back</button>
+            <div class="card">
+                <h2>PDF Documents</h2>
+                <div id="pdf-list"></div>
+            </div>
+        </div>
+
         <div class="page" id="notes">
             <button class="back-button" onclick="showPage('menu')">← Back</button>
             <div class="card">
@@ -228,6 +252,7 @@
             document.getElementById(p).classList.add('active');
             if(p==='notes')loadNotes();if(p==='history')displayHistory();
             if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
+            if(p==='pdfs')loadPdfs();
         }
 
         function calcInc() {
@@ -265,21 +290,17 @@
             const wantVol=parseFloat(document.getElementById('vol-wantv').value);
             if(!curMix||!curVol||!wantMix||!wantVol){document.getElementById('vol-result').innerHTML='';return;}
             
-            // Convert percentages to decimals
             const cm=curMix/100;
             const wm=wantMix/100;
             
-            // Column D calculations (Conc)
             const d4=cm*curVol;
             const d5=wm*wantVol;
             const d6=d5-d4;
             
-            // Column E calculations (H2O)
             const e4=curVol-d4;
             const e5=wantVol-d5;
             const e6=e5-e4;
             
-            // Results
             const percentToAdd=(d6/d5)*100;
             const volumeToAdd=d6+e6;
             const typeIToAdd=d6;
@@ -351,6 +372,45 @@
             s.textContent='Saving...';s.style.color='#0ea5e9';
             setTimeout(()=>{s.textContent='Saved ✓';s.style.color='#10b981';
                 setTimeout(()=>s.style.color='#9ca3af',2000);},500);
+        }
+
+        // PDF Links - Edit this array to add/remove PDFs
+        const pdfLinks = [
+            {
+                title: 'Safety Manual',
+                description: 'Winter operations safety procedures',
+                filename: 'safety-manual.pdf'
+            },
+            {
+                title: 'Deicing Procedures',
+                description: 'Step-by-step deicing guidelines',
+                filename: 'deicing-procedures.pdf'
+            },
+            {
+                title: 'Equipment Guide',
+                description: 'Equipment operation and maintenance',
+                filename: 'equipment-guide.pdf'
+            }
+            // Add more PDFs here following the same format
+        ];
+
+        function loadPdfs() {
+            const list = document.getElementById('pdf-list');
+            
+            if(!pdfLinks.length) {
+                list.innerHTML = '<p style="color:#9ca3af;padding:40px 20px;text-align:center;">No PDF documents available</p>';
+                return;
+            }
+            
+            list.innerHTML = pdfLinks.map(pdf => `
+                <a href="./pdfs/${pdf.filename}" target="_blank" class="pdf-link">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-info">
+                        <div class="pdf-title">${pdf.title}</div>
+                        ${pdf.description ? `<div class="pdf-desc">${pdf.description}</div>` : ''}
+                    </div>
+                </a>
+            `).join('');
         }
 
         const dilutionData=[['100%','1.4230-1.4260','DO NOT USE','DO NOT USE'],['90%/10%','1.4156-1.4186','-39°C/-38°F','DO NOT USE'],['80%/20%','1.4079-1.4106','-39°C/-38°F','DO NOT USE'],['70%/30%','1.3996-1.4026','-43°C/-45°F','DO NOT USE'],['65%/35%','1.3953-1.3983','-41.5°C/-43°F','-31°C/-24°F'],['60%/40%','1.3911-1.3941','-40°C/-40°F','-30°C/-22°F'],['59%/41%','1.3905-1.3910','-39°C/-39°F','-29°C/-21°F'],['58%/42%','1.3899-1.3904','-39°C/-38°F','-29°C/-20°F'],['57%/43%','1.3893-1.3898','-38°C/-36°F','-28°C/-18°F'],['56%/44%','1.3886-1.3892','-37°C/-34°F','-27°C/-16°F'],['55%/45%','1.3879-1.3885','-36°C/-32°F','-26°C/-14°F'],['54%/46%','1.3872-1.3878','-34°C/-29°F','-24°C/-11°F'],['53%/47%','1.3865-1.3871','-32°C/-26°F','-22°C/-8°F'],['52%/48%','1.3858-1.3864','-31°C/-23°F','-21°C/-5°F'],['51%/49%','1.3851-1.3857','-29°C/-20°F','-19°C/-2°F'],['50%/50%','1.3820-1.3850','-27°C/-17°F','-17°C/+1°F'],['49%/51%','1.3811-1.3819','-26°C/-15°F','-16°C/+3°F'],['48%/52%','1.3803-1.3810','-25°C/-13°F','-15°C/+5°F'],['47%/53%','1.3795-1.3802','-24°C/-11°F','-14°C/+7°F'],['46%/54%','1.3787-1.3794','-23°C/-9°F','-13°C/+9°F'],['45%/55%','1.3779-1.3786','-22°C/-8°F','-12°C/+10°F'],['44%/56%','1.3771-1.3778','-21°C/-6°F','-11°C/+12°F'],['43%/57%','1.3763-1.3770','-21°C/-5°F','-11°C/+13°F'],['42%/58%','1.3755-1.3762','-19°C/-3°F','-9°C/+15°F'],['41%/59%','1.3747-1.3754','-19°C/-2°F','-9°C/+16°F'],['40%/60%','1.3716-1.3746','-18°C/0°F','-8°C/+18°F'],['39%/61%','1.3707-1.3715','-17°C/+2°F','-7°C/+20°F'],['38%/62%','1.3699-1.3706','-16°C/+3°F','-6°C/+21°F'],['37%/63%','1.3691-1.3698','-15°C/+5°F','-5°C/+23°F'],['36%/64%','1.3682-1.3690','-14°C/+6°F','-4°C/+24°F'],['35%/65%','1.3673-1.3681','-13°C/+7°F','-3°C/+25°F'],['34%/66%','1.3664-1.3672','-13°C/+8°F','-3°C/+26°F'],['33%/67%','1.3655-1.3663','-13°C/+9°F','-3°C/+27°F'],['32%/68%','1.3646-1.3654','-12°C/+10°F','-2°C/+28°F'],['31%/69%','1.3637-1.3645','-12°C/+11°F','-2°C/+29°F'],['30%/70%','1.3606-1.3636','-11°C/+12°F','-1°C/+30°F'],['29%/71%','1.3600-1.3605','-11°C/+12°F','-1°C/+30°F'],['28%/72%','1.3593-1.3599','-11°C/+13°F','-1°C/+31°F'],['27%/73%','1.3587-1.3592','-11°C/+13°F','-1°C/+31°F'],['26%/74%','1.3580-1.3586','-10°C/+14°F','0°C/+32°F'],['25%/75%','1.3573-1.3579','-10°C/+14°F','0°C/+32°F'],['24%/76%','1.3565-1.3573','-9°C/+15°F','+1°C/+33°F'],['23%/77%','1.3557-1.3565','-8°C/+18°F','+2°C/+36°F'],['22%/78%','1.3549-1.3557','-8°C/+18°F','+2°C/+36°F'],['21%/79%','1.3541-1.3549','-7°C/+19°F','+3°C/+37°F'],['20%/80%','1.3511-1.3541','-7°C/+19°F','+3°C/+37°F']];
