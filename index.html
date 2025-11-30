@@ -112,7 +112,7 @@
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.1.3</div>
+    <div class="version-badge">v1.1.4</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()">🔄 Update</button>
@@ -237,8 +237,10 @@
             if(!c||!d||!v){document.getElementById('inc-result').innerHTML='';return;}
             const g=v*((d-c)/(100-d)),t=v+g;
             document.getElementById('inc-result').innerHTML=
-                `<div class="result-item"><span>Glycol to Add</span><span class="result-value">${g.toFixed(2)} gal</span></div>
-                <div class="result-item"><span>Total Volume</span><span class="result-value">${t.toFixed(2)} gal</span></div>`;
+                `<div style="background:#f97316;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
+                    Type I to Add: ${g.toFixed(2)} gal
+                </div>
+                <div class="result-item"><span>New Total Volume</span><span class="result-value">${t.toFixed(2)} gal</span></div>`;
             saveToHistory('Inc',{c,d,v,g:g.toFixed(2)});
         }
 
@@ -249,8 +251,10 @@
             if(!c||!d||!v){document.getElementById('dec-result').innerHTML='';return;}
             const w=v*((c-d)/d),t=v+w;
             document.getElementById('dec-result').innerHTML=
-                `<div class="result-item"><span>Water to Add</span><span class="result-value">${w.toFixed(2)} gal</span></div>
-                <div class="result-item"><span>Total Volume</span><span class="result-value">${t.toFixed(2)} gal</span></div>`;
+                `<div style="background:#3b82f6;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
+                    Water to Add: ${w.toFixed(2)} gal
+                </div>
+                <div class="result-item"><span>New Total Volume</span><span class="result-value">${t.toFixed(2)} gal</span></div>`;
             saveToHistory('Dec',{c,d,v,w:w.toFixed(2)});
         }
 
