@@ -599,13 +599,9 @@
                     }
                     caches.keys().then(names=>{
                         names.forEach(name=>caches.delete(name));
-                    }).then(()=>{
-                        alert('App updated! Reloading...');
-                        window.location.reload(true);
-                    });
+                    }).then(()=>window.location.reload(true));
                 });
             }else{
-                alert('Reloading app...');
                 window.location.reload(true);
             }
         }
