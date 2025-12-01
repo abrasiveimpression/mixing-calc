@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mixing-calc-v1.2.1';
+const CACHE_NAME = 'mixing-calc-v1.2.2';
 const urlsToCache = [
     './',
     './index.html'
@@ -6,7 +6,7 @@ const urlsToCache = [
 
 // Install event - cache files
 self.addEventListener('install', (event) => {
-    console.log('Service Worker installing...');
+    console.log('Service Worker v1.2.2 installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
@@ -14,12 +14,15 @@ self.addEventListener('install', (event) => {
                 return cache.addAll(urlsToCache);
             })
             .then(() => self.skipWaiting())
+            .catch((error) => {
+                console.error('Cache installation failed:', error);
+            })
     );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker activating...');
+    console.log('Service Worker v1.2.2 activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -56,7 +59,7 @@ self.addEventListener('fetch', (event) => {
                 
                 return fetch(fetchRequest).then((response) => {
                     // Check if valid response
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                    if (!response || response.status !== 200) {
                         return response;
                     }
                     
@@ -71,8 +74,15 @@ self.addEventListener('fetch', (event) => {
                 });
             })
             .catch(() => {
-                // If both cache and network fail, could return a fallback page
-                console.log('Fetch failed; returning offline page instead.');
+                // If both cache and network fail, return a fallback response
+                console.log('Fetch failed; returning offline response.');
+                return new Response('App is offline. Please check your connection.', {
+                    status: 503,
+                    statusText: 'Service Unavailable',
+                    headers: new Headers({
+                        'Content-Type': 'text/plain'
+                    })
+                });
             })
     );
 });
