@@ -301,7 +301,7 @@
             const e5=wantVol-d5;
             const e6=e5-e4;
             
-            const percentToAdd=(d6/d5)*100;
+            const percentToAdd=(d6/(d6+e6))*100;
             const volumeToAdd=d6+e6;
             const typeIToAdd=d6;
             const waterToAdd=e6;
@@ -471,6 +471,7 @@
     </script>
 </body>
 </html>
+
 
 
 
