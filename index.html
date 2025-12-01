@@ -154,7 +154,7 @@
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.2.2</div>
+    <div class="version-badge">v1.2.3</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()" aria-label="Update application">🔄 Update</button>
@@ -425,7 +425,7 @@
                         Type I to Add: ${Math.round(typeIToAdd)} gal
                     </div>
                 </div>`;
-            saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0)});
+            saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0),water:Math.round(waterToAdd),typeI:Math.round(typeIToAdd)});
         }
 
         function calcTote() {
@@ -475,7 +475,7 @@
                 let det='';
                 if(x.type==='Inc')det=`${x.data.c}% → ${x.data.d}% | Add ${x.data.g} gal glycol`;
                 else if(x.type==='Dec')det=`${x.data.c}% → ${x.data.d}% | Add ${x.data.w} gal water`;
-                else if(x.type==='Vol')det=`${x.data.curVol} → ${x.data.wantVol} gal | Add ${x.data.vol} gal at ${x.data.pct}%`;
+                else if(x.type==='Vol')det=`${x.data.curVol} → ${x.data.wantVol} gal | Add ${x.data.vol} gal at ${x.data.pct}% (${x.data.water} gal water + ${x.data.typeI} gal Type I)`;
                 else if(x.type==='Tote')det=`${x.data.tm}% + ${x.data.ttm}% = ${x.data.nm}%`;
                 return `<div style="padding:12px;background:#f0f9ff;border-radius:8px;margin-bottom:8px;">
                     <div style="font-weight:600;color:#0369a1;">${x.type}</div>
