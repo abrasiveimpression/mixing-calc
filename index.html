@@ -228,54 +228,6 @@
         .external-link-btn:hover {
             background: #059669;
         }
-        .fullscreen-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            padding: 20px;
-        }
-        .fullscreen-overlay.active {
-            display: flex;
-            flex-direction: column;
-        }
-        .fullscreen-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 16px;
-            border-radius: 10px;
-        }
-        .fullscreen-header h3 {
-            margin: 0;
-            color: #0369a1;
-            font-size: 16px;
-        }
-        .close-overlay-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .close-overlay-btn:hover {
-            background: #dc2626;
-        }
-        .fullscreen-iframe {
-            flex: 1;
-            border: none;
-            border-radius: 10px;
-            background: white;
-        }
     </style>
 </head>
 <body>
@@ -354,15 +306,17 @@
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
                 <h2>Truck Board</h2>
-                <p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
-                    Choose how you'd like to view the truck board:
-                </p>
-                <button onclick="openFullscreenTruckBoard()" style="background: #0ea5e9; color: white; border: none; padding: 16px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; margin-bottom: 12px;">
-                    📱 View in App (Fullscreen)
-                </button>
+                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <p style="margin: 0; color: #92400e; font-size: 14px;">
+                        ℹ️ Due to security restrictions, the Truck Board must be opened in a new browser tab. Click the button below to view it.
+                    </p>
+                </div>
                 <a href="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" target="_blank" class="external-link-btn" style="display: block; text-align: center; font-size: 16px; padding: 16px;">
-                    🔗 Open in New Browser Tab
+                    📋 Open Truck Board Display
                 </a>
+                <p style="color: #6b7280; font-size: 13px; margin-top: 12px; text-align: center; font-style: italic;">
+                    Tip: After viewing the truck board, use your browser's back button or close the tab to return here.
+                </p>
             </div>
         </div>
 
@@ -412,7 +366,7 @@
                 </div>
                 
                 <a href="https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw" target="_blank" class="external-link-btn">📡 View Full ATIS Display</a>
-                <a href="https://aviationweather.gov/metar/data?ids=KPIT&format=decoded&hours=0&taf=off&layout=off" target="_blank" class="external-link-btn" style="background: #0ea5e9; margin-left: 8px;">🌤️ View Detailed Weather</a>
+                <a href="https://www.aviationweather.gov/metar/data?ids=KPIT&format=decoded&hours=0&taf=off&layout=off" target="_blank" class="external-link-btn" style="background: #0ea5e9; margin-left: 8px;">🌤️ View Detailed Weather</a>
             </div>
         </div>
 
@@ -466,15 +420,6 @@
                 <div id="notes-status" style="color: #9ca3af; font-size: 13px;">Auto-saved</div>
             </div>
         </div>
-    </div>
-
-    <!-- Fullscreen Overlays -->
-    <div class="fullscreen-overlay" id="truckboard-overlay">
-        <div class="fullscreen-header">
-            <h3>🚛 Truck Board Display</h3>
-            <button class="close-overlay-btn" onclick="closeFullscreenOverlay()">✕ Close & Return to Menu</button>
-        </div>
-        <iframe class="fullscreen-iframe" id="truckboard-iframe" title="Truck Board Display"></iframe>
     </div>
 
     <script>
@@ -888,29 +833,6 @@
         function loadAircraft(){const t=document.getElementById('aircraft-body');if(t.innerHTML)return;t.innerHTML=aircraftData.map(r=>`<tr>${r.map((c,i)=>`<td style="background:${i===0?'#f9fafb':'white'};font-size:10px;line-height:1.3;">${c}</td>`).join('')}</tr>`).join('');}
 
         function loadAirlines(){const t=document.getElementById('airlines-body');if(t.innerHTML)return;t.innerHTML=airlinesData.map(r=>`<tr>${r.map((c,i)=>`<td style="background:${i===0?'#f9fafb':'white'};">${c}</td>`).join('')}</tr>`).join('');}
-
-        // Fullscreen Overlay Functions
-        function openFullscreenTruckBoard() {
-            const overlay = document.getElementById('truckboard-overlay');
-            const iframe = document.getElementById('truckboard-iframe');
-            iframe.src = 'https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display';
-            overlay.classList.add('active');
-        }
-
-        function closeFullscreenOverlay() {
-            const overlay = document.getElementById('truckboard-overlay');
-            const iframe = document.getElementById('truckboard-iframe');
-            overlay.classList.remove('active');
-            // Clear iframe to stop loading
-            iframe.src = 'about:blank';
-        }
-
-        // Close overlay with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeFullscreenOverlay();
-            }
-        });
 
 
         // Service Worker Registration
