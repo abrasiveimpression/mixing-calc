@@ -306,10 +306,14 @@
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
                 <h2>Truck Board</h2>
-                <div class="iframe-container">
-                    <iframe src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display"></iframe>
+                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <p style="margin: 0; color: #92400e; font-size: 14px;">
+                        ⚠️ The Truck Board cannot be embedded due to security restrictions. Please use the button below to open it in a new tab.
+                    </p>
                 </div>
-                <a href="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" target="_blank" class="external-link-btn">Open in New Tab</a>
+                <a href="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" target="_blank" class="external-link-btn" style="display: block; text-align: center; font-size: 16px; padding: 16px;">
+                    📋 Open Truck Board Display
+                </a>
             </div>
         </div>
 
@@ -331,26 +335,35 @@
                 <button class="refresh-btn" onclick="loadATIS()">🔄 Refresh Data</button>
                 
                 <div style="margin-top: 20px;">
-                    <div class="info-box">
-                        <div class="info-label">Current ATIS Letter</div>
-                        <div class="info-value" id="atis-letter">Loading...</div>
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <p style="margin: 0 0 8px 0; color: #92400e; font-size: 14px; font-weight: 600;">
+                            ⚠️ ATIS Letter Unavailable
+                        </p>
+                        <p style="margin: 0; color: #92400e; font-size: 13px;">
+                            The ATIS letter cannot be automatically retrieved due to security restrictions. Please use the link below to view the current ATIS information.
+                        </p>
                     </div>
                     
                     <div class="info-box">
-                        <div class="info-label">Temperature</div>
+                        <div class="info-label">Temperature (KPIT)</div>
                         <div class="info-value" id="temperature">Loading...</div>
                     </div>
                     
                     <div class="info-box">
-                        <div class="info-label">Dew Point</div>
+                        <div class="info-label">Dew Point (KPIT)</div>
                         <div class="info-value" id="dewpoint">Loading...</div>
                     </div>
                     
                     <h3 style="margin-top: 20px; margin-bottom: 10px; color: #0369a1;">Full METAR</h3>
                     <div class="metar-box" id="metar-full">Loading...</div>
+                    
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px; font-style: italic;">
+                        Last updated: <span id="metar-time">--</span>
+                    </div>
                 </div>
                 
-                <a href="https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw" target="_blank" class="external-link-btn">Open ATIS Display</a>
+                <a href="https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw" target="_blank" class="external-link-btn">📡 View Full ATIS Display</a>
+                <a href="https://aviationweather.gov/metar/data?ids=KPIT&format=decoded&hours=0&taf=off&layout=off" target="_blank" class="external-link-btn" style="background: #0ea5e9; margin-left: 8px;">🌤️ View Detailed Weather</a>
             </div>
         </div>
 
@@ -595,75 +608,76 @@
         // ATIS and METAR Functions
         async function loadATIS() {
             try {
-                // Fetch ATIS Letter
-                document.getElementById('atis-letter').textContent = 'Loading...';
-                const atisResponse = await fetch('https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw');
-                const atisHTML = await atisResponse.text();
-                
-                // Parse ATIS letter from HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(atisHTML, 'text/html');
-                const atisLetter = extractATISLetter(doc);
-                
-                document.getElementById('atis-letter').textContent = atisLetter || 'N/A';
-                
-                // Fetch METAR
+                // Reset display
                 document.getElementById('temperature').textContent = 'Loading...';
                 document.getElementById('dewpoint').textContent = 'Loading...';
                 document.getElementById('metar-full').textContent = 'Loading...';
+                document.getElementById('metar-time').textContent = '--';
                 
+                // Fetch METAR using CORS proxy
                 const station = 'KPIT';
-                const metarResponse = await fetch(`https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0`);
-                const metarText = await metarResponse.text();
+                const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0`;
+                
+                // Try direct fetch first
+                try {
+                    const metarResponse = await fetch(metarURL);
+                    const metarText = await metarResponse.text();
+                    
+                    if (metarText && metarText.trim() && !metarText.includes('error')) {
+                        displayMETARData(metarText);
+                        return;
+                    }
+                } catch (directError) {
+                    console.log('Direct fetch failed, trying CORS proxy...');
+                }
+                
+                // If direct fetch fails, try with CORS proxy
+                const proxyURL = `https://corsproxy.io/?${encodeURIComponent(metarURL)}`;
+                const proxyResponse = await fetch(proxyURL);
+                const metarText = await proxyResponse.text();
                 
                 if (metarText && metarText.trim()) {
-                    document.getElementById('metar-full').textContent = metarText;
-                    
-                    // Parse temperature and dew point
-                    const weatherData = parseMETAR(metarText);
-                    document.getElementById('temperature').textContent = weatherData.temp || 'N/A';
-                    document.getElementById('dewpoint').textContent = weatherData.dewpoint || 'N/A';
+                    displayMETARData(metarText);
                 } else {
-                    document.getElementById('metar-full').textContent = 'No METAR data available';
-                    document.getElementById('temperature').textContent = 'N/A';
-                    document.getElementById('dewpoint').textContent = 'N/A';
+                    throw new Error('No METAR data received');
                 }
+                
             } catch (error) {
-                console.error('Error loading ATIS/METAR:', error);
-                document.getElementById('atis-letter').textContent = 'Error loading';
+                console.error('Error loading METAR:', error);
                 document.getElementById('temperature').textContent = 'Error';
                 document.getElementById('dewpoint').textContent = 'Error';
-                document.getElementById('metar-full').textContent = 'Error loading METAR data. Please try again.';
+                document.getElementById('metar-full').innerHTML = `
+                    <div style="color: #dc2626;">
+                        Unable to load METAR data. This may be due to network restrictions.<br><br>
+                        Please use the "View Detailed Weather" button below to access current weather information.
+                    </div>
+                `;
+                document.getElementById('metar-time').textContent = 'Error';
             }
         }
 
-        function extractATISLetter(doc) {
-            // Try to find ATIS letter in the document
-            // This may need adjustment based on the actual HTML structure
-            const bodyText = doc.body.textContent || doc.body.innerText || '';
+        function displayMETARData(metarText) {
+            // Display full METAR
+            document.getElementById('metar-full').textContent = metarText;
             
-            // Look for patterns like "Information A" or "ATIS A" etc.
-            const patterns = [
-                /Information\s+([A-Z])/i,
-                /ATIS\s+([A-Z])/i,
-                /\b([A-Z])\s+current/i,
-                /current.*\b([A-Z])\b/i
-            ];
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('metar-time').textContent = now.toLocaleTimeString();
             
-            for (const pattern of patterns) {
-                const match = bodyText.match(pattern);
-                if (match && match[1]) {
-                    return match[1].toUpperCase();
-                }
+            // Parse temperature and dew point
+            const weatherData = parseMETAR(metarText);
+            
+            if (weatherData.temp) {
+                document.getElementById('temperature').textContent = weatherData.temp;
+            } else {
+                document.getElementById('temperature').textContent = 'N/A';
             }
             
-            // If no pattern found, look for single capital letters
-            const singleLetter = bodyText.match(/\b([A-Z])\b/);
-            if (singleLetter && singleLetter[1]) {
-                return singleLetter[1];
+            if (weatherData.dewpoint) {
+                document.getElementById('dewpoint').textContent = weatherData.dewpoint;
+            } else {
+                document.getElementById('dewpoint').textContent = 'N/A';
             }
-            
-            return 'N/A';
         }
 
         function parseMETAR(metar) {
@@ -685,8 +699,14 @@
                     dewpoint = '-' + dewpoint.substring(1);
                 }
                 
-                result.temp = `${parseInt(temp)}°C`;
-                result.dewpoint = `${parseInt(dewpoint)}°C`;
+                // Parse to integers and add unit
+                const tempC = parseInt(temp);
+                const dewC = parseInt(dewpoint);
+                const tempF = Math.round((tempC * 9/5) + 32);
+                const dewF = Math.round((dewC * 9/5) + 32);
+                
+                result.temp = `${tempC}°C / ${tempF}°F`;
+                result.dewpoint = `${dewC}°C / ${dewF}°F`;
             }
             
             return result;
