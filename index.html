@@ -151,10 +151,87 @@
             color: #9ca3af;
             font-size: 14px;
         }
+        .iframe-container {
+            width: 100%;
+            height: 70vh;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+        }
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0369a1;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+        .refresh-btn {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .refresh-btn:hover {
+            background: #0284c7;
+        }
+        .metar-box {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            margin-top: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .external-link-btn {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .external-link-btn:hover {
+            background: #059669;
+        }
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.2.3</div>
+    <div class="version-badge">v1.3.0</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()" aria-label="Update application">🔄 Update</button>
@@ -167,6 +244,9 @@
                 <div class="menu-card" onclick="showPage('decrease')" role="button" tabindex="0" aria-label="Decrease Mix Calculator"><h3>Decrease Mix</h3></div>
                 <div class="menu-card" onclick="showPage('volume')" role="button" tabindex="0" aria-label="Increase Volume Calculator"><h3>Increase Volume</h3></div>
                 <div class="menu-card" onclick="showPage('tote')" role="button" tabindex="0" aria-label="Tote to Truck Calculator"><h3>Tote to Truck</h3></div>
+                <div class="menu-card" onclick="showPage('truckboard')" role="button" tabindex="0" aria-label="View Truck Board"><h3>🚛 Truck Board</h3></div>
+                <div class="menu-card" onclick="showPage('truckboard-edit')" role="button" tabindex="0" aria-label="Edit Truck Board"><h3>✏️ Edit Truck Board</h3></div>
+                <div class="menu-card" onclick="showPage('atis')" role="button" tabindex="0" aria-label="ATIS and Weather"><h3>📡 ATIS & Weather</h3></div>
                 <div class="menu-card" onclick="showPage('history')" role="button" tabindex="0" aria-label="View calculation history"><h3>📋 History</h3></div>
                 <div class="menu-card" onclick="showPage('dilution')" role="button" tabindex="0" aria-label="View dilution chart"><h3>📊 Dilution Chart</h3></div>
                 <div class="menu-card" onclick="showPage('aircraft')" role="button" tabindex="0" aria-label="Aircraft reference guide"><h3>✈️ Aircraft Reference</h3></div>
@@ -219,6 +299,58 @@
                 <input type="number" inputmode="decimal" id="tote-ttm" placeholder="Tote Mix %" oninput="calcTote()" aria-label="Tote mix percentage" min="0" max="100">
                 <input type="number" inputmode="decimal" id="tote-ttv" placeholder="Tote Volume" oninput="calcTote()" aria-label="Tote volume in gallons" min="0">
                 <div id="tote-result"></div>
+            </div>
+        </div>
+
+        <div class="page" id="truckboard">
+            <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
+            <div class="card">
+                <h2>Truck Board</h2>
+                <div class="iframe-container">
+                    <iframe src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display"></iframe>
+                </div>
+                <a href="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" target="_blank" class="external-link-btn">Open in New Tab</a>
+            </div>
+        </div>
+
+        <div class="page" id="truckboard-edit">
+            <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
+            <div class="card">
+                <h2>Edit Truck Board</h2>
+                <div class="iframe-container">
+                    <iframe src="https://tb.kpiticeman.com/" title="Truck Board Editor"></iframe>
+                </div>
+                <a href="https://tb.kpiticeman.com/" target="_blank" class="external-link-btn">Open in New Tab</a>
+            </div>
+        </div>
+
+        <div class="page" id="atis">
+            <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
+            <div class="card">
+                <h2>ATIS & Weather</h2>
+                <button class="refresh-btn" onclick="loadATIS()">🔄 Refresh Data</button>
+                
+                <div style="margin-top: 20px;">
+                    <div class="info-box">
+                        <div class="info-label">Current ATIS Letter</div>
+                        <div class="info-value" id="atis-letter">Loading...</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="info-label">Temperature</div>
+                        <div class="info-value" id="temperature">Loading...</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="info-label">Dew Point</div>
+                        <div class="info-value" id="dewpoint">Loading...</div>
+                    </div>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #0369a1;">Full METAR</h3>
+                    <div class="metar-box" id="metar-full">Loading...</div>
+                </div>
+                
+                <a href="https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw" target="_blank" class="external-link-btn">Open ATIS Display</a>
             </div>
         </div>
 
@@ -280,7 +412,7 @@
             document.getElementById(p).classList.add('active');
             if(p==='notes')loadNotes();if(p==='history')displayHistory();
             if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
-            if(p==='pdfs')loadPdfs();
+            if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();
         }
 
         function validateInput(value, name, min = 0, max = null) {
@@ -460,6 +592,106 @@
             saveToHistory('Tote',{tm:(tm*100).toFixed(1),ttm:(ttm*100).toFixed(1),nm:(nm*100).toFixed(2)});
         }
 
+        // ATIS and METAR Functions
+        async function loadATIS() {
+            try {
+                // Fetch ATIS Letter
+                document.getElementById('atis-letter').textContent = 'Loading...';
+                const atisResponse = await fetch('https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw');
+                const atisHTML = await atisResponse.text();
+                
+                // Parse ATIS letter from HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(atisHTML, 'text/html');
+                const atisLetter = extractATISLetter(doc);
+                
+                document.getElementById('atis-letter').textContent = atisLetter || 'N/A';
+                
+                // Fetch METAR
+                document.getElementById('temperature').textContent = 'Loading...';
+                document.getElementById('dewpoint').textContent = 'Loading...';
+                document.getElementById('metar-full').textContent = 'Loading...';
+                
+                const station = 'KPIT';
+                const metarResponse = await fetch(`https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0`);
+                const metarText = await metarResponse.text();
+                
+                if (metarText && metarText.trim()) {
+                    document.getElementById('metar-full').textContent = metarText;
+                    
+                    // Parse temperature and dew point
+                    const weatherData = parseMETAR(metarText);
+                    document.getElementById('temperature').textContent = weatherData.temp || 'N/A';
+                    document.getElementById('dewpoint').textContent = weatherData.dewpoint || 'N/A';
+                } else {
+                    document.getElementById('metar-full').textContent = 'No METAR data available';
+                    document.getElementById('temperature').textContent = 'N/A';
+                    document.getElementById('dewpoint').textContent = 'N/A';
+                }
+            } catch (error) {
+                console.error('Error loading ATIS/METAR:', error);
+                document.getElementById('atis-letter').textContent = 'Error loading';
+                document.getElementById('temperature').textContent = 'Error';
+                document.getElementById('dewpoint').textContent = 'Error';
+                document.getElementById('metar-full').textContent = 'Error loading METAR data. Please try again.';
+            }
+        }
+
+        function extractATISLetter(doc) {
+            // Try to find ATIS letter in the document
+            // This may need adjustment based on the actual HTML structure
+            const bodyText = doc.body.textContent || doc.body.innerText || '';
+            
+            // Look for patterns like "Information A" or "ATIS A" etc.
+            const patterns = [
+                /Information\s+([A-Z])/i,
+                /ATIS\s+([A-Z])/i,
+                /\b([A-Z])\s+current/i,
+                /current.*\b([A-Z])\b/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = bodyText.match(pattern);
+                if (match && match[1]) {
+                    return match[1].toUpperCase();
+                }
+            }
+            
+            // If no pattern found, look for single capital letters
+            const singleLetter = bodyText.match(/\b([A-Z])\b/);
+            if (singleLetter && singleLetter[1]) {
+                return singleLetter[1];
+            }
+            
+            return 'N/A';
+        }
+
+        function parseMETAR(metar) {
+            const result = { temp: null, dewpoint: null };
+            
+            // METAR temperature format: M01/M03 or 15/08
+            // M indicates minus (negative temperature)
+            const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
+            
+            if (tempMatch) {
+                let temp = tempMatch[1];
+                let dewpoint = tempMatch[2];
+                
+                // Convert to readable format
+                if (temp.startsWith('M')) {
+                    temp = '-' + temp.substring(1);
+                }
+                if (dewpoint.startsWith('M')) {
+                    dewpoint = '-' + dewpoint.substring(1);
+                }
+                
+                result.temp = `${parseInt(temp)}°C`;
+                result.dewpoint = `${parseInt(dewpoint)}°C`;
+            }
+            
+            return result;
+        }
+
         function saveToHistory(t,d) {
             const h=JSON.parse(localStorage.getItem('mixHist')||'[]');
             h.unshift({type:t,data:d,time:new Date().toISOString()});
@@ -621,5 +853,3 @@
     </script>
 </body>
 </html>
-
-
