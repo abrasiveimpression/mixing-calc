@@ -282,10 +282,36 @@
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
                 <h2>Increase Volume</h2>
-                <input type="number" inputmode="decimal" id="vol-cur" placeholder="Current Mix %" oninput="calcVol()" aria-label="Current mix percentage" min="0" max="100">
+                
+                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                    <strong>Current Mix:</strong> Enter either percentage OR freeze point
+                </div>
+                
+                <input type="number" inputmode="decimal" id="vol-cur" placeholder="Current Mix %" oninput="handleVolCurInput()" aria-label="Current mix percentage" min="0" max="100">
+                <input type="number" inputmode="decimal" id="vol-cur-freeze" placeholder="OR Current Freeze Point (°C)" oninput="handleVolCurFreezeInput()" aria-label="Current freeze point in Celsius" max="0">
+                
                 <input type="number" inputmode="decimal" id="vol-curv" placeholder="Current Volume" oninput="calcVol()" aria-label="Current volume in gallons" min="0">
-                <input type="number" inputmode="decimal" id="vol-want" placeholder="Wanted Mix %" oninput="calcVol()" aria-label="Wanted mix percentage" min="0" max="100">
+                
+                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                    <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
+                </div>
+                
+                <input type="number" inputmode="decimal" id="vol-want" placeholder="Wanted Mix %" oninput="handleVolWantInput()" aria-label="Wanted mix percentage" min="0" max="100">
+                <input type="number" inputmode="decimal" id="vol-want-freeze" placeholder="OR Wanted Freeze Point (°C)" oninput="handleVolWantFreezeInput()" aria-label="Wanted freeze point in Celsius" max="0">
+                
                 <input type="number" inputmode="decimal" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()" aria-label="Wanted volume in gallons" min="0">
+                
+                <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
+                        <input type="checkbox" id="vol-pumpout" onchange="calcVol()" style="width: auto; margin-right: 8px;">
+                        <span>Need to pump out fluid first?</span>
+                    </label>
+                </div>
+                
+                <div id="vol-pumpout-input" style="display: none; margin-top: 12px;">
+                    <input type="number" inputmode="decimal" id="vol-pumpout-amount" placeholder="Gallons to Pump Out" oninput="calcVol()" aria-label="Gallons to pump out" min="0">
+                </div>
+                
                 <div id="vol-result"></div>
             </div>
         </div>
@@ -528,7 +554,12 @@
             const curVol=parseFloat(document.getElementById('vol-curv').value);
             const wantMix=parseFloat(document.getElementById('vol-want').value);
             const wantVol=parseFloat(document.getElementById('vol-wantv').value);
+            const pumpOutChecked = document.getElementById('vol-pumpout').checked;
+            const pumpOutAmount = parseFloat(document.getElementById('vol-pumpout-amount').value) || 0;
             const resultDiv = document.getElementById('vol-result');
+            
+            // Show/hide pump out input
+            document.getElementById('vol-pumpout-input').style.display = pumpOutChecked ? 'block' : 'none';
             
             if(!curMix||!curVol||!wantMix||!wantVol){resultDiv.innerHTML='';return;}
             
@@ -547,19 +578,43 @@
                 }
             }
             
-            if (wantVol <= curVol) {
-                resultDiv.innerHTML = '<div class="error-message">Wanted volume must be greater than current volume</div>';
+            if (pumpOutChecked && pumpOutAmount <= 0) {
+                resultDiv.innerHTML = '<div class="error-message">Please enter gallons to pump out</div>';
+                return;
+            }
+            
+            if (pumpOutChecked && pumpOutAmount >= curVol) {
+                resultDiv.innerHTML = '<div class="error-message">Cannot pump out more than current volume</div>';
+                return;
+            }
+            
+            // Calculate with pump out if checked
+            let effectiveCurVol = curVol;
+            let pumpOutHtml = '';
+            
+            if (pumpOutChecked && pumpOutAmount > 0) {
+                effectiveCurVol = curVol - pumpOutAmount;
+                pumpOutHtml = `
+                    <div style="background:#ef4444;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
+                        Step 1: Pump Out ${pumpOutAmount.toFixed(2)} gal
+                    </div>
+                    <div class="result-item"><span>Volume After Pump Out</span><span class="result-value">${effectiveCurVol.toFixed(2)} gal</span></div>
+                    <div style="height: 1px; background: #e5e7eb; margin: 16px 0;"></div>`;
+            }
+            
+            if (wantVol <= effectiveCurVol) {
+                resultDiv.innerHTML = '<div class="error-message">Wanted volume must be greater than current volume' + (pumpOutChecked ? ' after pump out' : '') + '</div>';
                 return;
             }
             
             const cm=curMix/100;
             const wm=wantMix/100;
             
-            const d4=cm*curVol;
+            const d4=cm*effectiveCurVol;
             const d5=wm*wantVol;
             const d6=d5-d4;
             
-            const e4=curVol-d4;
+            const e4=effectiveCurVol-d4;
             const e5=wantVol-d5;
             const e6=e5-e4;
             
@@ -568,10 +623,14 @@
             const typeIToAdd=d6;
             const waterToAdd=e6;
             
+            const stepLabel = pumpOutChecked ? 'Step 2: Add Fluid' : '';
+            
             resultDiv.innerHTML=
+                pumpOutHtml +
                 `<div class="result-item"><span>% to Add</span><span class="result-value">${percentToAdd.toFixed(0)}%</span></div>
                 <div class="result-item"><span>Volume to Add</span><span class="result-value">${Math.round(volumeToAdd)} gal</span></div>
                 <div style="margin-top:16px;">
+                    ${stepLabel ? `<div style="color: #0369a1; font-weight: 600; margin-bottom: 8px;">${stepLabel}</div>` : ''}
                     <div style="background:#3b82f6;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
                         Water to Add: ${Math.round(waterToAdd)} gal
                     </div>
@@ -579,7 +638,105 @@
                         Type I to Add: ${Math.round(typeIToAdd)} gal
                     </div>
                 </div>`;
-            saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0),water:Math.round(waterToAdd),typeI:Math.round(typeIToAdd)});
+            saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0),water:Math.round(waterToAdd),typeI:Math.round(typeIToAdd),pumpOut:pumpOutChecked?pumpOutAmount:0});
+        }
+
+        // Freeze point to percentage conversion based on dilution table
+        function freezePointToPercentage(freezeC) {
+            // Dilution table mapping (freeze point in C to percentage)
+            const freezeMap = [
+                {freeze: -43, pct: 70},
+                {freeze: -41.5, pct: 65},
+                {freeze: -40, pct: 60},
+                {freeze: -39, pct: 59},
+                {freeze: -39, pct: 58},
+                {freeze: -38, pct: 57},
+                {freeze: -37, pct: 56},
+                {freeze: -36, pct: 55},
+                {freeze: -34, pct: 54},
+                {freeze: -32, pct: 53},
+                {freeze: -31, pct: 52},
+                {freeze: -29, pct: 51},
+                {freeze: -27, pct: 50},
+                {freeze: -26, pct: 49},
+                {freeze: -25, pct: 48},
+                {freeze: -24, pct: 47},
+                {freeze: -23, pct: 46},
+                {freeze: -22, pct: 45},
+                {freeze: -21, pct: 44},
+                {freeze: -21, pct: 43},
+                {freeze: -19, pct: 42},
+                {freeze: -19, pct: 41},
+                {freeze: -18, pct: 40},
+                {freeze: -17, pct: 39},
+                {freeze: -16, pct: 38},
+                {freeze: -15, pct: 37},
+                {freeze: -14, pct: 36},
+                {freeze: -13, pct: 35},
+                {freeze: -13, pct: 34},
+                {freeze: -13, pct: 33},
+                {freeze: -12, pct: 32},
+                {freeze: -12, pct: 31},
+                {freeze: -11, pct: 30},
+                {freeze: -11, pct: 29},
+                {freeze: -11, pct: 28},
+                {freeze: -11, pct: 27},
+                {freeze: -10, pct: 26},
+                {freeze: -10, pct: 25},
+                {freeze: -9, pct: 24},
+                {freeze: -8, pct: 23},
+                {freeze: -8, pct: 22},
+                {freeze: -7, pct: 21},
+                {freeze: -7, pct: 20}
+            ];
+            
+            // Find closest match
+            let closest = freezeMap[0];
+            let minDiff = Math.abs(freezeC - closest.freeze);
+            
+            for (let entry of freezeMap) {
+                const diff = Math.abs(freezeC - entry.freeze);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = entry;
+                }
+            }
+            
+            return closest.pct;
+        }
+
+        // Handle input for current mix percentage
+        function handleVolCurInput() {
+            calcVol();
+        }
+
+        // Handle input for current freeze point
+        function handleVolCurFreezeInput() {
+            const freezeInput = document.getElementById('vol-cur-freeze');
+            
+            if (freezeInput.value) {
+                const freezeC = parseFloat(freezeInput.value);
+                const percentage = freezePointToPercentage(freezeC);
+                document.getElementById('vol-cur').value = percentage;
+            }
+            calcVol();
+        }
+
+        // Handle input for wanted mix percentage
+        function handleVolWantInput() {
+            calcVol();
+        }
+
+        // Handle input for wanted freeze point
+        function handleVolWantFreezeInput() {
+            const freezeInput = document.getElementById('vol-want-freeze');
+            
+            if (freezeInput.value) {
+                const freezeC = parseFloat(freezeInput.value);
+                const percentage = freezePointToPercentage(freezeC);
+                document.getElementById('vol-want').value = percentage;
+            }
+            calcVol();
         }
 
         function calcTote() {
