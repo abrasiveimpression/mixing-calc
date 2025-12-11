@@ -302,10 +302,25 @@
                 <input type="number" inputmode="decimal" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()" aria-label="Wanted volume in gallons" min="0">
                 
                 <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
-                    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
-                        <input type="checkbox" id="vol-pumpout" onchange="calcVol()" style="width: auto; margin-right: 8px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px; margin-bottom: 8px;">
+                        <input type="checkbox" id="vol-pumpout" onchange="handlePumpOutChange()" style="width: auto; margin-right: 8px;">
                         <span>Need to pump out fluid first?</span>
                     </label>
+                    
+                    <div id="vol-pumpout-options" style="display: none; margin-top: 12px;">
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="radio" name="pumpout-mode" value="manual" checked onchange="handlePumpOutModeChange()" style="width: auto; margin-right: 8px;">
+                            <span style="font-size: 13px;">Manual: I'll specify gallons to pump out</span>
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="radio" name="pumpout-mode" value="water-only" onchange="handlePumpOutModeChange()" style="width: auto; margin-right: 8px;">
+                            <span style="font-size: 13px;">Auto: Calculate to add water only</span>
+                        </label>
+                        <label style="display: block;">
+                            <input type="radio" name="pumpout-mode" value="glycol-only" onchange="handlePumpOutModeChange()" style="width: auto; margin-right: 8px;">
+                            <span style="font-size: 13px;">Auto: Calculate to add glycol only</span>
+                        </label>
+                    </div>
                 </div>
                 
                 <div id="vol-pumpout-input" style="display: none; margin-top: 12px;">
@@ -555,11 +570,9 @@
             const wantMix=parseFloat(document.getElementById('vol-want').value);
             const wantVol=parseFloat(document.getElementById('vol-wantv').value);
             const pumpOutChecked = document.getElementById('vol-pumpout').checked;
-            const pumpOutAmount = parseFloat(document.getElementById('vol-pumpout-amount').value) || 0;
+            const pumpOutMode = document.querySelector('input[name="pumpout-mode"]:checked')?.value || 'manual';
+            let pumpOutAmount = parseFloat(document.getElementById('vol-pumpout-amount').value) || 0;
             const resultDiv = document.getElementById('vol-result');
-            
-            // Show/hide pump out input
-            document.getElementById('vol-pumpout-input').style.display = pumpOutChecked ? 'block' : 'none';
             
             if(!curMix||!curVol||!wantMix||!wantVol){resultDiv.innerHTML='';return;}
             
@@ -578,7 +591,20 @@
                 }
             }
             
-            if (pumpOutChecked && pumpOutAmount <= 0) {
+            // Auto-calculate pump out amount if needed
+            if (pumpOutChecked && pumpOutMode !== 'manual') {
+                pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
+                
+                if (pumpOutAmount === null) {
+                    resultDiv.innerHTML = `<div class="error-message">Cannot achieve ${pumpOutMode === 'water-only' ? 'water-only' : 'glycol-only'} solution with these parameters. Try manual mode.</div>`;
+                    return;
+                }
+                
+                // Update the input field to show calculated amount
+                document.getElementById('vol-pumpout-amount').value = pumpOutAmount.toFixed(2);
+            }
+            
+            if (pumpOutChecked && pumpOutMode === 'manual' && pumpOutAmount <= 0) {
                 resultDiv.innerHTML = '<div class="error-message">Please enter gallons to pump out</div>';
                 return;
             }
@@ -594,9 +620,10 @@
             
             if (pumpOutChecked && pumpOutAmount > 0) {
                 effectiveCurVol = curVol - pumpOutAmount;
+                const modeLabel = pumpOutMode === 'manual' ? '' : ` (${pumpOutMode === 'water-only' ? 'for water-only addition' : 'for glycol-only addition'})`;
                 pumpOutHtml = `
                     <div style="background:#ef4444;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
-                        Step 1: Pump Out ${pumpOutAmount.toFixed(2)} gal
+                        Step 1: Pump Out ${pumpOutAmount.toFixed(2)} gal${modeLabel}
                     </div>
                     <div class="result-item"><span>Volume After Pump Out</span><span class="result-value">${effectiveCurVol.toFixed(2)} gal</span></div>
                     <div style="height: 1px; background: #e5e7eb; margin: 16px 0;"></div>`;
@@ -639,6 +666,90 @@
                     </div>
                 </div>`;
             saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0),water:Math.round(waterToAdd),typeI:Math.round(typeIToAdd),pumpOut:pumpOutChecked?pumpOutAmount:0});
+        }
+
+        // Calculate pump out amount for water-only or glycol-only addition
+        function calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, mode) {
+            const cm = curMix / 100;
+            const wm = wantMix / 100;
+            
+            if (mode === 'water-only') {
+                // For water-only: we need wantMix * wantVol = curMix * (curVol - pumpOut)
+                // Solving for pumpOut: pumpOut = curVol - (wantMix * wantVol / curMix)
+                
+                if (wantMix >= curMix) {
+                    return null; // Can't add only water to increase concentration
+                }
+                
+                const pumpOut = curVol - (wm * wantVol / cm);
+                
+                // Validate the solution
+                if (pumpOut < 0 || pumpOut >= curVol) {
+                    return null;
+                }
+                
+                return pumpOut;
+                
+            } else if (mode === 'glycol-only') {
+                // For glycol-only: we need wantVol - (curVol - pumpOut) = all glycol
+                // And: curMix * (curVol - pumpOut) + 100 * glycolToAdd = wantMix * wantVol
+                // Where: glycolToAdd = wantVol - (curVol - pumpOut)
+                // Solving: curMix * (curVol - pumpOut) + 100 * (wantVol - curVol + pumpOut) = wantMix * wantVol
+                // curMix * curVol - curMix * pumpOut + 100 * wantVol - 100 * curVol + 100 * pumpOut = wantMix * wantVol
+                // pumpOut * (100 - curMix) = wantMix * wantVol - curMix * curVol - 100 * wantVol + 100 * curVol
+                // pumpOut = (wantMix * wantVol - curMix * curVol - 100 * wantVol + 100 * curVol) / (100 - curMix)
+                
+                if (wantMix <= curMix) {
+                    return null; // Can't add only glycol to decrease concentration
+                }
+                
+                const numerator = (wm * wantVol - cm * curVol - wantVol + curVol) * 100;
+                const denominator = 100 - curMix;
+                
+                if (denominator === 0) {
+                    return null;
+                }
+                
+                const pumpOut = numerator / denominator;
+                
+                // Validate the solution
+                if (pumpOut < 0 || pumpOut >= curVol) {
+                    return null;
+                }
+                
+                return pumpOut;
+            }
+            
+            return null;
+        }
+
+        // Handle pump out checkbox change
+        function handlePumpOutChange() {
+            const checked = document.getElementById('vol-pumpout').checked;
+            document.getElementById('vol-pumpout-options').style.display = checked ? 'block' : 'none';
+            
+            if (!checked) {
+                document.getElementById('vol-pumpout-input').style.display = 'none';
+            } else {
+                handlePumpOutModeChange();
+            }
+            
+            calcVol();
+        }
+
+        // Handle pump out mode change
+        function handlePumpOutModeChange() {
+            const mode = document.querySelector('input[name="pumpout-mode"]:checked')?.value;
+            const manualInput = document.getElementById('vol-pumpout-input');
+            
+            if (mode === 'manual') {
+                manualInput.style.display = 'block';
+                document.getElementById('vol-pumpout-amount').value = '';
+            } else {
+                manualInput.style.display = 'none';
+            }
+            
+            calcVol();
         }
 
         // Freeze point to percentage conversion based on dilution table
