@@ -265,7 +265,10 @@
         <div class="page" id="increase">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
-                <h2>Increase Mix</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin: 0;">Increase Mix</h2>
+                    <button onclick="clearCalculator('increase')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Clear</button>
+                </div>
                 <input type="number" inputmode="decimal" id="inc-cur" placeholder="Current Mix %" oninput="calcInc()" aria-label="Current mix percentage" min="0" max="100">
                 <input type="number" inputmode="decimal" id="inc-des" placeholder="Desired Mix %" oninput="calcInc()" aria-label="Desired mix percentage" min="0" max="100">
                 <input type="number" inputmode="decimal" id="inc-vol" placeholder="Current Volume" oninput="calcInc()" aria-label="Current volume in gallons" min="0">
@@ -276,7 +279,10 @@
         <div class="page" id="decrease">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
-                <h2>Decrease Mix</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin: 0;">Decrease Mix</h2>
+                    <button onclick="clearCalculator('decrease')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Clear</button>
+                </div>
                 <input type="number" inputmode="decimal" id="dec-cur" placeholder="Current Mix %" oninput="calcDec()" aria-label="Current mix percentage" min="0" max="100">
                 <input type="number" inputmode="decimal" id="dec-des" placeholder="Desired Mix %" oninput="calcDec()" aria-label="Desired mix percentage" min="0" max="100">
                 <input type="number" inputmode="decimal" id="dec-vol" placeholder="Current Volume" oninput="calcDec()" aria-label="Current volume in gallons" min="0">
@@ -287,7 +293,10 @@
         <div class="page" id="volume">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
-                <h2>Increase Volume</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin: 0;">Increase Volume</h2>
+                    <button onclick="clearCalculator('volume')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Clear</button>
+                </div>
                 
                 <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
                     <strong>Current Mix:</strong> Enter either percentage OR freeze point
@@ -321,7 +330,10 @@
         <div class="page" id="tote">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
-                <h2>Tote to Truck</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="margin: 0;">Tote to Truck</h2>
+                    <button onclick="clearCalculator('tote')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Clear</button>
+                </div>
                 <input type="number" inputmode="decimal" id="tote-tm" placeholder="Truck Mix %" oninput="calcTote()" aria-label="Truck mix percentage" min="0" max="100">
                 <input type="number" inputmode="decimal" id="tote-tv" placeholder="Truck Volume" oninput="calcTote()" aria-label="Truck volume in gallons" min="0">
                 <input type="number" inputmode="decimal" id="tote-ttm" placeholder="Tote Mix %" oninput="calcTote()" aria-label="Tote mix percentage" min="0" max="100">
@@ -517,6 +529,37 @@
                 const key = `input_${pageId}_${input.id}`;
                 localStorage.removeItem(key);
             });
+        }
+
+        // Clear calculator - clears all inputs and saved data
+        function clearCalculator(pageId) {
+            const page = document.getElementById(pageId);
+            if (!page) return;
+            
+            // Clear all input fields
+            page.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
+                input.value = '';
+                const key = `input_${pageId}_${input.id}`;
+                localStorage.removeItem(key);
+            });
+            
+            // Clear checkboxes
+            page.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                input.checked = false;
+                const key = `input_${pageId}_${input.id}`;
+                localStorage.removeItem(key);
+            });
+            
+            // Clear result displays
+            if (pageId === 'increase') {
+                document.getElementById('inc-result').innerHTML = '';
+            } else if (pageId === 'decrease') {
+                document.getElementById('dec-result').innerHTML = '';
+            } else if (pageId === 'volume') {
+                document.getElementById('vol-result').innerHTML = '';
+            } else if (pageId === 'tote') {
+                document.getElementById('tote-result').innerHTML = '';
+            }
         }
 
         function validateInput(value, name, min = 0, max = null) {
