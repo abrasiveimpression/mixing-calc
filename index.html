@@ -156,18 +156,19 @@
             height: 80vh;
             border: 2px solid #e5e7eb;
             border-radius: 10px;
-            overflow: auto;
+            overflow: hidden;
             background: white;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            position: relative;
         }
         .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 50%;
             width: 250%;
             height: 250%;
             border: none;
-            transform: scale(0.4);
-            transform-origin: center top;
+            transform: scale(0.4) translateX(-50%);
+            transform-origin: top left;
         }
         .info-box {
             background: #f0f9ff;
