@@ -288,7 +288,7 @@
                 </div>
                 
                 <input type="number" inputmode="decimal" id="vol-cur" placeholder="Current Mix %" oninput="handleVolCurInput()" aria-label="Current mix percentage" min="0" max="100">
-                <input type="number" inputmode="decimal" id="vol-cur-freeze" placeholder="OR Current Freeze Point (°C)" oninput="handleVolCurFreezeInput()" aria-label="Current freeze point in Celsius" max="0">
+                <input type="number" id="vol-cur-freeze" placeholder="OR Current Freeze Point (°C)" oninput="handleVolCurFreezeInput()" aria-label="Current freeze point in Celsius" max="0">
                 
                 <input type="number" inputmode="decimal" id="vol-curv" placeholder="Current Volume" oninput="calcVol()" aria-label="Current volume in gallons" min="0">
                 
@@ -297,7 +297,7 @@
                 </div>
                 
                 <input type="number" inputmode="decimal" id="vol-want" placeholder="Wanted Mix %" oninput="handleVolWantInput()" aria-label="Wanted mix percentage" min="0" max="100">
-                <input type="number" inputmode="decimal" id="vol-want-freeze" placeholder="OR Wanted Freeze Point (°C)" oninput="handleVolWantFreezeInput()" aria-label="Wanted freeze point in Celsius" max="0">
+                <input type="number" id="vol-want-freeze" placeholder="OR Wanted Freeze Point (°C)" oninput="handleVolWantFreezeInput()" aria-label="Wanted freeze point in Celsius" max="0">
                 
                 <input type="number" inputmode="decimal" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()" aria-label="Wanted volume in gallons" min="0">
                 
@@ -456,6 +456,61 @@
             if(p==='notes')loadNotes();if(p==='history')displayHistory();
             if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
             if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();
+            
+            // Restore saved inputs for this page
+            restorePageInputs(p);
+        }
+
+        // Save input values to localStorage
+        function saveInput(pageId, inputId, value) {
+            const key = `input_${pageId}_${inputId}`;
+            localStorage.setItem(key, value);
+        }
+
+        // Restore all inputs for a page
+        function restorePageInputs(pageId) {
+            const page = document.getElementById(pageId);
+            if (!page) return;
+            
+            // Restore all text/number inputs
+            page.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
+                const key = `input_${pageId}_${input.id}`;
+                const savedValue = localStorage.getItem(key);
+                if (savedValue !== null) {
+                    input.value = savedValue;
+                }
+            });
+            
+            // Restore checkboxes
+            page.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                const key = `input_${pageId}_${input.id}`;
+                const savedValue = localStorage.getItem(key);
+                if (savedValue !== null) {
+                    input.checked = savedValue === 'true';
+                }
+            });
+            
+            // Trigger calculations after restoring values
+            if (pageId === 'increase' && document.getElementById('inc-cur').value) {
+                calcInc();
+            } else if (pageId === 'decrease' && document.getElementById('dec-cur').value) {
+                calcDec();
+            } else if (pageId === 'volume' && document.getElementById('vol-cur').value) {
+                calcVol();
+            } else if (pageId === 'tote' && document.getElementById('tote-tm').value) {
+                calcTote();
+            }
+        }
+
+        // Clear saved inputs for a page (optional - for future use)
+        function clearPageInputs(pageId) {
+            const page = document.getElementById(pageId);
+            if (!page) return;
+            
+            page.querySelectorAll('input').forEach(input => {
+                const key = `input_${pageId}_${input.id}`;
+                localStorage.removeItem(key);
+            });
         }
 
         function validateInput(value, name, min = 0, max = null) {
@@ -473,6 +528,11 @@
             const d=parseFloat(document.getElementById('inc-des').value);
             const v=parseFloat(document.getElementById('inc-vol').value);
             const resultDiv = document.getElementById('inc-result');
+            
+            // Auto-save inputs
+            saveInput('increase', 'inc-cur', document.getElementById('inc-cur').value);
+            saveInput('increase', 'inc-des', document.getElementById('inc-des').value);
+            saveInput('increase', 'inc-vol', document.getElementById('inc-vol').value);
             
             if(!c||!d||!v){resultDiv.innerHTML='';return;}
             
@@ -509,6 +569,11 @@
             const d=parseFloat(document.getElementById('dec-des').value);
             const v=parseFloat(document.getElementById('dec-vol').value);
             const resultDiv = document.getElementById('dec-result');
+            
+            // Auto-save inputs
+            saveInput('decrease', 'dec-cur', document.getElementById('dec-cur').value);
+            saveInput('decrease', 'dec-des', document.getElementById('dec-des').value);
+            saveInput('decrease', 'dec-vol', document.getElementById('dec-vol').value);
             
             if(!c||!d||!v){resultDiv.innerHTML='';return;}
             
@@ -552,6 +617,11 @@
             const wantVol=parseFloat(document.getElementById('vol-wantv').value);
             const pumpOutChecked = document.getElementById('vol-pumpout').checked;
             const resultDiv = document.getElementById('vol-result');
+            
+            // Auto-save all volume inputs
+            saveInput('volume', 'vol-curv', document.getElementById('vol-curv').value);
+            saveInput('volume', 'vol-wantv', document.getElementById('vol-wantv').value);
+            saveInput('volume', 'vol-pumpout', pumpOutChecked);
             
             if(!curMix||!curVol||!wantMix||!wantVol){resultDiv.innerHTML='';return;}
             
@@ -794,34 +864,40 @@
 
         // Handle input for current mix percentage
         function handleVolCurInput() {
+            saveInput('volume', 'vol-cur', document.getElementById('vol-cur').value);
             calcVol();
         }
 
         // Handle input for current freeze point
         function handleVolCurFreezeInput() {
             const freezeInput = document.getElementById('vol-cur-freeze');
+            saveInput('volume', 'vol-cur-freeze', freezeInput.value);
             
             if (freezeInput.value) {
                 const freezeC = parseFloat(freezeInput.value);
                 const percentage = freezePointToPercentage(freezeC);
                 document.getElementById('vol-cur').value = percentage;
+                saveInput('volume', 'vol-cur', percentage);
             }
             calcVol();
         }
 
         // Handle input for wanted mix percentage
         function handleVolWantInput() {
+            saveInput('volume', 'vol-want', document.getElementById('vol-want').value);
             calcVol();
         }
 
         // Handle input for wanted freeze point
         function handleVolWantFreezeInput() {
             const freezeInput = document.getElementById('vol-want-freeze');
+            saveInput('volume', 'vol-want-freeze', freezeInput.value);
             
             if (freezeInput.value) {
                 const freezeC = parseFloat(freezeInput.value);
                 const percentage = freezePointToPercentage(freezeC);
                 document.getElementById('vol-want').value = percentage;
+                saveInput('volume', 'vol-want', percentage);
             }
             calcVol();
         }
@@ -832,6 +908,12 @@
             const ttm=parseFloat(document.getElementById('tote-ttm').value)/100;
             const ttv=parseFloat(document.getElementById('tote-ttv').value);
             const resultDiv = document.getElementById('tote-result');
+            
+            // Auto-save inputs
+            saveInput('tote', 'tote-tm', document.getElementById('tote-tm').value);
+            saveInput('tote', 'tote-tv', document.getElementById('tote-tv').value);
+            saveInput('tote', 'tote-ttm', document.getElementById('tote-ttm').value);
+            saveInput('tote', 'tote-ttv', document.getElementById('tote-ttv').value);
             
             if(!tm||!tv||!ttm||!ttv){resultDiv.innerHTML='';return;}
             
