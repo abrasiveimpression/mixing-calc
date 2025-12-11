@@ -331,9 +331,15 @@
         </div>
 
         <div class="page" id="truckboard">
-            <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu" style="margin-bottom: 5px;">← Back</button>
-            <div class="iframe-container" style="height: 92vh; border-radius: 0; border: none;">
-                <iframe src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display"></iframe>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu" style="margin-bottom: 0;">← Back</button>
+                <button class="refresh-btn" onclick="refreshTruckBoard()" style="margin-top: 0;">🔄 Refresh</button>
+            </div>
+            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px; text-align: right;">
+                Last refreshed: <span id="truckboard-time">--</span>
+            </div>
+            <div class="iframe-container" style="height: 88vh; border-radius: 0; border: none;">
+                <iframe id="truckboard-iframe" src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display" onload="updateTruckBoardTime()"></iframe>
             </div>
         </div>
 
@@ -796,6 +802,27 @@
         // Handle pump out checkbox change
         function handlePumpOutChange() {
             calcVol();
+        }
+
+        // Truck Board refresh functions
+        function refreshTruckBoard() {
+            const iframe = document.getElementById('truckboard-iframe');
+            const currentSrc = iframe.src.split('?')[0]; // Get base URL without parameters
+            // Add timestamp to force reload
+            iframe.src = currentSrc + '?page=display&t=' + new Date().getTime();
+        }
+
+        function updateTruckBoardTime() {
+            const now = new Date();
+            const options = {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            document.getElementById('truckboard-time').textContent = now.toLocaleString('en-US', options);
         }
 
         // Freeze point to percentage conversion based on dilution table
