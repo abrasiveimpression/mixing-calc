@@ -342,6 +342,16 @@
                         <div class="info-value" id="dewpoint">Loading...</div>
                     </div>
                     
+                    <div class="info-box">
+                        <div class="info-label">Wind</div>
+                        <div class="info-value" id="wind">Loading...</div>
+                    </div>
+                    
+                    <div class="info-box" id="precip-box" style="display: none;">
+                        <div class="info-label">Precipitation</div>
+                        <div class="info-value" id="precipitation">None</div>
+                    </div>
+                    
                     <h3 style="margin-top: 20px; margin-bottom: 10px; color: #0369a1;">Full METAR</h3>
                     <div class="metar-box" id="metar-full">Loading...</div>
                     
@@ -604,8 +614,10 @@
                 // Reset display
                 document.getElementById('temperature').textContent = 'Loading...';
                 document.getElementById('dewpoint').textContent = 'Loading...';
+                document.getElementById('wind').textContent = 'Loading...';
                 document.getElementById('metar-full').textContent = 'Loading...';
                 document.getElementById('metar-time').textContent = '--';
+                document.getElementById('precip-box').style.display = 'none';
                 
                 // Fetch METAR using CORS proxy
                 const station = 'KPIT';
@@ -639,6 +651,7 @@
                 console.error('Error loading METAR:', error);
                 document.getElementById('temperature').textContent = 'Error';
                 document.getElementById('dewpoint').textContent = 'Error';
+                document.getElementById('wind').textContent = 'Error';
                 document.getElementById('metar-full').innerHTML = `
                     <div style="color: #dc2626;">
                         Unable to load METAR data. This may be due to network restrictions.<br><br>
@@ -657,25 +670,44 @@
             const now = new Date();
             document.getElementById('metar-time').textContent = now.toLocaleTimeString();
             
-            // Parse temperature and dew point
+            // Parse all weather data
             const weatherData = parseMETAR(metarText);
             
+            // Temperature
             if (weatherData.temp) {
                 document.getElementById('temperature').textContent = weatherData.temp;
             } else {
                 document.getElementById('temperature').textContent = 'N/A';
             }
             
+            // Dew Point
             if (weatherData.dewpoint) {
                 document.getElementById('dewpoint').textContent = weatherData.dewpoint;
             } else {
                 document.getElementById('dewpoint').textContent = 'N/A';
             }
+            
+            // Wind
+            if (weatherData.wind) {
+                document.getElementById('wind').textContent = weatherData.wind;
+            } else {
+                document.getElementById('wind').textContent = 'N/A';
+            }
+            
+            // Precipitation
+            const precipBox = document.getElementById('precip-box');
+            if (weatherData.precipitation) {
+                document.getElementById('precipitation').textContent = weatherData.precipitation;
+                precipBox.style.display = 'block';
+            } else {
+                precipBox.style.display = 'none';
+            }
         }
 
         function parseMETAR(metar) {
-            const result = { temp: null, dewpoint: null };
+            const result = { temp: null, dewpoint: null, wind: null, precipitation: null };
             
+            // Parse temperature and dew point
             // METAR temperature format: M01/M03 or 15/08
             // M indicates minus (negative temperature)
             const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
@@ -700,6 +732,102 @@
                 
                 result.temp = `${tempC}°C / ${tempF}°F`;
                 result.dewpoint = `${dewC}°C / ${dewF}°F`;
+            }
+            
+            // Parse wind information
+            // Format: 27008KT or 09012G22KT (with gusts) or 00000KT (calm) or VRB03KT (variable)
+            const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
+            
+            if (windMatch) {
+                const direction = windMatch[1];
+                const speed = parseInt(windMatch[2]);
+                const gust = windMatch[4] ? parseInt(windMatch[4]) : null;
+                
+                if (speed === 0) {
+                    result.wind = 'Calm';
+                } else {
+                    let windText = '';
+                    
+                    if (direction === 'VRB') {
+                        windText = `Variable at ${speed} kts`;
+                    } else {
+                        windText = `${direction}° at ${speed} kts`;
+                    }
+                    
+                    if (gust) {
+                        windText += ` gusting ${gust} kts`;
+                    }
+                    
+                    result.wind = windText;
+                }
+            }
+            
+            // Parse precipitation/weather phenomena
+            // Common codes: RA (rain), SN (snow), FG (fog), BR (mist), DZ (drizzle), 
+            // TS (thunderstorm), SH (shower), FZ (freezing), + (heavy), - (light)
+            const weatherCodes = {
+                'RA': 'Rain',
+                'SN': 'Snow',
+                'DZ': 'Drizzle',
+                'FG': 'Fog',
+                'BR': 'Mist',
+                'HZ': 'Haze',
+                'FU': 'Smoke',
+                'VA': 'Volcanic Ash',
+                'DU': 'Dust',
+                'SA': 'Sand',
+                'TS': 'Thunderstorm',
+                'SH': 'Shower',
+                'FZ': 'Freezing',
+                'GR': 'Hail',
+                'GS': 'Small Hail',
+                'PL': 'Ice Pellets',
+                'SG': 'Snow Grains',
+                'IC': 'Ice Crystals',
+                'UP': 'Unknown Precipitation',
+                'SQ': 'Squalls',
+                'FC': 'Funnel Cloud',
+                'SS': 'Sandstorm',
+                'DS': 'Duststorm'
+            };
+            
+            // Look for weather phenomena between the wind and temperature
+            // Pattern: intensity (optional: - or +) + descriptor (optional) + precipitation type
+            const weatherMatch = metar.match(/\s([-+])?(VC|MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)/g);
+            
+            if (weatherMatch) {
+                const weatherPhenomena = [];
+                
+                weatherMatch.forEach(wx => {
+                    wx = wx.trim();
+                    let description = '';
+                    
+                    // Check for intensity
+                    if (wx.startsWith('-')) {
+                        description = 'Light ';
+                        wx = wx.substring(1);
+                    } else if (wx.startsWith('+')) {
+                        description = 'Heavy ';
+                        wx = wx.substring(1);
+                    }
+                    
+                    // Parse the weather codes
+                    let matched = false;
+                    for (let code in weatherCodes) {
+                        if (wx.includes(code)) {
+                            description += weatherCodes[code] + ' ';
+                            matched = true;
+                        }
+                    }
+                    
+                    if (matched) {
+                        weatherPhenomena.push(description.trim());
+                    }
+                });
+                
+                if (weatherPhenomena.length > 0) {
+                    result.precipitation = weatherPhenomena.join(', ');
+                }
             }
             
             return result;
@@ -867,11 +995,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
