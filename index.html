@@ -47,6 +47,19 @@
             text-align: center;
             transition: all 0.2s;
         }
+        .menu-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        .menu-card {
+            cursor: grab;
+        }
+        .menu-card:active {
+            cursor: grabbing;
+        }
+        .menu-grid.drag-over {
+            background: rgba(14, 165, 233, 0.1);
+        }
         .menu-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
@@ -245,21 +258,21 @@
         </div>
         
         <div class="page active" id="menu">
-            <div class="menu-grid">
-                <div class="menu-card" onclick="showPage('increase')" role="button" tabindex="0" aria-label="Increase Mix Calculator"><h3>Increase Mix</h3></div>
-                <div class="menu-card" onclick="showPage('decrease')" role="button" tabindex="0" aria-label="Decrease Mix Calculator"><h3>Decrease Mix</h3></div>
-                <div class="menu-card" onclick="showPage('volume')" role="button" tabindex="0" aria-label="Increase Volume Calculator"><h3>Increase Volume</h3></div>
-                <div class="menu-card" onclick="showPage('tote')" role="button" tabindex="0" aria-label="Tote to Truck Calculator"><h3>Tote to Truck</h3></div>
-                <div class="menu-card" onclick="showPage('truckboard')" role="button" tabindex="0" aria-label="View Truck Board"><h3>🚛 Truck Board</h3></div>
-                <div class="menu-card" onclick="showPage('truckboard-edit')" role="button" tabindex="0" aria-label="Edit Truck Board"><h3>✏️ Edit Truck Board</h3></div>
-                <div class="menu-card" onclick="showPage('atis')" role="button" tabindex="0" aria-label="ATIS and Weather"><h3>📡 ATIS & Weather</h3></div>
-                <div class="menu-card" onclick="showPage('history')" role="button" tabindex="0" aria-label="View calculation history"><h3>📋 History</h3></div>
-                <div class="menu-card" onclick="showPage('dilution')" role="button" tabindex="0" aria-label="View dilution chart"><h3>📊 Dilution Chart</h3></div>
-                <div class="menu-card" onclick="showPage('aircraft')" role="button" tabindex="0" aria-label="Aircraft reference guide"><h3>✈️ Aircraft Reference</h3></div>
-                <div class="menu-card" onclick="showPage('airlines')" role="button" tabindex="0" aria-label="Airline codes reference"><h3>🛫 Airline Codes</h3></div>
-                <div class="menu-card" onclick="showPage('pdfs')" role="button" tabindex="0" aria-label="Documents and links"><h3>📄 Documents & Links</h3></div>
-                <div class="menu-card" onclick="showPage('notes')" role="button" tabindex="0" aria-label="Field notes"><h3>📝 Notes</h3></div>
-            </div>
+            <div class="menu-grid" id="menu-grid">
+                <div class="menu-card" draggable="true" data-menu-id="increase" onclick="showPage('increase')" role="button" tabindex="0" aria-label="Increase Mix"><h3>Increase Mix</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="decrease" onclick="showPage('decrease')" role="button" tabindex="0" aria-label="Decrease Mix"><h3>Decrease Mix</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="volume" onclick="showPage('volume')" role="button" tabindex="0" aria-label="Increase Volume"><h3>Increase Volume</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="tote" onclick="showPage('tote')" role="button" tabindex="0" aria-label="Tote to Truck"><h3>Tote to Truck</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="truckboard" onclick="showPage('truckboard')" role="button" tabindex="0" aria-label="Truck Board"><h3>🚛 Truck Board</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="truckboard-edit" onclick="showPage('truckboard-edit')" role="button" tabindex="0" aria-label="Edit Truck Board"><h3>✏️ Edit Truck Board</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="atis" onclick="showPage('atis')" role="button" tabindex="0" aria-label="ATIS & Weather"><h3>📡 ATIS & Weather</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="history" onclick="showPage('history')" role="button" tabindex="0" aria-label="History"><h3>📋 History</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="dilution" onclick="showPage('dilution')" role="button" tabindex="0" aria-label="Dilution Chart"><h3>📊 Dilution Chart</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="aircraft" onclick="showPage('aircraft')" role="button" tabindex="0" aria-label="Aircraft Reference"><h3>✈️ Aircraft Reference</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="airlines" onclick="showPage('airlines')" role="button" tabindex="0" aria-label="Airline Codes"><h3>🛫 Airline Codes</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="pdfs" onclick="showPage('pdfs')" role="button" tabindex="0" aria-label="Documents & Links"><h3>📄 Documents & Links</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="notes" onclick="showPage('notes')" role="button" tabindex="0" aria-label="Notes"><h3>📝 Notes</h3></div>
+            </div></div>
         </div>
 
         <div class="page" id="increase">
@@ -1440,6 +1453,139 @@
                 });
             });
         });
-    </script>
+    
+
+        // Drag and Drop Functionality for Menu Cards
+        let draggedElement = null;
+        let menuOrder = [];
+
+        function initDragAndDrop() {
+            const menuGrid = document.getElementById('menu-grid');
+            const cards = menuGrid.querySelectorAll('.menu-card');
+            
+            // Load saved order from localStorage
+            const savedOrder = localStorage.getItem('menuOrder');
+            if (savedOrder) {
+                menuOrder = JSON.parse(savedOrder);
+                reorderMenuCards();
+            } else {
+                // Initialize with current order
+                cards.forEach(card => {
+                    menuOrder.push(card.dataset.menuId);
+                });
+            }
+            
+            cards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragenter', handleDragEnter);
+                card.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            
+            // Remove drag-over class from all cards
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const menuGrid = document.getElementById('menu-grid');
+                const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const droppedIndex = allCards.indexOf(this);
+                
+                // Reorder in DOM
+                if (draggedIndex < droppedIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+                
+                // Update menuOrder array
+                const draggedId = draggedElement.dataset.menuId;
+                menuOrder = menuOrder.filter(id => id !== draggedId);
+                const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
+                    .findIndex(card => card === draggedElement);
+                menuOrder.splice(newIndex, 0, draggedId);
+                
+                // Save to localStorage
+                localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
+            }
+            
+            return false;
+        }
+
+        function reorderMenuCards() {
+            const menuGrid = document.getElementById('menu-grid');
+            const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+            
+            // Create a map of cards by their menu-id
+            const cardMap = {};
+            cards.forEach(card => {
+                cardMap[card.dataset.menuId] = card;
+            });
+            
+            // Remove all cards
+            cards.forEach(card => card.remove());
+            
+            // Re-add in saved order
+            menuOrder.forEach(menuId => {
+                if (cardMap[menuId]) {
+                    menuGrid.appendChild(cardMap[menuId]);
+                }
+            });
+        }
+
+        // Initialize drag and drop when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initDragAndDrop();
+            
+            // Existing keyboard support
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+        });
+</script>
 </body>
 </html>
