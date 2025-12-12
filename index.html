@@ -1488,13 +1488,119 @@
                     isDragging = false; // Reset flag
                 });
                 
+                // Desktop drag events
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragend', handleDragEnd);
                 card.addEventListener('dragover', handleDragOver);
                 card.addEventListener('drop', handleDrop);
                 card.addEventListener('dragenter', handleDragEnter);
                 card.addEventListener('dragleave', handleDragLeave);
+                
+                // Mobile touch events
+                card.addEventListener('touchstart', handleTouchStart, {passive: false});
+                card.addEventListener('touchmove', handleTouchMove, {passive: false});
+                card.addEventListener('touchend', handleTouchEnd, {passive: false});
             });
+        }
+
+        // Mobile touch variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchMoved = false;
+        let touchStartTime = 0;
+
+        function handleTouchStart(e) {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchMoved = false;
+            touchStartTime = Date.now();
+            draggedElement = this;
+        }
+
+        function handleTouchMove(e) {
+            if (!draggedElement) return;
+            
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+            const deltaY = Math.abs(touch.clientY - touchStartY);
+            
+            // If moved more than 10px, consider it a drag
+            if (deltaX > 10 || deltaY > 10) {
+                touchMoved = true;
+                isDragging = true;
+                e.preventDefault(); // Prevent scrolling while dragging
+                
+                draggedElement.classList.add('dragging');
+                
+                // Get element under touch point
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
+                
+                // Remove drag-over from all cards
+                document.querySelectorAll('.menu-card').forEach(card => {
+                    card.classList.remove('drag-over');
+                });
+                
+                // Add drag-over to card we're hovering
+                if (cardBelow && cardBelow !== draggedElement) {
+                    cardBelow.classList.add('drag-over');
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!draggedElement) return;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
+            
+            draggedElement.classList.remove('dragging');
+            
+            // Remove drag-over from all cards
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+            
+            // If we moved significantly, do the reorder
+            if (touchMoved && cardBelow && cardBelow !== draggedElement) {
+                const menuGrid = document.getElementById('menu-grid');
+                const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const droppedIndex = allCards.indexOf(cardBelow);
+                
+                // Reorder in DOM
+                if (draggedIndex < droppedIndex) {
+                    cardBelow.parentNode.insertBefore(draggedElement, cardBelow.nextSibling);
+                } else {
+                    cardBelow.parentNode.insertBefore(draggedElement, cardBelow);
+                }
+                
+                // Update menuOrder array
+                const draggedId = draggedElement.dataset.menuId;
+                menuOrder = menuOrder.filter(id => id !== draggedId);
+                const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
+                    .findIndex(card => card === draggedElement);
+                menuOrder.splice(newIndex, 0, draggedId);
+                
+                // Save to localStorage
+                localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
+                
+                // Prevent click event
+                setTimeout(() => {
+                    isDragging = false;
+                    touchMoved = false;
+                }, 300);
+            } else {
+                // Reset after a short delay
+                setTimeout(() => {
+                    isDragging = false;
+                    touchMoved = false;
+                }, 50);
+            }
+            
+            draggedElement = null;
         }
 
         function handleDragStart(e) {
