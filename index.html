@@ -372,23 +372,23 @@
                 <h2>ATIS & Weather</h2>
                 <button class="refresh-btn" onclick="loadATIS()">🔄 Refresh Data</button>
                 
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 16px;">
-                        <!-- ATIS Letter Box -->
-                        <div class="info-box" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border: 3px solid #0369a1;">
-                            <div class="info-label" style="color: white; font-size: 11px;">ATIS Letter</div>
-                            <div class="info-value" id="atis-letter" style="font-size: 42px; font-weight: 900; letter-spacing: 4px; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">--</div>
-                        </div>
-                        
-                        <!-- Pad Status Box -->
-                        <div style="background: rgba(255, 255, 255, 0.98); border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px;">
-                            <h3 style="color: #0369a1; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Deicing Pad Status</h3>
-                            <div id="pad-status-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
-                                <div style="text-align: center; color: #6b7280; font-size: 12px;">Loading...</div>
-                            </div>
-                        </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 16px;">
+                    <!-- ATIS Letter Box -->
+                    <div class="info-box" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border: 3px solid #0369a1;">
+                        <div class="info-label" style="color: white; font-size: 11px;">ATIS Letter</div>
+                        <div class="info-value" id="atis-letter" style="font-size: 42px; font-weight: 900; letter-spacing: 4px; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">--</div>
                     </div>
                     
-                    <div class="info-box">
+                    <!-- Pad Status Box -->
+                    <div style="background: rgba(255, 255, 255, 0.98); border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px;">
+                        <h3 style="color: #0369a1; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Deicing Pad Status</h3>
+                        <div id="pad-status-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px;">
+                            <div style="text-align: center; color: #6b7280; font-size: 12px;">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
                         <div class="info-label">Temperature (KPIT)</div>
                         <div class="info-value" id="temperature">Loading...</div>
                     </div>
@@ -1027,116 +1027,91 @@
 
         // ATIS and METAR Functions
         
-        // Function to fetch and parse ATIS letter from Pittsburgh Airport page
-        
-        // Function to fetch deicing pad statuses from Pittsburgh Airport page
-        async function fetchPadStatuses() {
+        // Fetch ATIS Letter from Pittsburgh Airport
+        async function fetchATISLetter() {
             try {
                 const url = 'https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw';
-                
-                // Try multiple CORS proxies
                 const proxies = [
                     `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
                 ];
                 
                 let html = null;
-                
                 for (const proxyURL of proxies) {
                     try {
                         const response = await fetch(proxyURL);
                         html = await response.text();
                         if (html && html.length > 100) break;
                     } catch (err) {
-                        console.log(`Proxy failed: ${proxyURL}`, err);
                         continue;
                     }
                 }
                 
-                if (!html) {
-                    throw new Error('Unable to fetch pad status data');
-                }
+                if (!html) return null;
                 
-                // Parse the HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-                
-                // Look for pad status information
-                // Common patterns: "Pad 1", "Pad 2", "North Pad", "South Pad", etc.
-                // Status keywords: "Open", "Closed", "Available", "In Use", "Occupied"
-                
-                const padStatuses = [];
                 const textContent = doc.body.textContent || doc.body.innerText;
                 
-                // Try to find all pad-related information
-                // Pattern 1: "Pad X: Status" or "Pad X - Status"
-                const padMatches = textContent.matchAll(/Pad\s+(\d+|[A-Z]+|North|South|East|West)\s*[:-]?\s*(Open|Closed|Available|Occupied|In Use|Maintenance|Out of Service)/gi);
-                for (const match of padMatches) {
-                    padStatuses.push({
-                        name: `Pad ${match[1]}`,
-                        status: match[2]
-                    });
-                }
+                let match = textContent.match(/ATIS\s*[:;]?\s*([A-Z])\b/i);
+                if (match) return match[1].toUpperCase();
                 
-                // Pattern 2: Look in table structures
-                const tables = doc.querySelectorAll('table');
-                tables.forEach(table => {
-                    const rows = table.querySelectorAll('tr');
-                    rows.forEach(row => {
-                        const cells = row.querySelectorAll('td, th');
-                        const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join(' ');
-                        
-                        // Check if row contains pad information
-                        if (/pad/i.test(rowText)) {
-                            const padMatch = rowText.match(/Pad\s+(\d+|[A-Z]+|North|South|East|West)/i);
-                            const statusMatch = rowText.match(/\b(Open|Closed|Available|Occupied|In Use|Maintenance|Out of Service)\b/i);
-                            
-                            if (padMatch && statusMatch) {
-                                const padName = `Pad ${padMatch[1]}`;
-                                // Avoid duplicates
-                                if (!padStatuses.find(p => p.name === padName)) {
-                                    padStatuses.push({
-                                        name: padName,
-                                        status: statusMatch[1]
-                                    });
-                                }
-                            }
-                        }
-                    });
-                });
+                match = textContent.match(/Information\s*[:;]?\s*([A-Z])\b/i);
+                if (match) return match[1].toUpperCase();
                 
-                // Pattern 3: Look for specific div/span elements with pad info
-                const allElements = doc.querySelectorAll('div, span, p');
-                allElements.forEach(elem => {
-                    const elemText = elem.textContent.trim();
-                    if (elemText.length < 100 && /pad/i.test(elemText)) {
-                        const padMatch = elemText.match(/Pad\s+(\d+|[A-Z]+|North|South|East|West)/i);
-                        const statusMatch = elemText.match(/\b(Open|Closed|Available|Occupied|In Use|Maintenance|Out of Service)\b/i);
-                        
-                        if (padMatch && statusMatch) {
-                            const padName = `Pad ${padMatch[1]}`;
-                            if (!padStatuses.find(p => p.name === padName)) {
-                                padStatuses.push({
-                                    name: padName,
-                                    status: statusMatch[1]
-                                });
-                            }
-                        }
-                    }
-                });
-                
-                return padStatuses.length > 0 ? padStatuses : null;
-                
+                return null;
             } catch (error) {
-                console.error('Error fetching pad statuses:', error);
+                console.error('ATIS fetch error:', error);
                 return null;
             }
         }
 
+        // Fetch Pad Statuses from Pittsburgh Airport
+        async function fetchPadStatuses() {
+            try {
+                const url = 'https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw';
+                const proxies = [
+                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+                ];
+                
+                let html = null;
+                for (const proxyURL of proxies) {
+                    try {
+                        const response = await fetch(proxyURL);
+                        html = await response.text();
+                        if (html && html.length > 100) break;
+                    } catch (err) {
+                        continue;
+                    }
+                }
+                
+                if (!html) return null;
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const textContent = doc.body.textContent || doc.body.innerText;
+                
+                const padStatuses = [];
+                const padMatches = textContent.matchAll(/Pad\s+(\d+|North|South|East|West)\s*[:-]?\s*(Open|Closed|Available)/gi);
+                
+                for (const match of padMatches) {
+                    const padName = `Pad ${match[1]}`;
+                    if (!padStatuses.find(p => p.name === padName)) {
+                        padStatuses.push({ name: padName, status: match[2] });
+                    }
+                }
+                
+                return padStatuses.length > 0 ? padStatuses : null;
+            } catch (error) {
+                console.error('Pad status fetch error:', error);
+                return null;
+            }
+        }
+
+        // Display Pad Statuses
         function displayPadStatuses(padStatuses) {
             const container = document.getElementById('pad-status-container');
-            
             if (!padStatuses || padStatuses.length === 0) {
                 container.innerHTML = '<div style="text-align: center; color: #6b7280; grid-column: 1/-1; font-size: 11px;">No data</div>';
                 return;
@@ -1144,23 +1119,11 @@
             
             container.innerHTML = padStatuses.map(pad => {
                 const status = pad.status.toLowerCase();
-                let bgColor = '#f3f4f6';
-                let textColor = '#6b7280';
-                let borderColor = '#e5e7eb';
-                let displayStatus = 'Unknown';
-                
-                // Simplified: Only Open or Closed
-                if (status.includes('open') || status.includes('available')) {
-                    bgColor = '#d1fae5';
-                    textColor = '#065f46';
-                    borderColor = '#10b981';
-                    displayStatus = 'OPEN';
-                } else if (status.includes('closed') || status.includes('maintenance') || status.includes('out of service') || status.includes('occupied') || status.includes('in use')) {
-                    bgColor = '#fee2e2';
-                    textColor = '#991b1b';
-                    borderColor = '#ef4444';
-                    displayStatus = 'CLOSED';
-                }
+                const isOpen = status.includes('open') || status.includes('available');
+                const bgColor = isOpen ? '#d1fae5' : '#fee2e2';
+                const textColor = isOpen ? '#065f46' : '#991b1b';
+                const borderColor = isOpen ? '#10b981' : '#ef4444';
+                const displayStatus = isOpen ? 'OPEN' : 'CLOSED';
                 
                 return `
                     <div style="background: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 6px; padding: 8px; text-align: center;">
@@ -1170,109 +1133,13 @@
                 `;
             }).join('');
         }
-            
-            container.innerHTML = padStatuses.map(pad => {
-                const status = pad.status.toLowerCase();
-                let bgColor = '#f3f4f6';
-                let textColor = '#6b7280';
-                let borderColor = '#e5e7eb';
-                
-                // Color coding based on status
-                if (status.includes('open') || status.includes('available')) {
-                    bgColor = '#d1fae5';
-                    textColor = '#065f46';
-                    borderColor = '#10b981';
-                } else if (status.includes('closed') || status.includes('maintenance') || status.includes('out of service')) {
-                    bgColor = '#fee2e2';
-                    textColor = '#991b1b';
-                    borderColor = '#ef4444';
-                } else if (status.includes('occupied') || status.includes('in use')) {
-                    bgColor = '#fef3c7';
-                    textColor = '#92400e';
-                    borderColor = '#f59e0b';
-                }
-                
-                return `
-                    <div style="background: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 8px; padding: 10px; text-align: center;">
-                        <div style="font-weight: 600; color: ${textColor}; font-size: 13px; margin-bottom: 4px;">${pad.name}</div>
-                        <div style="font-size: 11px; color: ${textColor}; text-transform: uppercase; letter-spacing: 0.5px;">${pad.status}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function fetchATISLetter() {
-            try {
-                const url = 'https://ids6.pitairport.com/IDS5Status/?recover=dXNlcj1BT1VTRVImcHc9QU9QVw';
-                
-                // Try multiple CORS proxies
-                const proxies = [
-                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-                ];
-                
-                let html = null;
-                
-                for (const proxyURL of proxies) {
-                    try {
-                        const response = await fetch(proxyURL);
-                        html = await response.text();
-                        if (html && html.length > 100) break;
-                    } catch (err) {
-                        console.log(`Proxy failed: ${proxyURL}`, err);
-                        continue;
-                    }
-                }
-                
-                if (!html) {
-                    throw new Error('Unable to fetch ATIS data');
-                }
-                
-                // Parse the HTML
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const textContent = doc.body.textContent || doc.body.innerText;
-                
-                // Try multiple patterns to find ATIS letter
-                let atisLetter = null;
-                
-                // Pattern 1: "ATIS" followed by letter
-                let match = textContent.match(/ATIS\s*[:;]?\s*([A-Z])\b/i);
-                if (match) atisLetter = match[1].toUpperCase();
-                
-                // Pattern 2: "Information" followed by letter
-                if (!atisLetter) {
-                    match = textContent.match(/Information\s*[:;]?\s*([A-Z])\b/i);
-                    if (match) atisLetter = match[1].toUpperCase();
-                }
-                
-                // Pattern 3: Look for "Info" followed by letter
-                if (!atisLetter) {
-                    match = textContent.match(/Info\s*[:;]?\s*([A-Z])\b/i);
-                    if (match) atisLetter = match[1].toUpperCase();
-                }
-                
-                // Pattern 4: Search for common ATIS phrases
-                if (!atisLetter) {
-                    match = textContent.match(/[Cc]urrent\s+[Ii]nformation\s+([A-Z])/);
-                    if (match) atisLetter = match[1].toUpperCase();
-                }
-                
-                return atisLetter || null;
-                
-            } catch (error) {
-                console.error('Error fetching ATIS letter:', error);
-                return null;
-            }
-        }
 
         async function loadATIS() {
             try {
                 // Reset display
                 document.getElementById('atis-letter').textContent = '...';
-document.getElementById('pad-status-container').innerHTML = '<div style="text-align: center; color: #6b7280;">Loading...</div>';
-                                document.getElementById('temperature').textContent = 'Loading...';
+                document.getElementById('pad-status-container').innerHTML = '<div style="text-align: center; color: #6b7280; font-size: 12px;">Loading...</div>';
+                document.getElementById('temperature').textContent = 'Loading...';
                 document.getElementById('dewpoint').textContent = 'Loading...';
                 document.getElementById('wind').textContent = 'Loading...';
                 document.getElementById('metar-full').textContent = 'Loading...';
@@ -1292,25 +1159,21 @@ document.getElementById('pad-status-container').innerHTML = '<div style="text-al
                     if (metarText && metarText.trim() && !metarText.includes('error')) {
                         displayMETARData(metarText);
                         
+                
                 // Fetch ATIS letter
                 fetchATISLetter().then(letter => {
-                    if (letter) {
-                        document.getElementById('atis-letter').textContent = letter;
-                    } else {
-                        document.getElementById('atis-letter').textContent = 'N/A';
-                    }
-                }).catch(err => {
-                    console.error('ATIS letter fetch error:', err);
+                    document.getElementById('atis-letter').textContent = letter || 'N/A';
+                }).catch(() => {
                     document.getElementById('atis-letter').textContent = '?';
                 });
                 
                 // Fetch pad statuses
                 fetchPadStatuses().then(pads => {
                     displayPadStatuses(pads);
-                }).catch(err => {
-                    console.error('Pad status fetch error:', err);
-                    document.getElementById('pad-status-container').innerHTML = '<div style="text-align: center; color: #dc2626; grid-column: 1/-1;">Error loading pad status</div>';
+                }).catch(() => {
+                    document.getElementById('pad-status-container').innerHTML = '<div style="text-align: center; color: #dc2626; grid-column: 1/-1; font-size: 11px;">Error</div>';
                 });
+                
                 return;
                     }
                 } catch (directError) {
@@ -1324,6 +1187,22 @@ document.getElementById('pad-status-container').innerHTML = '<div style="text-al
                 
                 if (metarText && metarText.trim()) {
                     displayMETARData(metarText);
+                
+                
+                // Fetch ATIS letter
+                fetchATISLetter().then(letter => {
+                    document.getElementById('atis-letter').textContent = letter || 'N/A';
+                }).catch(() => {
+                    document.getElementById('atis-letter').textContent = '?';
+                });
+                
+                // Fetch pad statuses
+                fetchPadStatuses().then(pads => {
+                    displayPadStatuses(pads);
+                }).catch(() => {
+                    document.getElementById('pad-status-container').innerHTML = '<div style="text-align: center; color: #dc2626; grid-column: 1/-1; font-size: 11px;">Error</div>';
+                });
+                
                 } else {
                     throw new Error('No METAR data received');
                 }
