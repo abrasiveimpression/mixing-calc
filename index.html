@@ -259,19 +259,19 @@
         
         <div class="page active" id="menu">
             <div class="menu-grid" id="menu-grid">
-                <div class="menu-card" draggable="true" data-menu-id="increase" onclick="handleCardClick('increase', event)" role="button" tabindex="0" aria-label="Increase Mix"><h3>Increase Mix</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="decrease" onclick="handleCardClick('decrease', event)" role="button" tabindex="0" aria-label="Decrease Mix"><h3>Decrease Mix</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="volume" onclick="handleCardClick('volume', event)" role="button" tabindex="0" aria-label="Increase Volume"><h3>Increase Volume</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="tote" onclick="handleCardClick('tote', event)" role="button" tabindex="0" aria-label="Tote to Truck"><h3>Tote to Truck</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="truckboard" onclick="handleCardClick('truckboard', event)" role="button" tabindex="0" aria-label="Truck Board"><h3>🚛 Truck Board</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="truckboard-edit" onclick="handleCardClick('truckboard-edit', event)" role="button" tabindex="0" aria-label="Edit Truck Board"><h3>✏️ Edit Truck Board</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="atis" onclick="handleCardClick('atis', event)" role="button" tabindex="0" aria-label="ATIS & Weather"><h3>📡 ATIS & Weather</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="history" onclick="handleCardClick('history', event)" role="button" tabindex="0" aria-label="History"><h3>📋 History</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="dilution" onclick="handleCardClick('dilution', event)" role="button" tabindex="0" aria-label="Dilution Chart"><h3>📊 Dilution Chart</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="aircraft" onclick="handleCardClick('aircraft', event)" role="button" tabindex="0" aria-label="Aircraft Reference"><h3>✈️ Aircraft Reference</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="airlines" onclick="handleCardClick('airlines', event)" role="button" tabindex="0" aria-label="Airline Codes"><h3>🛫 Airline Codes</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="pdfs" onclick="handleCardClick('pdfs', event)" role="button" tabindex="0" aria-label="Documents & Links"><h3>📄 Documents & Links</h3></div>
-                <div class="menu-card" draggable="true" data-menu-id="notes" onclick="handleCardClick('notes', event)" role="button" tabindex="0" aria-label="Notes"><h3>📝 Notes</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="increase" role="button" tabindex="0" aria-label="Increase Mix"><h3>Increase Mix</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="decrease" role="button" tabindex="0" aria-label="Decrease Mix"><h3>Decrease Mix</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="volume" role="button" tabindex="0" aria-label="Increase Volume"><h3>Increase Volume</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="tote" role="button" tabindex="0" aria-label="Tote to Truck"><h3>Tote to Truck</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="truckboard" role="button" tabindex="0" aria-label="Truck Board"><h3>🚛 Truck Board</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="truckboard-edit" role="button" tabindex="0" aria-label="Edit Truck Board"><h3>✏️ Edit Truck Board</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="atis" role="button" tabindex="0" aria-label="ATIS & Weather"><h3>📡 ATIS & Weather</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="history" role="button" tabindex="0" aria-label="History"><h3>📋 History</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="dilution" role="button" tabindex="0" aria-label="Dilution Chart"><h3>📊 Dilution Chart</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="aircraft" role="button" tabindex="0" aria-label="Aircraft Reference"><h3>✈️ Aircraft Reference</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="airlines" role="button" tabindex="0" aria-label="Airline Codes"><h3>🛫 Airline Codes</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="pdfs" role="button" tabindex="0" aria-label="Documents & Links"><h3>📄 Documents & Links</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="notes" role="button" tabindex="0" aria-label="Notes"><h3>📝 Notes</h3></div>
             </div></div>
         </div>
 
@@ -1458,6 +1458,7 @@
         // Drag and Drop Functionality for Menu Cards
         let draggedElement = null;
         let menuOrder = [];
+        let isDragging = false;
 
         function initDragAndDrop() {
             const menuGrid = document.getElementById('menu-grid');
@@ -1476,6 +1477,17 @@
             }
             
             cards.forEach(card => {
+                // Remove onclick attribute and add our own click handler
+                card.removeAttribute('onclick');
+                
+                card.addEventListener('click', function(e) {
+                    if (!isDragging) {
+                        const pageId = this.dataset.menuId;
+                        showPage(pageId);
+                    }
+                    isDragging = false; // Reset flag
+                });
+                
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragend', handleDragEnd);
                 card.addEventListener('dragover', handleDragOver);
@@ -1485,21 +1497,10 @@
             });
         }
 
-        
-        // Handle card clicks - prevent navigation if dragging
-        function handleCardClick(pageId, event) {
-            if (event.target.closest('.menu-card').dataset.isDragging === 'true') {
-                event.preventDefault();
-                event.stopPropagation();
-                return false;
-            }
-            showPage(pageId);
-        }
-
         function handleDragStart(e) {
             draggedElement = this;
+            isDragging = true;
             this.classList.add('dragging');
-            this.dataset.isDragging = 'true';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.innerHTML);
         }
@@ -1507,11 +1508,10 @@
         function handleDragEnd(e) {
             this.classList.remove('dragging');
             
-            // Prevent click event from firing after drag
-            const element = this;
+            // Keep isDragging true for a moment to prevent click
             setTimeout(() => {
-                delete element.dataset.isDragging;
-            }, 100);
+                isDragging = false;
+            }, 50);
             
             // Remove drag-over class from all cards
             document.querySelectorAll('.menu-card').forEach(card => {
@@ -1590,6 +1590,7 @@
             });
         }
 
+        
         // Initialize drag and drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initDragAndDrop();
