@@ -741,15 +741,26 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                 const lines = csvText.trim().split('\n');
                 const dataLines = lines.slice(1);
                 
-             let importedData = '';
+let importedData = '';
 dataLines.forEach(line => {
-    // Remove quotes and handle numbers with commas (like 1,650)
-    const cleanLine = line.replace(/"/g, '').replace(/,(\d{3})/g, '$1');
-    const values = cleanLine.split(',');
-    if (values.length >= 6 && values[0].trim()) {
-        const truckId = values[0].trim();           // Column A: Truck ID
-        const typeIGallons = values[5].trim();      // Column F: Type I Gallons (index 5)
-        const freezePointC = values[2].trim();      // Column C: Freeze Point (index 2)
+    const values = line.replace(/"/g, '').split(',');
+    
+    // Debug: log the values to see what we're getting
+    console.log('Row values:', values);
+    
+    if (values.length >= 7 && values[0].trim()) {
+        const truckId = values[0].trim();           // Column A: ID
+        
+        // Type I gallons might be at index 5 or 6 depending on comma formatting
+        // Try to find the correct gallon value (should be 3-4 digits)
+        let typeIGallons = values[5].trim();
+        
+        // If value at index 5 is short (like just "1"), check if next value completes it
+        if (typeIGallons.length <= 2 && values[6] && values[6].match(/^\d{3}/)) {
+            typeIGallons = typeIGallons + values[6].substring(0, 3);
+        }
+        
+        const freezePointC = values[2].trim();      // Column C: Freeze Point
         importedData += `${truckId}, ${typeIGallons}, ${freezePointC}\n`;
     }
 });
