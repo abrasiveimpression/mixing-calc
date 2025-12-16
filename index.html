@@ -806,32 +806,32 @@ function processBatch() {
             const lines = input.split('\n');
             const trucks = [];
             
-            lines.forEach((line, index) => {
-                const parts = line.split(',').map(s => s.trim());
-                if (parts.length >= 3) {
-                    const truckId = parts[0];
-                    const typeIGallons = parseFloat(parts[1]);
-                    const freezeOrPct = parts[2];
-                    
-                    let currentMixPct;
-                    if (freezeOrPct.includes('%')) {
-                        currentMixPct = parseFloat(freezeOrPct.replace('%', ''));
-                    } else if (freezeOrPct.includes('-')) {
-                        currentMixPct = freezePointToPercentage(parseFloat(freezeOrPct));
-                    } else {
-                        currentMixPct = parseFloat(freezeOrPct);
-                    }
-                    
-                    if (!isNaN(typeIGallons) && !isNaN(currentMixPct)) {
-                        trucks.push({
-                            id: truckId,
-                            typeIGallons: typeIGallons,
-                            currentMixPct: currentMixPct,
-                            currentVolume: typeIGallons / (currentMixPct / 100)
-                        });
-                    }
-                }
+lines.forEach((line, index) => {
+    const parts = line.split(',').map(s => s.trim());
+    if (parts.length >= 3) {
+        const truckId = parts[0];
+        const typeIGallons = parseFloat(parts[1]);
+        const freezeOrPct = parts[2];
+        
+        let currentMixPct;
+        if (freezeOrPct.includes('%')) {
+            currentMixPct = parseFloat(freezeOrPct.replace('%', ''));
+        } else if (freezeOrPct.includes('-')) {
+            currentMixPct = freezePointToPercentage(parseFloat(freezeOrPct));
+        } else {
+            currentMixPct = parseFloat(freezeOrPct);
+        }
+        
+        if (!isNaN(typeIGallons) && !isNaN(currentMixPct)) {
+            trucks.push({
+                id: truckId,
+                typeIGallons: typeIGallons,
+                currentMixPct: currentMixPct,
+                currentVolume: typeIGallons / (currentMixPct / 100)
             });
+        }
+    }
+});
             
             if (trucks.length === 0) {
                 resultsDiv.innerHTML = '<div class="error-message">No valid truck data found. Please check your input format.</div>';
