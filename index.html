@@ -434,13 +434,7 @@
                 <input type="number" id="vol-cur-freeze" placeholder="OR Current Freeze Point (°C)" oninput="handleVolCurFreezeInput()" aria-label="Current freeze point in Celsius" max="0">
                 
                 <input type="number" inputmode="decimal" id="vol-curv" placeholder="Current Volume" oninput="calcVol()" aria-label="Current volume in gallons" min="0">
-                
-<div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
-    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
-        <input type="checkbox" id="batch-pumpout" style="width: auto; margin-right: 8px;">
-        <span>Calculate pump-out for each truck (water or glycol only)</span>
-    </label>
-</div>                
+                              
 
 <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
                     <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
@@ -489,7 +483,13 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                 <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
                     <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
                 </div>
-                
+<div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
+        <input type="checkbox" id="batch-pumpout" style="width: auto; margin-right: 8px;">
+        <span>Calculate pump-out for each truck (water or glycol only)</span>
+    </label>
+</div>                
+
                 <input type="number" inputmode="decimal" id="batch-want-pct" placeholder="Wanted Mix %" aria-label="Wanted mix percentage" min="0" max="100">
                 <input type="number" id="batch-want-freeze" placeholder="OR Wanted Freeze Point (°C)" aria-label="Wanted freeze point in Celsius" max="0">
                 
