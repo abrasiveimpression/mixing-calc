@@ -435,7 +435,14 @@
                 
                 <input type="number" inputmode="decimal" id="vol-curv" placeholder="Current Volume" oninput="calcVol()" aria-label="Current volume in gallons" min="0">
                 
-                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+<div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
+        <input type="checkbox" id="batch-pumpout" style="width: auto; margin-right: 8px;">
+        <span>Calculate pump-out for each truck (water or glycol only)</span>
+    </label>
+</div>                
+
+<div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
                     <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
                 </div>
                 
@@ -758,12 +765,13 @@ dataLines.forEach(line => {
             }
         }
 
-        function processBatch() {
-            const input = document.getElementById('batch-input').value.trim();
-            const wantPct = document.getElementById('batch-want-pct').value;
-            const wantFreeze = document.getElementById('batch-want-freeze').value;
-            const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
-            const resultsDiv = document.getElementById('batch-results');
+function processBatch() {
+    const input = document.getElementById('batch-input').value.trim();
+    const wantPct = document.getElementById('batch-want-pct').value;
+    const wantFreeze = document.getElementById('batch-want-freeze').value;
+    const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
+    const pumpOutChecked = document.getElementById('batch-pumpout').checked;
+    const resultsDiv = document.getElementById('batch-results');
             
             if (!input) {
                 resultsDiv.innerHTML = '<div class="error-message">Please enter truck data or import from Google Sheets</div>';
@@ -818,14 +826,15 @@ dataLines.forEach(line => {
             }
             
             const results = trucks.map(truck => {
-                return calculateTruckMix(
-                    truck.id,
-                    truck.currentMixPct,
-                    truck.currentVolume,
-                    wantedMixPct,
-                    wantVol
-                );
-            });
+    return calculateTruckMix(
+        truck.id,
+        truck.currentMixPct,
+        truck.currentVolume,
+        wantedMixPct,
+        wantVol,
+        pumpOutChecked
+    );
+});
             
             displayBatchResults(results, wantedMixPct, wantVol);
             
@@ -836,69 +845,110 @@ dataLines.forEach(line => {
             });
         }
 
-        function calculateTruckMix(truckId, curMix, curVol, wantMix, wantVol) {
-            try {
-                const validations = [
-                    validateInput(curMix, 'Current mix', 0, 100),
-                    validateInput(wantMix, 'Wanted mix', 0, 100),
-                    validateInput(curVol, 'Current volume', 0.1),
-                    validateInput(wantVol, 'Wanted volume', 0.1)
-                ];
-                
-                for (let validation of validations) {
-                    if (!validation.valid) {
-                        return {
-                            truckId: truckId,
-                            success: false,
-                            error: validation.message
-                        };
-                    }
-                }
-                
-                if (wantVol <= curVol) {
-                    return {
-                        truckId: truckId,
-                        success: false,
-                        error: 'Wanted volume must be greater than current volume'
-                    };
-                }
-                
-                const cm = curMix / 100;
-                const wm = wantMix / 100;
-                
-                const d4 = cm * curVol;
-                const d5 = wm * wantVol;
-                const d6 = d5 - d4;
-                
-                const e4 = curVol - d4;
-                const e5 = wantVol - d5;
-                const e6 = e5 - e4;
-                
-                const percentToAdd = (d6 / (d6 + e6)) * 100;
-                const volumeToAdd = d6 + e6;
-                const typeIToAdd = d6;
-                const waterToAdd = e6;
-                
-                return {
-                    truckId: truckId,
-                    success: true,
-                    currentMix: curMix,
-                    currentVolume: curVol,
-                    wantedMix: wantMix,
-                    wantedVolume: wantVol,
-                    percentToAdd: percentToAdd,
-                    volumeToAdd: volumeToAdd,
-                    typeIToAdd: typeIToAdd,
-                    waterToAdd: waterToAdd
-                };
-            } catch (error) {
+        function calculateTruckMix(truckId, curMix, curVol, wantMix, wantVol, pumpOutChecked = false) {
+    try {
+        const validations = [
+            validateInput(curMix, 'Current mix', 0, 100),
+            validateInput(wantMix, 'Wanted mix', 0, 100),
+            validateInput(curVol, 'Current volume', 0.1),
+            validateInput(wantVol, 'Wanted volume', 0.1)
+        ];
+        
+        for (let validation of validations) {
+            if (!validation.valid) {
                 return {
                     truckId: truckId,
                     success: false,
-                    error: error.message
+                    error: validation.message
                 };
             }
         }
+        
+        // Handle pump-out if checked
+        let pumpOutAmount = 0;
+        let pumpOutMode = null;
+        let effectiveCurVol = curVol;
+        
+        if (pumpOutChecked) {
+            if (wantMix < curMix) {
+                pumpOutMode = 'water-only';
+            } else if (wantMix > curMix) {
+                pumpOutMode = 'glycol-only';
+            } else {
+                return {
+                    truckId: truckId,
+                    success: false,
+                    error: 'Pump-out not needed when current and wanted mix are the same'
+                };
+            }
+            
+            pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
+            
+            if (pumpOutAmount === null || pumpOutAmount <= 0) {
+                return {
+                    truckId: truckId,
+                    success: false,
+                    error: `Cannot achieve ${pumpOutMode === 'water-only' ? 'water-only' : 'glycol-only'} solution with these parameters`
+                };
+            }
+            
+            if (pumpOutAmount >= curVol) {
+                return {
+                    truckId: truckId,
+                    success: false,
+                    error: 'Calculated pump-out exceeds current volume'
+                };
+            }
+            
+            effectiveCurVol = curVol - pumpOutAmount;
+        }
+        
+        if (wantVol <= effectiveCurVol) {
+            return {
+                truckId: truckId,
+                success: false,
+                error: 'Wanted volume must be greater than current volume' + (pumpOutChecked ? ' after pump out' : '')
+            };
+        }
+        
+        const cm = curMix / 100;
+        const wm = wantMix / 100;
+        
+        const d4 = cm * effectiveCurVol;
+        const d5 = wm * wantVol;
+        const d6 = d5 - d4;
+        
+        const e4 = effectiveCurVol - d4;
+        const e5 = wantVol - d5;
+        const e6 = e5 - e4;
+        
+        const percentToAdd = (d6 / (d6 + e6)) * 100;
+        const volumeToAdd = d6 + e6;
+        const typeIToAdd = d6;
+        const waterToAdd = e6;
+        
+        return {
+            truckId: truckId,
+            success: true,
+            currentMix: curMix,
+            currentVolume: curVol,
+            wantedMix: wantMix,
+            wantedVolume: wantVol,
+            percentToAdd: percentToAdd,
+            volumeToAdd: volumeToAdd,
+            typeIToAdd: typeIToAdd,
+            waterToAdd: waterToAdd,
+            pumpOutAmount: pumpOutAmount,
+            pumpOutMode: pumpOutMode
+        };
+    } catch (error) {
+        return {
+            truckId: truckId,
+            success: false,
+            error: error.message
+        };
+    }
+}
 
         function displayBatchResults(results, wantedMix, wantedVol) {
             const resultsDiv = document.getElementById('batch-results');
@@ -931,44 +981,79 @@ dataLines.forEach(line => {
             `;
             
             results.forEach(result => {
-                if (result.success) {
-                    html += `
-                        <div class="truck-result">
-                            <div class="truck-header">
-                                <div class="truck-id">${result.truckId}</div>
-                                <div class="truck-status status-success">✓ Success</div>
-                            </div>
-                            <div class="truck-details">
-                                <div class="truck-details-row">
-                                    <span class="truck-details-label">Current:</span>
-                                    <span class="truck-details-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
-                                </div>
-                                <div class="truck-details-row">
-                                    <span class="truck-details-label">Target:</span>
-                                    <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${result.wantedVolume} gal</span>
-                                </div>
-                                <div class="truck-details-row">
-                                    <span class="truck-details-label">Mix to Add:</span>
-                                    <span class="truck-details-value">${result.percentToAdd.toFixed(0)}%</span>
-                                </div>
-                                <div class="truck-details-row">
-                                    <span class="truck-details-label">Total to Add:</span>
-                                    <span class="truck-details-value">${Math.round(result.volumeToAdd)} gal</span>
-                                </div>
-                            </div>
-                            <div class="fluid-add-box">
-                                <div class="fluid-add-title">Fluid Breakdown:</div>
-                                <div class="truck-details-row" style="margin-bottom: 6px;">
-                                    <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
-                                    <span style="font-weight: 700; color: #3b82f6;">${Math.round(result.waterToAdd)} gal</span>
-                                </div>
-                                <div class="truck-details-row">
-                                    <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
-                                    <span style="font-weight: 700; color: #f97316;">${Math.round(result.typeIToAdd)} gal</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+    if (result.success) {
+        // Build pump-out section if applicable
+        let pumpOutSection = '';
+        if (result.pumpOutAmount && result.pumpOutAmount > 0) {
+            const addType = result.pumpOutMode === 'water-only' ? 'water' : 'Type I glycol';
+            const afterPumpOutVol = result.currentVolume - result.pumpOutAmount;
+            pumpOutSection = `
+                <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 10px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #dc2626; margin-bottom: 6px;">⚠️ Pump Out Required</div>
+                    <div class="truck-details-row">
+                        <span class="truck-details-label">Pump Out:</span>
+                        <span class="truck-details-value" style="color: #dc2626;">${result.pumpOutAmount.toFixed(0)} gal</span>
+                    </div>
+                    <div class="truck-details-row">
+                        <span class="truck-details-label">After Pump Out:</span>
+                        <span class="truck-details-value">${afterPumpOutVol.toFixed(0)} gal</span>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
+                        Then add ${addType} only
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Verification for water/glycol only
+        let verificationNote = '';
+        if (result.pumpOutMode) {
+            if (result.pumpOutMode === 'water-only' && Math.round(result.typeIToAdd) === 0) {
+                verificationNote = '<div style="background: #d1fae5; color: #065f46; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Water only needed</div>';
+            } else if (result.pumpOutMode === 'glycol-only' && Math.round(result.waterToAdd) === 0) {
+                verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Type I glycol only needed</div>';
+            }
+        }
+        
+        html += `
+            <div class="truck-result">
+                <div class="truck-header">
+                    <div class="truck-id">${result.truckId}</div>
+                    <div class="truck-status status-success">✓ Success</div>
+                </div>
+                ${pumpOutSection}
+                <div class="truck-details">
+                    <div class="truck-details-row">
+                        <span class="truck-details-label">Current:</span>
+                        <span class="truck-details-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
+                    </div>
+                    <div class="truck-details-row">
+                        <span class="truck-details-label">Target:</span>
+                        <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${result.wantedVolume} gal</span>
+                    </div>
+                    <div class="truck-details-row">
+                        <span class="truck-details-label">Mix to Add:</span>
+                        <span class="truck-details-value">${result.percentToAdd.toFixed(0)}%</span>
+                    </div>
+                    <div class="truck-details-row">
+                        <span class="truck-details-label">Total to Add:</span>
+                        <span class="truck-details-value">${Math.round(result.volumeToAdd)} gal</span>
+                    </div>
+                </div>
+                ${verificationNote}
+                <div class="fluid-add-box">
+                    <div class="fluid-add-title">Fluid Breakdown:</div>
+                    <div class="truck-details-row" style="margin-bottom: 6px;">
+                        <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
+                        <span style="font-weight: 700; color: #3b82f6;">${Math.round(result.waterToAdd)} gal</span>
+                    </div>
+                    <div class="truck-details-row">
+                        <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
+                        <span style="font-weight: 700; color: #f97316;">${Math.round(result.typeIToAdd)} gal</span>
+                    </div>
+                </div>
+            </div>
+        `;
                 } else {
                     html += `
                         <div class="truck-result">
