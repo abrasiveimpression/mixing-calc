@@ -247,10 +247,124 @@
         .external-link-btn:hover {
             background: #059669;
         }
+        .btn-primary {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .btn-primary:hover {
+            background: #0284c7;
+        }
+        .btn-secondary {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .btn-secondary:hover {
+            background: #059669;
+        }
+        .truck-result {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .truck-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .truck-id {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0369a1;
+        }
+        .truck-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .truck-details {
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .truck-details-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        .truck-details-label {
+            color: #6b7280;
+        }
+        .truck-details-value {
+            font-weight: 600;
+            color: #0369a1;
+        }
+        .fluid-add-box {
+            background: #f0f9ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        .fluid-add-title {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .summary-box {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .summary-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .summary-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+        .summary-stat-value {
+            font-weight: 700;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
-    <div class="version-badge">v1.3.0</div>
+    <div class="version-badge">v1.4.0</div>
     <div class="container">
         <div class="header">
             <button class="update-btn" onclick="updateApp()" aria-label="Update application">🔄 Update</button>
@@ -262,6 +376,7 @@
                 <div class="menu-card" draggable="true" data-menu-id="increase" role="button" tabindex="0" aria-label="Increase Mix"><h3>Increase Mix</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="decrease" role="button" tabindex="0" aria-label="Decrease Mix"><h3>Decrease Mix</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="volume" role="button" tabindex="0" aria-label="Increase Volume"><h3>Increase Volume</h3></div>
+                <div class="menu-card" draggable="true" data-menu-id="batch" role="button" tabindex="0" aria-label="Batch Trucks"><h3>🚚 Batch Trucks</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="tote" role="button" tabindex="0" aria-label="Tote to Truck"><h3>Tote to Truck</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="truckboard" role="button" tabindex="0" aria-label="Truck Board"><h3>🚛 Truck Board</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="truckboard-edit" role="button" tabindex="0" aria-label="Edit Truck Board"><h3>✏️ Edit Truck Board</h3></div>
@@ -272,7 +387,7 @@
                 <div class="menu-card" draggable="true" data-menu-id="airlines" role="button" tabindex="0" aria-label="Airline Codes"><h3>🛫 Airline Codes</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="pdfs" role="button" tabindex="0" aria-label="Documents & Links"><h3>📄 Documents & Links</h3></div>
                 <div class="menu-card" draggable="true" data-menu-id="notes" role="button" tabindex="0" aria-label="Notes"><h3>📝 Notes</h3></div>
-            </div></div>
+            </div>
         </div>
 
         <div class="page" id="increase">
@@ -337,6 +452,45 @@
                 </div>
                 
                 <div id="vol-result"></div>
+            </div>
+        </div>
+
+        <!-- NEW: Batch Trucks Page -->
+        <div class="page" id="batch">
+            <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
+            <div class="card">
+                <h2 style="margin-bottom: 16px;">Batch Trucks</h2>
+                
+                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                    <strong>Import from Google Sheets or enter manually below</strong><br>
+Imports: Truck ID (Col A) | Type I Gallons (Col F) | Freeze Point °C (Col C)
+                </div>
+                
+                <button class="btn-primary" onclick="importFromSheets()">📊 Import from Google Sheets</button>
+                
+                <div style="text-align: center; margin: 16px 0; color: #9ca3af; font-size: 14px;">
+                    OR
+                </div>
+                
+                <textarea id="batch-input" rows="8" placeholder="Enter truck data (one per line):
+Truck 1, 500, -30
+Truck 2, 450, 45%
+Truck 3, 600, -25
+
+Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-family: 'Courier New', monospace; font-size: 13px;"></textarea>
+                
+                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                    <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
+                </div>
+                
+                <input type="number" inputmode="decimal" id="batch-want-pct" placeholder="Wanted Mix %" aria-label="Wanted mix percentage" min="0" max="100">
+                <input type="number" id="batch-want-freeze" placeholder="OR Wanted Freeze Point (°C)" aria-label="Wanted freeze point in Celsius" max="0">
+                
+                <input type="number" inputmode="decimal" id="batch-want-vol" placeholder="Wanted Volume (gallons)" aria-label="Wanted volume in gallons" min="0">
+                
+                <button class="btn-secondary" onclick="processBatch()">🚀 Process All Trucks</button>
+                
+                <div id="batch-results" style="margin-top: 20px;"></div>
             </div>
         </div>
 
@@ -466,7 +620,6 @@
             <div class="card">
                 <h2>Documents & Links</h2>
                 <h3 style="color: red;">Under Construction</h3>
-               <!-- <div id="pdf-list"></div> -->
             </div>
         </div>
 
@@ -481,6 +634,9 @@
     </div>
 
     <script>
+        // Google Sheets Configuration
+        const SHEETS_ID = '141e9AEoD3aluTHDRsyoTrIJHekM9Q5JGGANWfoCr_pY';
+        
         function showPage(p) {
             document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
             document.getElementById(p).classList.add('active');
@@ -488,22 +644,18 @@
             if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
             if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();
             
-            // Restore saved inputs for this page
             restorePageInputs(p);
         }
 
-        // Save input values to localStorage
         function saveInput(pageId, inputId, value) {
             const key = `input_${pageId}_${inputId}`;
             localStorage.setItem(key, value);
         }
 
-        // Restore all inputs for a page
         function restorePageInputs(pageId) {
             const page = document.getElementById(pageId);
             if (!page) return;
             
-            // Restore all text/number inputs
             page.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
                 const key = `input_${pageId}_${input.id}`;
                 const savedValue = localStorage.getItem(key);
@@ -512,7 +664,6 @@
                 }
             });
             
-            // Restore checkboxes
             page.querySelectorAll('input[type="checkbox"]').forEach(input => {
                 const key = `input_${pageId}_${input.id}`;
                 const savedValue = localStorage.getItem(key);
@@ -521,7 +672,6 @@
                 }
             });
             
-            // Trigger calculations after restoring values
             if (pageId === 'increase' && document.getElementById('inc-cur').value) {
                 calcInc();
             } else if (pageId === 'decrease' && document.getElementById('dec-cur').value) {
@@ -533,37 +683,22 @@
             }
         }
 
-        // Clear saved inputs for a page (optional - for future use)
-        function clearPageInputs(pageId) {
-            const page = document.getElementById(pageId);
-            if (!page) return;
-            
-            page.querySelectorAll('input').forEach(input => {
-                const key = `input_${pageId}_${input.id}`;
-                localStorage.removeItem(key);
-            });
-        }
-
-        // Clear calculator - clears all inputs and saved data
         function clearCalculator(pageId) {
             const page = document.getElementById(pageId);
             if (!page) return;
             
-            // Clear all input fields
             page.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
                 input.value = '';
                 const key = `input_${pageId}_${input.id}`;
                 localStorage.removeItem(key);
             });
             
-            // Clear checkboxes
             page.querySelectorAll('input[type="checkbox"]').forEach(input => {
                 input.checked = false;
                 const key = `input_${pageId}_${input.id}`;
                 localStorage.removeItem(key);
             });
             
-            // Clear result displays
             if (pageId === 'increase') {
                 document.getElementById('inc-result').innerHTML = '';
             } else if (pageId === 'decrease') {
@@ -585,20 +720,285 @@
             return { valid: true };
         }
 
+        // NEW: Batch Processing Functions
+        async function importFromSheets() {
+            const resultsDiv = document.getElementById('batch-results');
+            resultsDiv.innerHTML = '<div class="loading">📥 Loading data from Google Sheets...</div>';
+            
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv`;
+                
+                const response = await fetch(url);
+                const csvText = await response.text();
+                
+                const lines = csvText.trim().split('\n');
+                const dataLines = lines.slice(1);
+                
+               let importedData = '';
+dataLines.forEach(line => {
+    const values = line.replace(/"/g, '').split(',');
+    if (values.length >= 6 && values[0].trim()) {
+        const truckId = values[0].trim();           // Column A: Truck ID
+        const typeIGallons = values[5].trim();      // Column F: Type I Gallons (index 5)
+        const freezePointC = values[2].trim();      // Column C: Freeze Point (index 2)
+        importedData += `${truckId}, ${typeIGallons}, ${freezePointC}\n`;
+    }
+});
+                
+                document.getElementById('batch-input').value = importedData.trim();
+                resultsDiv.innerHTML = '<div style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; text-align: center; font-weight: 600;">✓ Data imported successfully! Now enter wanted mix and volume, then click "Process All Trucks"</div>';
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                resultsDiv.innerHTML = `<div class="error-message">
+                    <strong>Import Failed</strong><br>
+                    Unable to import from Google Sheets. Please make sure the spreadsheet is publicly accessible or enter data manually.<br><br>
+                    <small>Error: ${error.message}</small>
+                </div>`;
+            }
+        }
+
+        function processBatch() {
+            const input = document.getElementById('batch-input').value.trim();
+            const wantPct = document.getElementById('batch-want-pct').value;
+            const wantFreeze = document.getElementById('batch-want-freeze').value;
+            const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
+            const resultsDiv = document.getElementById('batch-results');
+            
+            if (!input) {
+                resultsDiv.innerHTML = '<div class="error-message">Please enter truck data or import from Google Sheets</div>';
+                return;
+            }
+            
+            if ((!wantPct && !wantFreeze) || !wantVol) {
+                resultsDiv.innerHTML = '<div class="error-message">Please enter wanted mix (percentage or freeze point) and wanted volume</div>';
+                return;
+            }
+            
+            let wantedMixPct;
+            if (wantPct) {
+                wantedMixPct = parseFloat(wantPct);
+            } else {
+                wantedMixPct = freezePointToPercentage(parseFloat(wantFreeze));
+            }
+            
+            const lines = input.split('\n');
+            const trucks = [];
+            
+            lines.forEach((line, index) => {
+                const parts = line.split(',').map(s => s.trim());
+                if (parts.length >= 3) {
+                    const truckId = parts[0];
+                    const typeIGallons = parseFloat(parts[1]);
+                    const freezeOrPct = parts[2];
+                    
+                    let currentMixPct;
+                    if (freezeOrPct.includes('%')) {
+                        currentMixPct = parseFloat(freezeOrPct.replace('%', ''));
+                    } else if (freezeOrPct.includes('-')) {
+                        currentMixPct = freezePointToPercentage(parseFloat(freezeOrPct));
+                    } else {
+                        currentMixPct = parseFloat(freezeOrPct);
+                    }
+                    
+                    if (!isNaN(typeIGallons) && !isNaN(currentMixPct)) {
+                        trucks.push({
+                            id: truckId,
+                            typeIGallons: typeIGallons,
+                            currentMixPct: currentMixPct,
+                            currentVolume: typeIGallons / (currentMixPct / 100)
+                        });
+                    }
+                }
+            });
+            
+            if (trucks.length === 0) {
+                resultsDiv.innerHTML = '<div class="error-message">No valid truck data found. Please check your input format.</div>';
+                return;
+            }
+            
+            const results = trucks.map(truck => {
+                return calculateTruckMix(
+                    truck.id,
+                    truck.currentMixPct,
+                    truck.currentVolume,
+                    wantedMixPct,
+                    wantVol
+                );
+            });
+            
+            displayBatchResults(results, wantedMixPct, wantVol);
+            
+            saveToHistory('Batch', {
+                trucksProcessed: trucks.length,
+                wantedMix: wantedMixPct.toFixed(1),
+                wantedVol: wantVol
+            });
+        }
+
+        function calculateTruckMix(truckId, curMix, curVol, wantMix, wantVol) {
+            try {
+                const validations = [
+                    validateInput(curMix, 'Current mix', 0, 100),
+                    validateInput(wantMix, 'Wanted mix', 0, 100),
+                    validateInput(curVol, 'Current volume', 0.1),
+                    validateInput(wantVol, 'Wanted volume', 0.1)
+                ];
+                
+                for (let validation of validations) {
+                    if (!validation.valid) {
+                        return {
+                            truckId: truckId,
+                            success: false,
+                            error: validation.message
+                        };
+                    }
+                }
+                
+                if (wantVol <= curVol) {
+                    return {
+                        truckId: truckId,
+                        success: false,
+                        error: 'Wanted volume must be greater than current volume'
+                    };
+                }
+                
+                const cm = curMix / 100;
+                const wm = wantMix / 100;
+                
+                const d4 = cm * curVol;
+                const d5 = wm * wantVol;
+                const d6 = d5 - d4;
+                
+                const e4 = curVol - d4;
+                const e5 = wantVol - d5;
+                const e6 = e5 - e4;
+                
+                const percentToAdd = (d6 / (d6 + e6)) * 100;
+                const volumeToAdd = d6 + e6;
+                const typeIToAdd = d6;
+                const waterToAdd = e6;
+                
+                return {
+                    truckId: truckId,
+                    success: true,
+                    currentMix: curMix,
+                    currentVolume: curVol,
+                    wantedMix: wantMix,
+                    wantedVolume: wantVol,
+                    percentToAdd: percentToAdd,
+                    volumeToAdd: volumeToAdd,
+                    typeIToAdd: typeIToAdd,
+                    waterToAdd: waterToAdd
+                };
+            } catch (error) {
+                return {
+                    truckId: truckId,
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        function displayBatchResults(results, wantedMix, wantedVol) {
+            const resultsDiv = document.getElementById('batch-results');
+            
+            const successCount = results.filter(r => r.success).length;
+            const totalTypeI = results.filter(r => r.success).reduce((sum, r) => sum + r.typeIToAdd, 0);
+            const totalWater = results.filter(r => r.success).reduce((sum, r) => sum + r.waterToAdd, 0);
+            const totalFluid = totalTypeI + totalWater;
+            
+            let html = `
+                <div class="summary-box">
+                    <div class="summary-title">📊 Batch Summary</div>
+                    <div class="summary-stat">
+                        <span>Trucks Processed:</span>
+                        <span class="summary-stat-value">${successCount} / ${results.length}</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span>Total Type I Needed:</span>
+                        <span class="summary-stat-value">${Math.round(totalTypeI)} gal</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span>Total Water Needed:</span>
+                        <span class="summary-stat-value">${Math.round(totalWater)} gal</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span>Total Fluid:</span>
+                        <span class="summary-stat-value">${Math.round(totalFluid)} gal</span>
+                    </div>
+                </div>
+            `;
+            
+            results.forEach(result => {
+                if (result.success) {
+                    html += `
+                        <div class="truck-result">
+                            <div class="truck-header">
+                                <div class="truck-id">${result.truckId}</div>
+                                <div class="truck-status status-success">✓ Success</div>
+                            </div>
+                            <div class="truck-details">
+                                <div class="truck-details-row">
+                                    <span class="truck-details-label">Current:</span>
+                                    <span class="truck-details-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
+                                </div>
+                                <div class="truck-details-row">
+                                    <span class="truck-details-label">Target:</span>
+                                    <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${result.wantedVolume} gal</span>
+                                </div>
+                                <div class="truck-details-row">
+                                    <span class="truck-details-label">Mix to Add:</span>
+                                    <span class="truck-details-value">${result.percentToAdd.toFixed(0)}%</span>
+                                </div>
+                                <div class="truck-details-row">
+                                    <span class="truck-details-label">Total to Add:</span>
+                                    <span class="truck-details-value">${Math.round(result.volumeToAdd)} gal</span>
+                                </div>
+                            </div>
+                            <div class="fluid-add-box">
+                                <div class="fluid-add-title">Fluid Breakdown:</div>
+                                <div class="truck-details-row" style="margin-bottom: 6px;">
+                                    <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
+                                    <span style="font-weight: 700; color: #3b82f6;">${Math.round(result.waterToAdd)} gal</span>
+                                </div>
+                                <div class="truck-details-row">
+                                    <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
+                                    <span style="font-weight: 700; color: #f97316;">${Math.round(result.typeIToAdd)} gal</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="truck-result">
+                            <div class="truck-header">
+                                <div class="truck-id">${result.truckId}</div>
+                                <div class="truck-status status-error">✗ Error</div>
+                            </div>
+                            <div class="error-message" style="margin: 0;">
+                                ${result.error}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
         function calcInc() {
             const c=parseFloat(document.getElementById('inc-cur').value);
             const d=parseFloat(document.getElementById('inc-des').value);
             const v=parseFloat(document.getElementById('inc-vol').value);
             const resultDiv = document.getElementById('inc-result');
             
-            // Auto-save inputs
             saveInput('increase', 'inc-cur', document.getElementById('inc-cur').value);
             saveInput('increase', 'inc-des', document.getElementById('inc-des').value);
             saveInput('increase', 'inc-vol', document.getElementById('inc-vol').value);
             
             if(!c||!d||!v){resultDiv.innerHTML='';return;}
             
-            // Validation
             const validations = [
                 validateInput(c, 'Current mix', 0, 100),
                 validateInput(d, 'Desired mix', 0, 100),
@@ -632,14 +1032,12 @@
             const v=parseFloat(document.getElementById('dec-vol').value);
             const resultDiv = document.getElementById('dec-result');
             
-            // Auto-save inputs
             saveInput('decrease', 'dec-cur', document.getElementById('dec-cur').value);
             saveInput('decrease', 'dec-des', document.getElementById('dec-des').value);
             saveInput('decrease', 'dec-vol', document.getElementById('dec-vol').value);
             
             if(!c||!d||!v){resultDiv.innerHTML='';return;}
             
-            // Validation
             const validations = [
                 validateInput(c, 'Current mix', 0, 100),
                 validateInput(d, 'Desired mix', 0, 100),
@@ -680,14 +1078,12 @@
             const pumpOutChecked = document.getElementById('vol-pumpout').checked;
             const resultDiv = document.getElementById('vol-result');
             
-            // Auto-save all volume inputs
             saveInput('volume', 'vol-curv', document.getElementById('vol-curv').value);
             saveInput('volume', 'vol-wantv', document.getElementById('vol-wantv').value);
             saveInput('volume', 'vol-pumpout', pumpOutChecked);
             
             if(!curMix||!curVol||!wantMix||!wantVol){resultDiv.innerHTML='';return;}
             
-            // Validation
             const validations = [
                 validateInput(curMix, 'Current mix', 0, 100),
                 validateInput(wantMix, 'Wanted mix', 0, 100),
@@ -705,16 +1101,12 @@
             let pumpOutAmount = 0;
             let pumpOutMode = null;
             
-            // Auto-determine mode based on concentration direction
             if (pumpOutChecked) {
                 if (wantMix < curMix) {
-                    // Decreasing concentration - use water only
                     pumpOutMode = 'water-only';
                 } else if (wantMix > curMix) {
-                    // Increasing concentration - use glycol only
                     pumpOutMode = 'glycol-only';
                 } else {
-                    // Same concentration - not applicable
                     resultDiv.innerHTML = '<div class="error-message">Pump-out not needed when current and wanted mix are the same</div>';
                     return;
                 }
@@ -727,7 +1119,6 @@
                 }
             }
             
-            // Calculate with pump out if checked
             let effectiveCurVol = curVol;
             let pumpOutHtml = '';
             
@@ -773,7 +1164,6 @@
             
             const stepLabel = pumpOutChecked ? 'Step 2: Add Fluid' : '';
             
-            // Verify water-only or glycol-only if pump out was used
             let verificationNote = '';
             if (pumpOutChecked) {
                 if (pumpOutMode === 'water-only' && Math.round(typeIToAdd) === 0) {
@@ -800,22 +1190,17 @@
             saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:percentToAdd.toFixed(0),water:Math.round(waterToAdd),typeI:Math.round(typeIToAdd),pumpOut:pumpOutChecked?pumpOutAmount:0});
         }
 
-        // Calculate pump out amount for water-only or glycol-only addition
         function calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, mode) {
             const cm = curMix / 100;
             const wm = wantMix / 100;
             
             if (mode === 'water-only') {
-                // For water-only: we need wantMix * wantVol = curMix * (curVol - pumpOut)
-                // Solving for pumpOut: pumpOut = curVol - (wantMix * wantVol / curMix)
-                
                 if (wantMix >= curMix) {
-                    return null; // Can't add only water to increase concentration
+                    return null;
                 }
                 
                 const pumpOut = curVol - (wm * wantVol / cm);
                 
-                // Validate the solution
                 if (pumpOut < 0 || pumpOut >= curVol) {
                     return null;
                 }
@@ -823,16 +1208,8 @@
                 return pumpOut;
                 
             } else if (mode === 'glycol-only') {
-                // For glycol-only: we need wantVol - (curVol - pumpOut) = all glycol
-                // And: curMix * (curVol - pumpOut) + 100 * glycolToAdd = wantMix * wantVol
-                // Where: glycolToAdd = wantVol - (curVol - pumpOut)
-                // Solving: curMix * (curVol - pumpOut) + 100 * (wantVol - curVol + pumpOut) = wantMix * wantVol
-                // curMix * curVol - curMix * pumpOut + 100 * wantVol - 100 * curVol + 100 * pumpOut = wantMix * wantVol
-                // pumpOut * (100 - curMix) = wantMix * wantVol - curMix * curVol - 100 * wantVol + 100 * curVol
-                // pumpOut = (wantMix * wantVol - curMix * curVol - 100 * wantVol + 100 * curVol) / (100 - curMix)
-                
                 if (wantMix <= curMix) {
-                    return null; // Can't add only glycol to decrease concentration
+                    return null;
                 }
                 
                 const numerator = (wm * wantVol - cm * curVol - wantVol + curVol) * 100;
@@ -844,7 +1221,6 @@
                 
                 const pumpOut = numerator / denominator;
                 
-                // Validate the solution
                 if (pumpOut < 0 || pumpOut >= curVol) {
                     return null;
                 }
@@ -855,16 +1231,13 @@
             return null;
         }
 
-        // Handle pump out checkbox change
         function handlePumpOutChange() {
             calcVol();
         }
 
-        // Truck Board refresh functions
         function refreshTruckBoard() {
             const iframe = document.getElementById('truckboard-iframe');
-            const currentSrc = iframe.src.split('?')[0]; // Get base URL without parameters
-            // Add timestamp to force reload
+            const currentSrc = iframe.src.split('?')[0];
             iframe.src = currentSrc + '?page=display&t=' + new Date().getTime();
         }
 
@@ -881,9 +1254,7 @@
             document.getElementById('truckboard-time').textContent = now.toLocaleString('en-US', options);
         }
 
-        // Freeze point to percentage conversion based on dilution table
         function freezePointToPercentage(freezeC) {
-            // Dilution table mapping (freeze point in C to percentage)
             const freezeMap = [
                 {freeze: -43, pct: 70},
                 {freeze: -41.5, pct: 65},
@@ -930,7 +1301,6 @@
                 {freeze: -7, pct: 20}
             ];
             
-            // Find closest match
             let closest = freezeMap[0];
             let minDiff = Math.abs(freezeC - closest.freeze);
             
@@ -945,13 +1315,11 @@
             return closest.pct;
         }
 
-        // Handle input for current mix percentage
         function handleVolCurInput() {
             saveInput('volume', 'vol-cur', document.getElementById('vol-cur').value);
             calcVol();
         }
 
-        // Handle input for current freeze point
         function handleVolCurFreezeInput() {
             const freezeInput = document.getElementById('vol-cur-freeze');
             saveInput('volume', 'vol-cur-freeze', freezeInput.value);
@@ -965,13 +1333,11 @@
             calcVol();
         }
 
-        // Handle input for wanted mix percentage
         function handleVolWantInput() {
             saveInput('volume', 'vol-want', document.getElementById('vol-want').value);
             calcVol();
         }
 
-        // Handle input for wanted freeze point
         function handleVolWantFreezeInput() {
             const freezeInput = document.getElementById('vol-want-freeze');
             saveInput('volume', 'vol-want-freeze', freezeInput.value);
@@ -992,7 +1358,6 @@
             const ttv=parseFloat(document.getElementById('tote-ttv').value);
             const resultDiv = document.getElementById('tote-result');
             
-            // Auto-save inputs
             saveInput('tote', 'tote-tm', document.getElementById('tote-tm').value);
             saveInput('tote', 'tote-tv', document.getElementById('tote-tv').value);
             saveInput('tote', 'tote-ttm', document.getElementById('tote-ttm').value);
@@ -1000,7 +1365,6 @@
             
             if(!tm||!tv||!ttm||!ttv){resultDiv.innerHTML='';return;}
             
-            // Validation
             const validations = [
                 validateInput(tm*100, 'Truck mix', 0, 100),
                 validateInput(ttm*100, 'Tote mix', 0, 100),
@@ -1022,10 +1386,8 @@
             saveToHistory('Tote',{tm:(tm*100).toFixed(1),ttm:(ttm*100).toFixed(1),nm:(nm*100).toFixed(2)});
         }
 
-        // ATIS and METAR Functions
         async function loadATIS() {
             try {
-                // Reset display
                 document.getElementById('temperature').textContent = 'Loading...';
                 document.getElementById('dewpoint').textContent = 'Loading...';
                 document.getElementById('wind').textContent = 'Loading...';
@@ -1034,11 +1396,9 @@
                 document.getElementById('metar-observed').textContent = '--';
                 document.getElementById('precip-box').style.display = 'none';
                 
-                // Fetch METAR using CORS proxy
                 const station = 'KPIT';
                 const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0`;
                 
-                // Try direct fetch first
                 try {
                     const metarResponse = await fetch(metarURL);
                     const metarText = await metarResponse.text();
@@ -1051,7 +1411,6 @@
                     console.log('Direct fetch failed, trying CORS proxy...');
                 }
                 
-                // If direct fetch fails, try with CORS proxy
                 const proxyURL = `https://corsproxy.io/?${encodeURIComponent(metarURL)}`;
                 const proxyResponse = await fetch(proxyURL);
                 const metarText = await proxyResponse.text();
@@ -1079,14 +1438,11 @@
         }
 
         function displayMETARData(metarText) {
-            // Display full METAR
             document.getElementById('metar-full').textContent = metarText;
             
-            // Extract METAR observation time from the METAR text
             const observedTime = extractMETARTime(metarText);
             document.getElementById('metar-observed').textContent = observedTime;
             
-            // Update "last checked" timestamp with current local time in 24-hour format
             const now = new Date();
             const options = {
                 hour: '2-digit',
@@ -1096,31 +1452,26 @@
             };
             document.getElementById('metar-time').textContent = now.toLocaleTimeString('en-US', options);
             
-            // Parse all weather data
             const weatherData = parseMETAR(metarText);
             
-            // Temperature
             if (weatherData.temp) {
                 document.getElementById('temperature').textContent = weatherData.temp;
             } else {
                 document.getElementById('temperature').textContent = 'N/A';
             }
             
-            // Dew Point
             if (weatherData.dewpoint) {
                 document.getElementById('dewpoint').textContent = weatherData.dewpoint;
             } else {
                 document.getElementById('dewpoint').textContent = 'N/A';
             }
             
-            // Wind
             if (weatherData.wind) {
                 document.getElementById('wind').textContent = weatherData.wind;
             } else {
                 document.getElementById('wind').textContent = 'N/A';
             }
             
-            // Precipitation
             const precipBox = document.getElementById('precip-box');
             if (weatherData.precipitation) {
                 document.getElementById('precipitation').textContent = weatherData.precipitation;
@@ -1131,8 +1482,6 @@
         }
 
         function extractMETARTime(metar) {
-            // METAR time format: KPIT 101851Z (day of month + time in UTC + Z)
-            // Example: "KPIT 101851Z" means 10th day at 18:51 UTC
             const timeMatch = metar.match(/\s(\d{2})(\d{2})(\d{2})Z/);
             
             if (timeMatch) {
@@ -1140,15 +1489,12 @@
                 const hour = timeMatch[2];
                 const minute = timeMatch[3];
                 
-                // Get current date to determine the month/year
                 const now = new Date();
                 const currentMonth = now.getUTCMonth();
                 const currentYear = now.getUTCFullYear();
                 
-                // Create a UTC date for the METAR observation
                 const metarDate = new Date(Date.UTC(currentYear, currentMonth, parseInt(day), parseInt(hour), parseInt(minute)));
                 
-                // Format the date/time in Eastern Time with 24-hour format
                 const options = {
                     month: 'short',
                     day: 'numeric',
@@ -1168,16 +1514,12 @@
         function parseMETAR(metar) {
             const result = { temp: null, dewpoint: null, wind: null, precipitation: null };
             
-            // Parse temperature and dew point
-            // METAR temperature format: M01/M03 or 15/08
-            // M indicates minus (negative temperature)
             const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
             
             if (tempMatch) {
                 let temp = tempMatch[1];
                 let dewpoint = tempMatch[2];
                 
-                // Convert to readable format
                 if (temp.startsWith('M')) {
                     temp = '-' + temp.substring(1);
                 }
@@ -1185,7 +1527,6 @@
                     dewpoint = '-' + dewpoint.substring(1);
                 }
                 
-                // Parse to integers and add unit
                 const tempC = parseInt(temp);
                 const dewC = parseInt(dewpoint);
                 const tempF = Math.round((tempC * 9/5) + 32);
@@ -1195,8 +1536,6 @@
                 result.dewpoint = `${dewC}°C / ${dewF}°F`;
             }
             
-            // Parse wind information
-            // Format: 27008KT or 09012G22KT (with gusts) or 00000KT (calm) or VRB03KT (variable)
             const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
             
             if (windMatch) {
@@ -1223,9 +1562,6 @@
                 }
             }
             
-            // Parse precipitation/weather phenomena
-            // Common codes: RA (rain), SN (snow), FG (fog), BR (mist), DZ (drizzle), 
-            // TS (thunderstorm), SH (shower), FZ (freezing), + (heavy), - (light)
             const weatherCodes = {
                 'RA': 'Rain',
                 'SN': 'Snow',
@@ -1252,8 +1588,6 @@
                 'DS': 'Duststorm'
             };
             
-            // Look for weather phenomena between the wind and temperature
-            // Pattern: intensity (optional: - or +) + descriptor (optional) + precipitation type
             const weatherMatch = metar.match(/\s([-+])?(VC|MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)/g);
             
             if (weatherMatch) {
@@ -1263,7 +1597,6 @@
                     wx = wx.trim();
                     let description = '';
                     
-                    // Check for intensity
                     if (wx.startsWith('-')) {
                         description = 'Light ';
                         wx = wx.substring(1);
@@ -1272,7 +1605,6 @@
                         wx = wx.substring(1);
                     }
                     
-                    // Parse the weather codes
                     let matched = false;
                     for (let code in weatherCodes) {
                         if (wx.includes(code)) {
@@ -1312,6 +1644,7 @@
                 else if(x.type==='Dec')det=`${x.data.c}% → ${x.data.d}% | Add ${x.data.w} gal water`;
                 else if(x.type==='Vol')det=`${x.data.curVol} → ${x.data.wantVol} gal | Add ${x.data.vol} gal at ${x.data.pct}% (${x.data.water} gal water + ${x.data.typeI} gal Type I)`;
                 else if(x.type==='Tote')det=`${x.data.tm}% + ${x.data.ttm}% = ${x.data.nm}%`;
+                else if(x.type==='Batch')det=`Processed ${x.data.trucksProcessed} trucks → ${x.data.wantedMix}% @ ${x.data.wantedVol} gal`;
                 return `<div style="padding:12px;background:#f0f9ff;border-radius:8px;margin-bottom:8px;">
                     <div style="font-weight:600;color:#0369a1;">${x.type}</div>
                     <div style="font-size:13px;color:#6b7280;">${det}</div>
@@ -1335,32 +1668,7 @@
                 setTimeout(()=>s.style.color='#9ca3af',2000);},500);
         }
 
-        // PDF Links - Edit this array to add/remove PDFs
-        // IMPORTANT: Create a 'pdfs' folder in the same directory as this HTML file
-        // and place your PDF files there with the exact filenames listed below
-        const pdfLinks = [
-            {
-                title: 'Safety Manual',
-                description: 'Winter operations safety procedures',
-                filename: 'safety-manual.pdf'
-            },
-            {
-                title: 'Deicing Procedures',
-                description: 'Step-by-step deicing guidelines',
-                filename: 'deicing-procedures.pdf'
-            },
-            {
-                title: 'Equipment Guide',
-                description: 'Equipment operation and maintenance',
-                filename: 'equipment-guide.pdf'
-            }
-            // Add more PDFs here following the same format:
-            // {
-            //     title: 'Your PDF Title',
-            //     description: 'Description of the PDF',
-            //     filename: 'your-pdf-file.pdf'
-            // }
-        ];
+        const pdfLinks = [];
 
         function loadPdfs() {
             const list = document.getElementById('pdf-list');
@@ -1380,6 +1688,7 @@
                 </a>
             `).join('');
         }
+
 
         const dilutionData=[['100%','1.4230-1.4260','DO NOT USE','DO NOT USE'],['90%/10%','1.4156-1.4186','-39°C/-38°F','DO NOT USE'],['80%/20%','1.4079-1.4106','-39°C/-38°F','DO NOT USE'],['70%/30%','1.3996-1.4026','-43°C/-45°F','DO NOT USE'],['65%/35%','1.3953-1.3983','-41.5°C/-43°F','-31°C/-24°F'],['60%/40%','1.3911-1.3941','-40°C/-40°F','-30°C/-22°F'],['59%/41%','1.3905-1.3910','-39°C/-39°F','-29°C/-21°F'],['58%/42%','1.3899-1.3904','-39°C/-38°F','-29°C/-20°F'],['57%/43%','1.3893-1.3898','-38°C/-36°F','-28°C/-18°F'],['56%/44%','1.3886-1.3892','-37°C/-34°F','-27°C/-16°F'],['55%/45%','1.3879-1.3885','-36°C/-32°F','-26°C/-14°F'],['54%/46%','1.3872-1.3878','-34°C/-29°F','-24°C/-11°F'],['53%/47%','1.3865-1.3871','-32°C/-26°F','-22°C/-8°F'],['52%/48%','1.3858-1.3864','-31°C/-23°F','-21°C/-5°F'],['51%/49%','1.3851-1.3857','-29°C/-20°F','-19°C/-2°F'],['50%/50%','1.3820-1.3850','-27°C/-17°F','-17°C/+1°F'],['49%/51%','1.3811-1.3819','-26°C/-15°F','-16°C/+3°F'],['48%/52%','1.3803-1.3810','-25°C/-13°F','-15°C/+5°F'],['47%/53%','1.3795-1.3802','-24°C/-11°F','-14°C/+7°F'],['46%/54%','1.3787-1.3794','-23°C/-9°F','-13°C/+9°F'],['45%/55%','1.3779-1.3786','-22°C/-8°F','-12°C/+10°F'],['44%/56%','1.3771-1.3778','-21°C/-6°F','-11°C/+12°F'],['43%/57%','1.3763-1.3770','-21°C/-5°F','-11°C/+13°F'],['42%/58%','1.3755-1.3762','-19°C/-3°F','-9°C/+15°F'],['41%/59%','1.3747-1.3754','-19°C/-2°F','-9°C/+16°F'],['40%/60%','1.3716-1.3746','-18°C/0°F','-8°C/+18°F'],['39%/61%','1.3707-1.3715','-17°C/+2°F','-7°C/+20°F'],['38%/62%','1.3699-1.3706','-16°C/+3°F','-6°C/+21°F'],['37%/63%','1.3691-1.3698','-15°C/+5°F','-5°C/+23°F'],['36%/64%','1.3682-1.3690','-14°C/+6°F','-4°C/+24°F'],['35%/65%','1.3673-1.3681','-13°C/+7°F','-3°C/+25°F'],['34%/66%','1.3664-1.3672','-13°C/+8°F','-3°C/+26°F'],['33%/67%','1.3655-1.3663','-13°C/+9°F','-3°C/+27°F'],['32%/68%','1.3646-1.3654','-12°C/+10°F','-2°C/+28°F'],['31%/69%','1.3637-1.3645','-12°C/+11°F','-2°C/+29°F'],['30%/70%','1.3606-1.3636','-11°C/+12°F','-1°C/+30°F'],['29%/71%','1.3600-1.3605','-11°C/+12°F','-1°C/+30°F'],['28%/72%','1.3593-1.3599','-11°C/+13°F','-1°C/+31°F'],['27%/73%','1.3587-1.3592','-11°C/+13°F','-1°C/+31°F'],['26%/74%','1.3580-1.3586','-10°C/+14°F','0°C/+32°F'],['25%/75%','1.3573-1.3579','-10°C/+14°F','0°C/+32°F'],['24%/76%','1.3565-1.3573','-9°C/+15°F','+1°C/+33°F'],['23%/77%','1.3557-1.3565','-8°C/+18°F','+2°C/+36°F'],['22%/78%','1.3549-1.3557','-8°C/+18°F','+2°C/+36°F'],['21%/79%','1.3541-1.3549','-7°C/+19°F','+3°C/+37°F'],['20%/80%','1.3511-1.3541','-7°C/+19°F','+3°C/+37°F']];
 
@@ -1413,8 +1722,6 @@
 
         function loadAirlines(){const t=document.getElementById('airlines-body');if(t.innerHTML)return;t.innerHTML=airlinesData.map(r=>`<tr>${r.map((c,i)=>`<td style="background:${i===0?'#f9fafb':'white'};">${c}</td>`).join('')}</tr>`).join('');}
 
-
-        // Service Worker Registration
         if('serviceWorker' in navigator){
             window.addEventListener('load',()=>{
                 navigator.serviceWorker.register('./service-worker.js')
@@ -1426,7 +1733,6 @@
             });
         }
 
-        // Update App Function
         function updateApp(){
             if('serviceWorker' in navigator){
                 navigator.serviceWorker.getRegistration().then(reg=>{
@@ -1442,7 +1748,6 @@
             }
         }
 
-        // Add keyboard support for menu cards
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.menu-card').forEach(card => {
                 card.addEventListener('keypress', function(e) {
@@ -1453,9 +1758,7 @@
                 });
             });
         });
-    
 
-        // Drag and Drop Functionality for Menu Cards
         let draggedElement = null;
         let menuOrder = [];
         let isDragging = false;
@@ -1464,20 +1767,17 @@
             const menuGrid = document.getElementById('menu-grid');
             const cards = menuGrid.querySelectorAll('.menu-card');
             
-            // Load saved order from localStorage
             const savedOrder = localStorage.getItem('menuOrder');
             if (savedOrder) {
                 menuOrder = JSON.parse(savedOrder);
                 reorderMenuCards();
             } else {
-                // Initialize with current order
                 cards.forEach(card => {
                     menuOrder.push(card.dataset.menuId);
                 });
             }
             
             cards.forEach(card => {
-                // Remove onclick attribute and add our own click handler
                 card.removeAttribute('onclick');
                 
                 card.addEventListener('click', function(e) {
@@ -1485,10 +1785,9 @@
                         const pageId = this.dataset.menuId;
                         showPage(pageId);
                     }
-                    isDragging = false; // Reset flag
+                    isDragging = false;
                 });
                 
-                // Desktop drag events
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragend', handleDragEnd);
                 card.addEventListener('dragover', handleDragOver);
@@ -1496,14 +1795,12 @@
                 card.addEventListener('dragenter', handleDragEnter);
                 card.addEventListener('dragleave', handleDragLeave);
                 
-                // Mobile touch events
                 card.addEventListener('touchstart', handleTouchStart, {passive: false});
                 card.addEventListener('touchmove', handleTouchMove, {passive: false});
                 card.addEventListener('touchend', handleTouchEnd, {passive: false});
             });
         }
 
-        // Mobile touch variables
         let touchStartX = 0;
         let touchStartY = 0;
         let touchMoved = false;
@@ -1525,24 +1822,20 @@
             const deltaX = Math.abs(touch.clientX - touchStartX);
             const deltaY = Math.abs(touch.clientY - touchStartY);
             
-            // If moved more than 10px, consider it a drag
             if (deltaX > 10 || deltaY > 10) {
                 touchMoved = true;
                 isDragging = true;
-                e.preventDefault(); // Prevent scrolling while dragging
+                e.preventDefault();
                 
                 draggedElement.classList.add('dragging');
                 
-                // Get element under touch point
                 const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
                 const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
                 
-                // Remove drag-over from all cards
                 document.querySelectorAll('.menu-card').forEach(card => {
                     card.classList.remove('drag-over');
                 });
                 
-                // Add drag-over to card we're hovering
                 if (cardBelow && cardBelow !== draggedElement) {
                     cardBelow.classList.add('drag-over');
                 }
@@ -1558,42 +1851,35 @@
             
             draggedElement.classList.remove('dragging');
             
-            // Remove drag-over from all cards
             document.querySelectorAll('.menu-card').forEach(card => {
                 card.classList.remove('drag-over');
             });
             
-            // If we moved significantly, do the reorder
             if (touchMoved && cardBelow && cardBelow !== draggedElement) {
                 const menuGrid = document.getElementById('menu-grid');
                 const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
                 const draggedIndex = allCards.indexOf(draggedElement);
                 const droppedIndex = allCards.indexOf(cardBelow);
                 
-                // Reorder in DOM
                 if (draggedIndex < droppedIndex) {
                     cardBelow.parentNode.insertBefore(draggedElement, cardBelow.nextSibling);
                 } else {
                     cardBelow.parentNode.insertBefore(draggedElement, cardBelow);
                 }
                 
-                // Update menuOrder array
                 const draggedId = draggedElement.dataset.menuId;
                 menuOrder = menuOrder.filter(id => id !== draggedId);
                 const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
                     .findIndex(card => card === draggedElement);
                 menuOrder.splice(newIndex, 0, draggedId);
                 
-                // Save to localStorage
                 localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
                 
-                // Prevent click event
                 setTimeout(() => {
                     isDragging = false;
                     touchMoved = false;
                 }, 300);
             } else {
-                // Reset after a short delay
                 setTimeout(() => {
                     isDragging = false;
                     touchMoved = false;
@@ -1614,12 +1900,10 @@
         function handleDragEnd(e) {
             this.classList.remove('dragging');
             
-            // Keep isDragging true for a moment to prevent click
             setTimeout(() => {
                 isDragging = false;
             }, 50);
             
-            // Remove drag-over class from all cards
             document.querySelectorAll('.menu-card').forEach(card => {
                 card.classList.remove('drag-over');
             });
@@ -1654,21 +1938,18 @@
                 const draggedIndex = allCards.indexOf(draggedElement);
                 const droppedIndex = allCards.indexOf(this);
                 
-                // Reorder in DOM
                 if (draggedIndex < droppedIndex) {
                     this.parentNode.insertBefore(draggedElement, this.nextSibling);
                 } else {
                     this.parentNode.insertBefore(draggedElement, this);
                 }
                 
-                // Update menuOrder array
                 const draggedId = draggedElement.dataset.menuId;
                 menuOrder = menuOrder.filter(id => id !== draggedId);
                 const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
                     .findIndex(card => card === draggedElement);
                 menuOrder.splice(newIndex, 0, draggedId);
                 
-                // Save to localStorage
                 localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
             }
             
@@ -1679,16 +1960,13 @@
             const menuGrid = document.getElementById('menu-grid');
             const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
             
-            // Create a map of cards by their menu-id
             const cardMap = {};
             cards.forEach(card => {
                 cardMap[card.dataset.menuId] = card;
             });
             
-            // Remove all cards
             cards.forEach(card => card.remove());
             
-            // Re-add in saved order
             menuOrder.forEach(menuId => {
                 if (cardMap[menuId]) {
                     menuGrid.appendChild(cardMap[menuId]);
@@ -1696,12 +1974,9 @@
             });
         }
 
-        
-        // Initialize drag and drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initDragAndDrop();
             
-            // Existing keyboard support
             document.querySelectorAll('.menu-card').forEach(card => {
                 card.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -1711,6 +1986,6 @@
                 });
             });
         });
-</script>
+    </script>
 </body>
 </html>
