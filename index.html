@@ -741,9 +741,11 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                 const lines = csvText.trim().split('\n');
                 const dataLines = lines.slice(1);
                 
-               let importedData = '';
+             let importedData = '';
 dataLines.forEach(line => {
-    const values = line.replace(/"/g, '').split(',');
+    // Remove quotes and handle numbers with commas (like 1,650)
+    const cleanLine = line.replace(/"/g, '').replace(/,(\d{3})/g, '$1');
+    const values = cleanLine.split(',');
     if (values.length >= 6 && values[0].trim()) {
         const truckId = values[0].trim();           // Column A: Truck ID
         const typeIGallons = values[5].trim();      // Column F: Type I Gallons (index 5)
