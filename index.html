@@ -878,28 +878,23 @@ lines.forEach((line, index) => {
         let pumpOutMode = null;
         let effectiveCurVol = curVol;
         
-        if (pumpOutChecked) {
-            if (wantMix < curMix) {
-                pumpOutMode = 'water-only';
-            } else if (wantMix > curMix) {
-                pumpOutMode = 'glycol-only';
-            } else {
-                return {
-                    truckId: truckId,
-                    success: false,
-                    error: 'Pump-out not needed when current and wanted mix are the same'
-                };
-            }
+if (pumpOutChecked) {
+    if (wantMix < curMix) {
+        pumpOutMode = 'water-only';
+    } else if (wantMix > curMix) {
+        pumpOutMode = 'glycol-only';
+    }
+    // If wantMix == curMix, just don't use pump-out mode (pumpOutMode stays null)
             
-            pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
-            
-            if (pumpOutAmount === null || pumpOutAmount <= 0) {
-                return {
-                    truckId: truckId,
-                    success: false,
-                    error: `Cannot achieve ${pumpOutMode === 'water-only' ? 'water-only' : 'glycol-only'} solution with these parameters`
-                };
-            }
+           if (pumpOutMode) {  // Only try to calculate pump-out if we determined a mode
+    pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
+    
+    if (pumpOutAmount === null || pumpOutAmount <= 0) {
+        // Pump-out not feasible, just process normally without pump-out
+        pumpOutAmount = 0;
+        pumpOutMode = null;
+    }
+}
             
             if (pumpOutAmount >= curVol) {
                 return {
