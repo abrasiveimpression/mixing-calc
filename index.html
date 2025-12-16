@@ -482,13 +482,7 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                 
                 <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
                     <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
-                </div>
-<div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
-    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
-        <input type="checkbox" id="batch-pumpout" style="width: auto; margin-right: 8px;">
-        <span>Calculate pump-out for each truck (water or glycol only)</span>
-    </label>
-</div>                
+                </div>               
 
                 <input type="number" inputmode="decimal" id="batch-want-pct" placeholder="Wanted Mix %" aria-label="Wanted mix percentage" min="0" max="100">
                 <input type="number" id="batch-want-freeze" placeholder="OR Wanted Freeze Point (°C)" aria-label="Wanted freeze point in Celsius" max="0">
@@ -780,7 +774,7 @@ function processBatch() {
     const wantPct = document.getElementById('batch-want-pct').value;
     const wantFreeze = document.getElementById('batch-want-freeze').value;
     const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
-    const pumpOutChecked = document.getElementById('batch-pumpout').checked;
+    const pumpOutChecked = true; //Always user pump-out optimization when beneficial
     const resultsDiv = document.getElementById('batch-results');
             
             if (!input) {
