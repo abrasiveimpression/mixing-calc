@@ -801,13 +801,13 @@ function processBatch() {
             }
             
             const lines = input.split('\n');
-            const trucks = [];
-            
+const trucks = [];
+
 lines.forEach((line, index) => {
     const parts = line.split(',').map(s => s.trim());
     if (parts.length >= 3) {
         const truckId = parts[0];
-        const typeIGallons = parseFloat(parts[1]);
+        const currentVolume = parseFloat(parts[1]);  // Column F: TOTAL VOLUME in truck
         const freezeOrPct = parts[2];
         
         let currentMixPct;
@@ -819,17 +819,16 @@ lines.forEach((line, index) => {
             currentMixPct = parseFloat(freezeOrPct);
         }
         
-        if (!isNaN(typeIGallons) && !isNaN(currentMixPct)) {
+        if (!isNaN(currentVolume) && !isNaN(currentMixPct)) {
             trucks.push({
                 id: truckId,
-                typeIGallons: typeIGallons,
+                typeIGallons: currentVolume * (currentMixPct / 100),  // Calculate Type I from total
                 currentMixPct: currentMixPct,
-                currentVolume: typeIGallons / (currentMixPct / 100)
+                currentVolume: currentVolume  // THIS IS THE KEY - use imported volume directly!
             });
         }
     }
-});
-            
+});            
             if (trucks.length === 0) {
                 resultsDiv.innerHTML = '<div class="error-message">No valid truck data found. Please check your input format.</div>';
                 return;
