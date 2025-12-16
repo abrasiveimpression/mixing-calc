@@ -873,40 +873,30 @@ lines.forEach((line, index) => {
             }
         }
         
-        // Handle pump-out if checked
-        let pumpOutAmount = 0;
-        let pumpOutMode = null;
-        let effectiveCurVol = curVol;
-        
+// Handle pump-out if checked
+let pumpOutAmount = 0;
+let pumpOutMode = null;
+let effectiveCurVol = curVol;
+
 if (pumpOutChecked) {
     if (wantMix < curMix) {
         pumpOutMode = 'water-only';
     } else if (wantMix > curMix) {
         pumpOutMode = 'glycol-only';
     }
-    // If wantMix == curMix, just don't use pump-out mode (pumpOutMode stays null)
-            
-           if (pumpOutMode) {  // Only try to calculate pump-out if we determined a mode
-    pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
     
-    if (pumpOutAmount === null || pumpOutAmount <= 0) {
-        // Pump-out not feasible, just process normally without pump-out
-        pumpOutAmount = 0;
-        pumpOutMode = null;
-    }
-}
-            
-            if (pumpOutAmount >= curVol) {
-                return {
-                    truckId: truckId,
-                    success: false,
-                    error: 'Calculated pump-out exceeds current volume'
-                };
-            }
-            
+    if (pumpOutMode) {
+        pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
+        
+        // If pump-out not feasible or exceeds volume, fall back to normal mixed-fluid mode
+        if (pumpOutAmount === null || pumpOutAmount <= 0 || pumpOutAmount >= curVol) {
+            pumpOutAmount = 0;
+            pumpOutMode = null;
+        } else {
             effectiveCurVol = curVol - pumpOutAmount;
         }
-        
+    }
+}        
         if (wantVol <= effectiveCurVol) {
             return {
                 truckId: truckId,
