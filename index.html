@@ -489,12 +489,21 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                 
                 <input type="number" inputmode="decimal" id="batch-want-vol" placeholder="Wanted Volume (gallons)" aria-label="Wanted volume in gallons" min="0">
                 
-                <button class="btn-secondary" onclick="processBatch()">🚀 Process All Trucks</button>
-                
-                <div id="batch-results" style="margin-top: 20px;"></div>
-            </div>
-        </div>
+<button class="btn-secondary" onclick="processBatch()">🚀 Process All Trucks</button>
 
+<div id="batch-sort-controls" style="display: none; margin-top: 20px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; padding: 16px; border: 2px solid #e5e7eb;">
+    <div style="font-weight: 600; color: #0369a1; margin-bottom: 12px; font-size: 14px;">📊 Sort & Filter Results:</div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+        <button class="sort-btn active" onclick="sortBatchResults('default')" style="padding: 8px; border: 2px solid #0ea5e9; background: #0ea5e9; color: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Default Order</button>
+        <button class="sort-btn" onclick="sortBatchResults('pump-out')" style="padding: 8px; border: 2px solid #e5e7eb; background: white; color: #0369a1; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Pump-Out First</button>
+        <button class="sort-btn" onclick="sortBatchResults('water-only')" style="padding: 8px; border: 2px solid #e5e7eb; background: white; color: #0369a1; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Water Only</button>
+        <button class="sort-btn" onclick="sortBatchResults('glycol-only')" style="padding: 8px; border: 2px solid #e5e7eb; background: white; color: #0369a1; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Glycol Only</button>
+        <button class="sort-btn" onclick="sortBatchResults('mixed')" style="padding: 8px; border: 2px solid #e5e7eb; background: white; color: #0369a1; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Mixed Fluid</button>
+        <button class="sort-btn" onclick="sortBatchResults('largest-diff')" style="padding: 8px; border: 2px solid #e5e7eb; background: white; color: #0369a1; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Largest % Diff</button>
+    </div>
+</div>
+
+<div id="batch-results" style="margin-top: 20px;"></div>
         <div class="page" id="tote">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
             <div class="card">
@@ -938,128 +947,209 @@ if (pumpOutChecked) {
     }
 }
 
-        function displayBatchResults(results, wantedMix, wantedVol) {
-            const resultsDiv = document.getElementById('batch-results');
-            
-            const successCount = results.filter(r => r.success).length;
-            const totalTypeI = results.filter(r => r.success).reduce((sum, r) => sum + r.typeIToAdd, 0);
-            const totalWater = results.filter(r => r.success).reduce((sum, r) => sum + r.waterToAdd, 0);
-            const totalFluid = totalTypeI + totalWater;
-            
-            let html = `
-                <div class="summary-box">
-                    <div class="summary-title">📊 Batch Summary</div>
-                    <div class="summary-stat">
-                        <span>Trucks Processed:</span>
-                        <span class="summary-stat-value">${successCount} / ${results.length}</span>
-                    </div>
-                    <div class="summary-stat">
-                        <span>Total Type I Needed:</span>
-                        <span class="summary-stat-value">${Math.round(totalTypeI)} gal</span>
-                    </div>
-                    <div class="summary-stat">
-                        <span>Total Water Needed:</span>
-                        <span class="summary-stat-value">${Math.round(totalWater)} gal</span>
-                    </div>
-                    <div class="summary-stat">
-                        <span>Total Fluid:</span>
-                        <span class="summary-stat-value">${Math.round(totalFluid)} gal</span>
-                    </div>
-                </div>
-            `;
-            
-            results.forEach(result => {
-    if (result.success) {
-        // Build pump-out section if applicable
-        let pumpOutSection = '';
-        if (result.pumpOutAmount && result.pumpOutAmount > 0) {
-            const addType = result.pumpOutMode === 'water-only' ? 'water' : 'Type I glycol';
-            const afterPumpOutVol = result.currentVolume - result.pumpOutAmount;
-            pumpOutSection = `
-                <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 10px; border-radius: 8px; margin-bottom: 12px;">
-                    <div style="font-weight: 600; color: #dc2626; margin-bottom: 6px;">⚠️ Pump Out Required</div>
-                    <div class="truck-details-row">
-                        <span class="truck-details-label">Pump Out:</span>
-                        <span class="truck-details-value" style="color: #dc2626;">${result.pumpOutAmount.toFixed(0)} gal</span>
-                    </div>
-                    <div class="truck-details-row">
-                        <span class="truck-details-label">After Pump Out:</span>
-                        <span class="truck-details-value">${afterPumpOutVol.toFixed(0)} gal</span>
-                    </div>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
-                        Then add ${addType} only
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Verification for water/glycol only
-        let verificationNote = '';
-        if (result.pumpOutMode) {
-            if (result.pumpOutMode === 'water-only' && Math.round(result.typeIToAdd) === 0) {
-                verificationNote = '<div style="background: #d1fae5; color: #065f46; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Water only needed</div>';
-            } else if (result.pumpOutMode === 'glycol-only' && Math.round(result.waterToAdd) === 0) {
-                verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Type I glycol only needed</div>';
-            }
-        }
-        
-        html += `
-            <div class="truck-result">
-                <div class="truck-header">
-                    <div class="truck-id">${result.truckId}</div>
-                    <div class="truck-status status-success">✓ Success</div>
-                </div>
-                ${pumpOutSection}
-                <div class="truck-details">
-                    <div class="truck-details-row">
-                        <span class="truck-details-label">Current:</span>
-                        <span class="truck-details-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
-                    </div>
-                    <div class="truck-details-row">
-                        <span class="truck-details-label">Target:</span>
-                        <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${result.wantedVolume} gal</span>
-                    </div>
-                    <div class="truck-details-row">
-                        <span class="truck-details-label">Mix to Add:</span>
-                        <span class="truck-details-value">${result.percentToAdd.toFixed(0)}%</span>
-                    </div>
-                    <div class="truck-details-row">
-                        <span class="truck-details-label">Total to Add:</span>
-                        <span class="truck-details-value">${Math.round(result.volumeToAdd)} gal</span>
-                    </div>
-                </div>
-                ${verificationNote}
-                <div class="fluid-add-box">
-                    <div class="fluid-add-title">Fluid Breakdown:</div>
-                    <div class="truck-details-row" style="margin-bottom: 6px;">
-                        <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
-                        <span style="font-weight: 700; color: #3b82f6;">${Math.round(result.waterToAdd)} gal</span>
-                    </div>
-                    <div class="truck-details-row">
-                        <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
-                        <span style="font-weight: 700; color: #f97316;">${Math.round(result.typeIToAdd)} gal</span>
-                    </div>
-                </div>
-            </div>
-        `;
-                } else {
-                    html += `
-                        <div class="truck-result">
-                            <div class="truck-header">
-                                <div class="truck-id">${result.truckId}</div>
-                                <div class="truck-status status-error">✗ Error</div>
-                            </div>
-                            <div class="error-message" style="margin: 0;">
-                                ${result.error}
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            
-            resultsDiv.innerHTML = html;
-        }
+let batchResultsData = []; // Store results globally for sorting
 
+function displayBatchResults(results, wantedMix, wantedVol) {
+    batchResultsData = results; // Store for sorting
+    const sortControls = document.getElementById('batch-sort-controls');
+    sortControls.style.display = 'block'; // Show sort controls
+    
+    renderBatchResults(results, wantedMix, wantedVol);
+}
+
+function sortBatchResults(sortType) {
+    // Update active button styling
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.style.background = 'white';
+        btn.style.color = '#0369a1';
+        btn.style.borderColor = '#e5e7eb';
+        btn.classList.remove('active');
+    });
+    event.target.style.background = '#0ea5e9';
+    event.target.style.color = 'white';
+    event.target.style.borderColor = '#0ea5e9';
+    event.target.classList.add('active');
+    
+    let sortedResults = [...batchResultsData];
+    
+    switch(sortType) {
+        case 'default':
+            // Keep original order (already in sortedResults)
+            break;
+            
+        case 'pump-out':
+            // Pump-out trucks first, then others
+            sortedResults.sort((a, b) => {
+                const aPumpOut = a.pumpOutAmount && a.pumpOutAmount > 0 ? 1 : 0;
+                const bPumpOut = b.pumpOutAmount && b.pumpOutAmount > 0 ? 1 : 0;
+                return bPumpOut - aPumpOut;
+            });
+            break;
+            
+        case 'water-only':
+            // Water only first (pump-out with 0 glycol), then others
+            sortedResults.sort((a, b) => {
+                const aWaterOnly = (a.pumpOutMode === 'water-only' && Math.round(a.typeIToAdd) === 0) ? 1 : 0;
+                const bWaterOnly = (b.pumpOutMode === 'water-only' && Math.round(b.typeIToAdd) === 0) ? 1 : 0;
+                return bWaterOnly - aWaterOnly;
+            });
+            break;
+            
+        case 'glycol-only':
+            // Glycol only first (pump-out with 0 water), then others
+            sortedResults.sort((a, b) => {
+                const aGlycolOnly = (a.pumpOutMode === 'glycol-only' && Math.round(a.waterToAdd) === 0) ? 1 : 0;
+                const bGlycolOnly = (b.pumpOutMode === 'glycol-only' && Math.round(b.waterToAdd) === 0) ? 1 : 0;
+                return bGlycolOnly - aGlycolOnly;
+            });
+            break;
+            
+        case 'mixed':
+            // Mixed fluid (no pump-out) first, then others
+            sortedResults.sort((a, b) => {
+                const aMixed = (!a.pumpOutMode || a.pumpOutAmount === 0) ? 1 : 0;
+                const bMixed = (!b.pumpOutMode || b.pumpOutAmount === 0) ? 1 : 0;
+                return bMixed - aMixed;
+            });
+            break;
+            
+        case 'largest-diff':
+            // Largest percentage difference first
+            sortedResults.sort((a, b) => {
+                const aDiff = Math.abs(a.wantedMix - a.currentMix);
+                const bDiff = Math.abs(b.wantedMix - b.currentMix);
+                return bDiff - aDiff;
+            });
+            break;
+    }
+    
+    // Re-render with sorted results
+    const wantedMix = sortedResults[0]?.wantedMix || 0;
+    const wantedVol = sortedResults[0]?.wantedVolume || 0;
+    renderBatchResults(sortedResults, wantedMix, wantedVol);
+}
+
+function renderBatchResults(results, wantedMix, wantedVol) {
+    const resultsDiv = document.getElementById('batch-results');
+    
+    const successCount = results.filter(r => r.success).length;
+    const totalTypeI = results.filter(r => r.success).reduce((sum, r) => sum + r.typeIToAdd, 0);
+    const totalWater = results.filter(r => r.success).reduce((sum, r) => sum + r.waterToAdd, 0);
+    const totalFluid = totalTypeI + totalWater;
+    
+    let html = `
+        <div class="summary-box">
+            <div class="summary-title">📊 Batch Summary</div>
+            <div class="summary-stat">
+                <span>Trucks Processed:</span>
+                <span class="summary-stat-value">${successCount} / ${results.length}</span>
+            </div>
+            <div class="summary-stat">
+                <span>Total Type I Needed:</span>
+                <span class="summary-stat-value">${Math.round(totalTypeI)} gal</span>
+            </div>
+            <div class="summary-stat">
+                <span>Total Water Needed:</span>
+                <span class="summary-stat-value">${Math.round(totalWater)} gal</span>
+            </div>
+            <div class="summary-stat">
+                <span>Total Fluid:</span>
+                <span class="summary-stat-value">${Math.round(totalFluid)} gal</span>
+            </div>
+        </div>
+    `;
+    
+    results.forEach(result => {
+        if (result.success) {
+            // Build pump-out section if applicable
+            let pumpOutSection = '';
+            if (result.pumpOutAmount && result.pumpOutAmount > 0) {
+                const addType = result.pumpOutMode === 'water-only' ? 'water' : 'Type I glycol';
+                const afterPumpOutVol = result.currentVolume - result.pumpOutAmount;
+                pumpOutSection = `
+                    <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 10px; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="font-weight: 600; color: #dc2626; margin-bottom: 6px;">⚠️ Pump Out Required</div>
+                        <div class="truck-details-row">
+                            <span class="truck-details-label">Pump Out:</span>
+                            <span class="truck-details-value" style="color: #dc2626;">${result.pumpOutAmount.toFixed(0)} gal</span>
+                        </div>
+                        <div class="truck-details-row">
+                            <span class="truck-details-label">After Pump Out:</span>
+                            <span class="truck-details-value">${afterPumpOutVol.toFixed(0)} gal</span>
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
+                            Then add ${addType} only
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Verification for water/glycol only
+            let verificationNote = '';
+            if (result.pumpOutMode) {
+                if (result.pumpOutMode === 'water-only' && Math.round(result.typeIToAdd) === 0) {
+                    verificationNote = '<div style="background: #d1fae5; color: #065f46; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Water only needed</div>';
+                } else if (result.pumpOutMode === 'glycol-only' && Math.round(result.waterToAdd) === 0) {
+                    verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Type I glycol only needed</div>';
+                }
+            }
+            
+            html += `
+                <div class="truck-result">
+                    <div class="truck-header">
+                        <div class="truck-id">${result.truckId}</div>
+                        <div class="truck-status status-success">✓ Success</div>
+                    </div>
+                    ${pumpOutSection}
+                    <div class="truck-details">
+                        <div class="truck-details-row">
+                            <span class="truck-details-label">Current:</span>
+                            <span class="truck-details-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
+                        </div>
+                        <div class="truck-details-row">
+                            <span class="truck-details-label">Target:</span>
+                            <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${result.wantedVolume} gal</span>
+                        </div>
+                        <div class="truck-details-row">
+                            <span class="truck-details-label">Mix to Add:</span>
+                            <span class="truck-details-value">${result.percentToAdd.toFixed(0)}%</span>
+                        </div>
+                        <div class="truck-details-row">
+                            <span class="truck-details-label">Total to Add:</span>
+                            <span class="truck-details-value">${Math.round(result.volumeToAdd)} gal</span>
+                        </div>
+                    </div>
+                    ${verificationNote}
+                    <div class="fluid-add-box">
+                        <div class="fluid-add-title">Fluid Breakdown:</div>
+                        <div class="truck-details-row" style="margin-bottom: 6px;">
+                            <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
+                            <span style="font-weight: 700; color: #3b82f6;">${Math.round(result.waterToAdd)} gal</span>
+                        </div>
+                        <div class="truck-details-row">
+                            <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
+                            <span style="font-weight: 700; color: #f97316;">${Math.round(result.typeIToAdd)} gal</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="truck-result">
+                    <div class="truck-header">
+                        <div class="truck-id">${result.truckId}</div>
+                        <div class="truck-status status-error">✗ Error</div>
+                    </div>
+                    <div class="error-message" style="margin: 0;">
+                        ${result.error}
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    resultsDiv.innerHTML = html;
+}
         function calcInc() {
             const c=parseFloat(document.getElementById('inc-cur').value);
             const d=parseFloat(document.getElementById('inc-des').value);
