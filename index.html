@@ -444,14 +444,7 @@
                 <input type="number" id="vol-want-freeze" placeholder="OR Wanted Freeze Point (°C)" oninput="handleVolWantFreezeInput()" aria-label="Wanted freeze point in Celsius" max="0">
                 
                 <input type="number" inputmode="decimal" id="vol-wantv" placeholder="Wanted Volume" oninput="calcVol()" aria-label="Wanted volume in gallons" min="0">
-                
-                <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
-                    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px;">
-                        <input type="checkbox" id="vol-pumpout" onchange="handlePumpOutChange()" style="width: auto; margin-right: 8px;">
-                        <span>Calculate pump-out (water or glycol only)</span>
-                    </label>
-                </div>
-                
+                                
                 <div id="vol-result"></div>
             </div>
         </div>
@@ -1240,7 +1233,7 @@ function renderBatchResults(results, wantedMix, wantedVol) {
             const curVol=parseFloat(document.getElementById('vol-curv').value);
             const wantMix=parseFloat(document.getElementById('vol-want').value);
             const wantVol=parseFloat(document.getElementById('vol-wantv').value);
-            const pumpOutChecked = document.getElementById('vol-pumpout').checked;
+            const pumpOutChecked = true; // Always use pump-out optimization when beneficial
             const resultDiv = document.getElementById('vol-result');
             
             saveInput('volume', 'vol-curv', document.getElementById('vol-curv').value);
@@ -2154,4 +2147,3 @@ function renderBatchResults(results, wantedMix, wantedVol) {
     </script>
 </body>
 </html>
-
