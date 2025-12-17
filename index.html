@@ -522,7 +522,7 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
         </div>
         <button class="refresh-btn" onclick="refreshTruckBoard()" style="margin: 0;">🔄 Refresh</button>
     </div>
-    <div class="iframe-container" style="height: calc(100vh - 120px); border-radius: 0; border: none; margin: 0;">
+    <div class="iframe-container" style="height: calc(100vh - 50px); border-radius: 0; border: none; margin: 0;">
         <iframe id="truckboard-iframe" src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display" onload="updateTruckBoardTime()"></iframe>
     </div>
 </div>
@@ -554,9 +554,45 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                     </div>
                     
                     <div class="info-box">
-                        <div class="info-label">Wind</div>
-                        <div class="info-value" id="wind">Loading...</div>
-                    </div>
+    <div class="info-label">Wind</div>
+    <div class="info-value" id="wind">Loading...</div>
+    <div id="wind-compass" style="margin-top: 16px; display: none;">
+        <svg width="200" height="200" viewBox="0 0 200 200" style="margin: 0 auto; display: block;">
+            <!-- Compass circle -->
+            <circle cx="100" cy="100" r="90" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
+            
+            <!-- Cardinal directions -->
+            <text x="100" y="25" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">N</text>
+            <text x="175" y="105" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">E</text>
+            <text x="100" y="185" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">S</text>
+            <text x="25" y="105" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">W</text>
+            
+            <!-- Degree markers -->
+            <line x1="100" y1="15" x2="100" y2="25" stroke="#6b7280" stroke-width="2"/>
+            <line x1="159.9" y1="25.9" x2="153.2" y2="32.6" stroke="#6b7280" stroke-width="1"/>
+            <line x1="184.1" y1="59.9" x2="177.4" y2="66.6" stroke="#6b7280" stroke-width="1"/>
+            <line x1="190" y1="100" x2="180" y2="100" stroke="#6b7280" stroke-width="2"/>
+            <line x1="184.1" y1="140.1" x2="177.4" y2="133.4" stroke="#6b7280" stroke-width="1"/>
+            <line x1="159.9" y1="174.1" x2="153.2" y2="167.4" stroke="#6b7280" stroke-width="1"/>
+            <line x1="100" y1="185" x2="100" y2="175" stroke="#6b7280" stroke-width="2"/>
+            <line x1="40.1" y1="174.1" x2="46.8" y2="167.4" stroke="#6b7280" stroke-width="1"/>
+            <line x1="15.9" y1="140.1" x2="22.6" y2="133.4" stroke="#6b7280" stroke-width="1"/>
+            <line x1="10" y1="100" x2="20" y2="100" stroke="#6b7280" stroke-width="2"/>
+            <line x1="15.9" y1="59.9" x2="22.6" y2="66.6" stroke="#6b7280" stroke-width="1"/>
+            <line x1="40.1" y1="25.9" x2="46.8" y2="32.6" stroke="#6b7280" stroke-width="1"/>
+            
+            <!-- Wind arrow (will be rotated by JavaScript) -->
+            <g id="wind-arrow" transform="rotate(0 100 100)">
+                <line x1="100" y1="100" x2="100" y2="35" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+                <polygon points="100,30 95,45 100,40 105,45" fill="#ef4444"/>
+                <circle cx="100" cy="100" r="8" fill="#ef4444"/>
+            </g>
+        </svg>
+        <div style="text-align: center; margin-top: 8px; font-size: 14px; color: #0369a1; font-weight: 600;">
+            Wind from <span id="wind-direction-text">---</span>°
+        </div>
+    </div>
+</div>
                     
                     <div class="info-box" id="precip-box" style="display: none;">
                         <div class="info-label">Precipitation</div>
@@ -1624,10 +1660,26 @@ function renderBatchResults(results, wantedMix, wantedVol) {
             }
             
             if (weatherData.wind) {
-                document.getElementById('wind').textContent = weatherData.wind;
-            } else {
-                document.getElementById('wind').textContent = 'N/A';
-            }
+    document.getElementById('wind').textContent = weatherData.wind;
+    
+    // Update wind compass if we have direction
+    if (weatherData.windDirection !== null && weatherData.windDirection !== 'VRB' && weatherData.windDirection !== 'CALM') {
+        const compass = document.getElementById('wind-compass');
+        const arrow = document.getElementById('wind-arrow');
+        const directionText = document.getElementById('wind-direction-text');
+        
+compass.style.display = 'block';
+// Add 180 degrees to show where wind is going TO (not FROM)
+const arrowDirection = (weatherData.windDirection + 180) % 360;
+arrow.setAttribute('transform', `rotate(${arrowDirection} 100 100)`);
+directionText.textContent = weatherData.windDirection;
+    } else {
+        document.getElementById('wind-compass').style.display = 'none';
+    }
+} else {
+    document.getElementById('wind').textContent = 'N/A';
+    document.getElementById('wind-compass').style.display = 'none';
+}
             
             const precipBox = document.getElementById('precip-box');
             if (weatherData.precipitation) {
@@ -1669,40 +1721,27 @@ function renderBatchResults(results, wantedMix, wantedVol) {
         }
 
         function parseMETAR(metar) {
-            const result = { temp: null, dewpoint: null, wind: null, precipitation: null };
+const result = { temp: null, dewpoint: null, wind: null, windDirection: null, precipitation: null };
             
-            const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
-            
-            if (tempMatch) {
-                let temp = tempMatch[1];
-                let dewpoint = tempMatch[2];
-                
-                if (temp.startsWith('M')) {
-                    temp = '-' + temp.substring(1);
-                }
-                if (dewpoint.startsWith('M')) {
-                    dewpoint = '-' + dewpoint.substring(1);
-                }
-                
-                const tempC = parseInt(temp);
-                const dewC = parseInt(dewpoint);
-                const tempF = Math.round((tempC * 9/5) + 32);
-                const dewF = Math.round((dewC * 9/5) + 32);
-                
-                result.temp = `${tempC}°C / ${tempF}°F`;
-                result.dewpoint = `${dewC}°C / ${dewF}°F`;
-            }
-            
-            const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
-            
-            if (windMatch) {
-                const direction = windMatch[1];
-                const speed = parseInt(windMatch[2]);
-                const gust = windMatch[4] ? parseInt(windMatch[4]) : null;
-                
-                if (speed === 0) {
-                    result.wind = 'Calm';
-                } else {
+const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
+
+if (windMatch) {
+    const direction = windMatch[1];
+    const speed = parseInt(windMatch[2]);
+    const gust = windMatch[4] ? parseInt(windMatch[4]) : null;
+    
+    // Store numeric direction for compass
+    if (direction !== 'VRB' && speed > 0) {
+        result.windDirection = parseInt(direction);
+    } else if (direction === 'VRB') {
+        result.windDirection = 'VRB';
+    } else {
+        result.windDirection = 'CALM';
+    }
+    
+    if (speed === 0) {
+        result.wind = 'Calm';
+    } else {
                     let windText = '';
                     
                     if (direction === 'VRB') {
@@ -2146,4 +2185,3 @@ function renderBatchResults(results, wantedMix, wantedVol) {
     </script>
 </body>
 </html>
-
