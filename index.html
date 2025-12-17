@@ -526,16 +526,59 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
         <iframe id="truckboard-iframe" src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display" onload="updateTruckBoardTime()"></iframe>
     </div>
 </div>
-        <div class="page" id="truckboard-edit">
-            <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
-            <div class="card">
-                <h2>Edit Truck Board</h2>
-                <div style="width: 100%; height: 70vh; border: 2px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: white;">
-                    <iframe src="https://tb.kpiticeman.com/" title="Truck Board Editor" style="width: 100%; height: 100%; border: none;"></iframe>
+
+
+<div class="page" id="truckboard-edit">
+    <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
+    <div class="card">
+        <h2 style="margin-bottom: 16px;">Edit Truck Board</h2>
+        
+        <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+            💡 <strong>Tip:</strong> Select a truck to view its current data before editing
+        </div>
+        
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #0369a1;">Select Truck:</label>
+        <select id="truck-select" onchange="loadTruckData()" style="width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; margin-bottom: 16px; cursor: pointer;">
+            <option value="">-- Select a Truck --</option>
+        </select>
+        
+        <div id="current-truck-data" style="display: none; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+            <div style="font-weight: 700; font-size: 16px; margin-bottom: 12px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px;">Current Data for <span id="current-truck-id"></span></div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
+                <div>
+                    <div style="opacity: 0.9; font-size: 12px; margin-bottom: 4px;">Percent:</div>
+                    <div style="font-weight: 700; font-size: 18px;" id="current-percent">--</div>
                 </div>
-                <a href="https://tb.kpiticeman.com/" target="_blank" class="external-link-btn">Open in New Tab</a>
+                <div>
+                    <div style="opacity: 0.9; font-size: 12px; margin-bottom: 4px;">Freeze Point:</div>
+                    <div style="font-weight: 700; font-size: 18px;" id="current-freeze">--</div>
+                </div>
+                <div>
+                    <div style="opacity: 0.9; font-size: 12px; margin-bottom: 4px;">Type I (gal):</div>
+                    <div style="font-weight: 700; font-size: 18px;" id="current-typei">--</div>
+                </div>
+                <div>
+                    <div style="opacity: 0.9; font-size: 12px; margin-bottom: 4px;">Water (gal):</div>
+                    <div style="font-weight: 700; font-size: 18px;" id="current-water">--</div>
+                </div>
+                <div>
+                    <div style="opacity: 0.9; font-size: 12px; margin-bottom: 4px;">Total (gal):</div>
+                    <div style="font-weight: 700; font-size: 18px;" id="current-total">--</div>
+                </div>
+                <div>
+                    <div style="opacity: 0.9; font-size: 12px; margin-bottom: 4px;">Status:</div>
+                    <div style="font-weight: 700; font-size: 18px;" id="current-status">--</div>
+                </div>
             </div>
         </div>
+        
+        <div style="width: 100%; height: 60vh; border: 2px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: white;">
+            <iframe src="https://tb.kpiticeman.com/" title="Truck Board Editor" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+        <a href="https://tb.kpiticeman.com/" target="_blank" class="external-link-btn">Open Editor in New Tab</a>
+    </div>
+</div>
+
 
         <div class="page" id="atis">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
@@ -682,8 +725,7 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
             document.getElementById(p).classList.add('active');
             if(p==='notes')loadNotes();if(p==='history')displayHistory();
             if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
-            if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();
-            
+if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();if(p==='truckboard-edit')loadTruckList();            
             restorePageInputs(p);
         }
 
@@ -1447,6 +1489,11 @@ function renderBatchResults(results, wantedMix, wantedVol) {
             document.getElementById('truckboard-time').textContent = now.toLocaleString('en-US', options);
         }
 
+function openTruckBoardDisplay() {
+    const displayUrl = 'https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display';
+    window.open(displayUrl, 'TruckBoardDisplay', 'width=800,height=600,resizable=yes,scrollbars=yes');
+}
+
         function freezePointToPercentage(freezeC) {
             const freezeMap = [
                 {freeze: -43, pct: 70},
@@ -1507,6 +1554,121 @@ function renderBatchResults(results, wantedMix, wantedVol) {
             
             return closest.pct;
         }
+
+async function loadTruckList() {
+    const select = document.getElementById('truck-select');
+    
+    // Clear existing options except the first one
+    select.innerHTML = '<option value="">-- Select a Truck --</option>';
+    
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv`;
+        const response = await fetch(url);
+        const csvText = await response.text();
+        
+        const lines = csvText.trim().split('\n');
+        const dataLines = lines.slice(1); // Skip header
+        
+        dataLines.forEach(line => {
+            const values = line.replace(/"/g, '').split(',');
+            if (values.length >= 1 && values[0].trim()) {
+                const truckId = values[0].trim();
+                const option = document.createElement('option');
+                option.value = truckId;
+                option.textContent = truckId;
+                select.appendChild(option);
+            }
+        });
+    } catch (error) {
+        console.error('Error loading truck list:', error);
+    }
+}
+
+async function loadTruckData() {
+    const select = document.getElementById('truck-select');
+    const selectedTruck = select.value;
+    const dataDiv = document.getElementById('current-truck-data');
+    
+    if (!selectedTruck) {
+        dataDiv.style.display = 'none';
+        return;
+    }
+    
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv`;
+        const response = await fetch(url);
+        const csvText = await response.text();
+        
+        const lines = csvText.trim().split('\n');
+        const dataLines = lines.slice(1); // Skip header
+        
+        // Find the truck
+        for (let line of dataLines) {
+            const values = line.replace(/"/g, '').split(',');
+            const truckId = values[0].trim();
+            
+            if (truckId === selectedTruck) {
+                // Parse the data
+                // Column A = ID, B = Percent, C = Freeze Point, D = Type I, E = Water, F = Total, G = Status
+                const percent = values[1] ? values[1].trim() + '%' : 'N/A';
+                const freeze = values[2] ? values[2].trim() + '°C' : 'N/A';
+                
+                // Handle comma-formatted numbers for Type I
+                let typeI = values[3] ? values[3].trim() : '0';
+                if (typeI.length <= 2 && values[4] && values[4].match(/^\d{3}/)) {
+                    typeI = typeI + values[4].substring(0, 3);
+                }
+                
+                // Handle comma-formatted numbers for Water
+                let water = values[4] ? values[4].trim() : '0';
+                if (water.match(/^\d{3}/) && values[3].length <= 2) {
+                    water = water.substring(3);
+                }
+                if (water.length <= 2 && values[5] && values[5].match(/^\d{3}/)) {
+                    water = water + values[5].substring(0, 3);
+                }
+                
+                // Handle comma-formatted numbers for Total
+                let total = values[5] ? values[5].trim() : '0';
+                if (total.match(/^\d{3}/) && values[4].length <= 2) {
+                    total = total.substring(3);
+                }
+                if (total.length <= 2 && values[6] && values[6].match(/^\d{3}/)) {
+                    total = total + values[6].substring(0, 3);
+                }
+                
+                const status = values[6] ? values[6].trim() : 'N/A';
+                // If status looks like a number, it's probably shifted
+                if (status.match(/^\d+$/)) {
+                    const actualStatus = values[7] ? values[7].trim() : 'N/A';
+                    document.getElementById('current-status').textContent = actualStatus;
+                } else {
+                    document.getElementById('current-status').textContent = status;
+                }
+                
+                // Update the display
+                document.getElementById('current-truck-id').textContent = truckId;
+                document.getElementById('current-percent').textContent = percent;
+                document.getElementById('current-freeze').textContent = freeze;
+                document.getElementById('current-typei').textContent = typeI + ' gal';
+                document.getElementById('current-water').textContent = water + ' gal';
+                document.getElementById('current-total').textContent = total + ' gal';
+                
+                dataDiv.style.display = 'block';
+                return;
+            }
+        }
+        
+        // Truck not found
+        dataDiv.style.display = 'none';
+        alert('Truck data not found');
+        
+    } catch (error) {
+        console.error('Error loading truck data:', error);
+        alert('Error loading truck data. Please try again.');
+    }
+}
+
 
         function handleVolCurInput() {
             saveInput('volume', 'vol-cur', document.getElementById('vol-cur').value);
@@ -2209,5 +2371,4 @@ function parseMETAR(metar) {
     </script>
 </body>
 </html>
-
 
