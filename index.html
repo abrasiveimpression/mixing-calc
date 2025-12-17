@@ -1723,9 +1723,30 @@ directionText.textContent = weatherData.windDirection;
 function parseMETAR(metar) {
 const result = { temp: null, dewpoint: null, wind: null, windDirection: null, precipitation: null };
 
-// Parse temperature and dewpoint
+// Parse temperature and dewpoint first
 const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
 
+if (tempMatch) {
+    let temp = tempMatch[1];
+    let dewpoint = tempMatch[2];
+    
+    if (temp.startsWith('M')) {
+        temp = '-' + temp.substring(1);
+    }
+    if (dewpoint.startsWith('M')) {
+        dewpoint = '-' + dewpoint.substring(1);
+    }
+    
+    const tempC = parseInt(temp);
+    const dewC = parseInt(dewpoint);
+    const tempF = Math.round((tempC * 9/5) + 32);
+    const dewF = Math.round((dewC * 9/5) + 32);
+    
+    result.temp = `${tempC}°C / ${tempF}°F`;
+    result.dewpoint = `${dewC}°C / ${dewF}°F`;
+}
+            
+const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
 if (tempMatch) {
     let temp = tempMatch[1];
     let dewpoint = tempMatch[2];
@@ -2210,3 +2231,4 @@ if (windMatch) {
     </script>
 </body>
 </html>
+
