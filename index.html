@@ -1297,54 +1297,59 @@ function renderBatchResults(results, wantedMix, wantedVol) {
             saveToHistory('Dec',{c,d,v,w:w.toFixed(2)});
         }
 
-        function calcVol() {
-            const curMix=parseFloat(document.getElementById('vol-cur').value);
-            const curVol=parseFloat(document.getElementById('vol-curv').value);
-            const wantMix=parseFloat(document.getElementById('vol-want').value);
-            const wantVol=parseFloat(document.getElementById('vol-wantv').value);
-            const pumpOutChecked = true; // Always use pump-out optimization when beneficial
-            const resultDiv = document.getElementById('vol-result');
+function calcVol() {
+    const curMix=parseFloat(document.getElementById('vol-cur').value);
+    const curVol=parseFloat(document.getElementById('vol-curv').value);
+    const wantMix=parseFloat(document.getElementById('vol-want').value);
+    const wantVol=parseFloat(document.getElementById('vol-wantv').value);
+    const pumpOutChecked = true; // Always use pump-out optimization when beneficial
+    const resultDiv = document.getElementById('vol-result');
+    
+    saveInput('volume', 'vol-curv', document.getElementById('vol-curv').value);
+    saveInput('volume', 'vol-wantv', document.getElementById('vol-wantv').value);
+    saveInput('volume', 'vol-pumpout', pumpOutChecked);
+    
+    if(!curMix||!curVol||!wantMix||!wantVol){resultDiv.innerHTML='';return;}
+    
+    const validations = [
+        validateInput(curMix, 'Current mix', 0, 100),
+        validateInput(wantMix, 'Wanted mix', 0, 100),
+        validateInput(curVol, 'Current volume', 0.1),
+        validateInput(wantVol, 'Wanted volume', 0.1)
+    ];
+    
+    for (let validation of validations) {
+        if (!validation.valid) {
+            resultDiv.innerHTML = `<div class="error-message">${validation.message}</div>`;
+            return;
+        }
+    }
+    
+    if (curMix === wantMix) {
+        resultDiv.innerHTML = '<div class="error-message">Current and wanted mix are the same</div>';
+        return;
+    }
+    
+    let pumpOutAmount = 0;
+    let pumpOutMode = null;
+    
+    if (pumpOutChecked) {
+        if (wantMix < curMix) {
+            pumpOutMode = 'water-only';
+        } else if (wantMix > curMix) {
+            pumpOutMode = 'glycol-only';
+        }
+        
+        if (pumpOutMode) {
+            pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
             
-            saveInput('volume', 'vol-curv', document.getElementById('vol-curv').value);
-            saveInput('volume', 'vol-wantv', document.getElementById('vol-wantv').value);
-            saveInput('volume', 'vol-pumpout', pumpOutChecked);
-            
-            if(!curMix||!curVol||!wantMix||!wantVol){resultDiv.innerHTML='';return;}
-            
-            const validations = [
-                validateInput(curMix, 'Current mix', 0, 100),
-                validateInput(wantMix, 'Wanted mix', 0, 100),
-                validateInput(curVol, 'Current volume', 0.1),
-                validateInput(wantVol, 'Wanted volume', 0.1)
-            ];
-            
-            for (let validation of validations) {
-                if (!validation.valid) {
-                    resultDiv.innerHTML = `<div class="error-message">${validation.message}</div>`;
-                    return;
-                }
+            // If pump-out not feasible, fall back to mixed fluid (no pump-out)
+            if (pumpOutAmount === null || pumpOutAmount <= 0 || pumpOutAmount >= curVol) {
+                pumpOutAmount = 0;
+                pumpOutMode = null;
             }
-            
-            let pumpOutAmount = 0;
-            let pumpOutMode = null;
-            
-            if (pumpOutChecked) {
-                if (wantMix < curMix) {
-                    pumpOutMode = 'water-only';
-                } else if (wantMix > curMix) {
-                    pumpOutMode = 'glycol-only';
-                } else {
-                    resultDiv.innerHTML = '<div class="error-message">Pump-out not needed when current and wanted mix are the same</div>';
-                    return;
-                }
-                
-                pumpOutAmount = calculateAutoPumpOut(curMix, curVol, wantMix, wantVol, pumpOutMode);
-                
-                if (pumpOutAmount === null || pumpOutAmount <= 0) {
-                    resultDiv.innerHTML = `<div class="error-message">Cannot achieve ${pumpOutMode === 'water-only' ? 'water-only' : 'glycol-only'} solution with these parameters. Try without pump-out option.</div>`;
-                    return;
-                }
-            }
+        }
+    }
             
             let effectiveCurVol = curVol;
             let pumpOutHtml = '';
@@ -2347,6 +2352,7 @@ function parseMETAR(metar) {
     </script>
 </body>
 </html>
+
 
 
 
