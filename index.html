@@ -514,15 +514,15 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
             </div>
         </div>
 
-<div class="page" id="truckboard">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-        <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu" style="margin-bottom: 0;">← Back</button>
-        <button class="refresh-btn" onclick="refreshTruckBoard()" style="margin-top: 0;">🔄 Refresh</button>
+<div class="page" id="truckboard" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; padding: 0; margin: 0; background: white; z-index: 1000;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);">
+        <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu" style="margin: 0;">← Back</button>
+        <div style="font-size: 11px; color: #6b7280;">
+            Last refreshed: <span id="truckboard-time">--</span>
+        </div>
+        <button class="refresh-btn" onclick="refreshTruckBoard()" style="margin: 0;">🔄 Refresh</button>
     </div>
-    <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px; text-align: right;">
-        Last refreshed: <span id="truckboard-time">--</span>
-    </div>
-    <div class="iframe-container" style="height: calc(100vh - 50px); border-radius: 0; border: none;">
+    <div class="iframe-container" style="height: calc(100vh - 50px); border-radius: 0; border: none; margin: 0;">
         <iframe id="truckboard-iframe" src="https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec?page=display" title="Truck Board Display" onload="updateTruckBoardTime()"></iframe>
     </div>
 </div>
@@ -2146,9 +2146,3 @@ function renderBatchResults(results, wantedMix, wantedVol) {
     </script>
 </body>
 </html>
-
-
-
-
-
-
