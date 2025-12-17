@@ -1605,23 +1605,46 @@ async function loadTruckData() {
                 const percent = values[1] ? values[1].trim() + '%' : 'N/A';
                 const freeze = values[2] ? values[2].trim() + '°C' : 'N/A';
                 
-                // Handle comma-formatted numbers for Type I (column D, index 3)
-                let typeI = values[3] ? values[3].trim() : '0';
-                if (typeI.length <= 2 && values[4] && values[4].match(/^\d{3}/)) {
-                    typeI = typeI + values[4].substring(0, 3);
+                // For Type I - if number has comma, it's split across columns
+                let typeI = '0';
+                if (values[3]) {
+                    const val3 = values[3].trim();
+                    const val4 = values[4] ? values[4].trim() : '';
+                    
+                    // Check if it's a comma-separated number like "1,650" becomes ["1", "650"]
+                    if (val3.length <= 2 && val4.match(/^\d{3}$/)) {
+                        typeI = val3 + val4; // Combine: "1" + "650" = "1650"
+                    } else {
+                        typeI = val3;
+                    }
                 }
                 
-                // Handle comma-formatted numbers for Type IV (column E, index 4)
-                let typeIV = values[4] ? values[4].trim() : '0';
-                // If this value is 3 digits and previous was short, it's the rest of Type I
-                if (typeIV.match(/^\d{3}$/) && values[3].length <= 2) {
-                    // This is actually part of Type I, get the real Type IV from next column
-                    typeIV = values[5] ? values[5].trim() : '0';
-                    if (typeIV.length <= 2 && values[6] && values[6].match(/^\d{3}/)) {
-                        typeIV = typeIV + values[6].substring(0, 3);
+                // For Type IV - determine correct column based on whether Type I had comma
+                let typeIV = '0';
+                if (values[3] && values[3].trim().length <= 2 && values[4] && values[4].match(/^\d{3}$/)) {
+                    // Type I had comma, so Type IV is in column 5 (index 5)
+                    if (values[5]) {
+                        const val5 = values[5].trim();
+                        const val6 = values[6] ? values[6].trim() : '';
+                        
+                        if (val5.length <= 2 && val6.match(/^\d{3}$/)) {
+                            typeIV = val5 + val6;
+                        } else {
+                            typeIV = val5;
+                        }
                     }
-                } else if (typeIV.length <= 2 && values[5] && values[5].match(/^\d{3}/)) {
-                    typeIV = typeIV + values[5].substring(0, 3);
+                } else {
+                    // Type I had no comma, so Type IV is in column 4 (index 4)
+                    if (values[4]) {
+                        const val4 = values[4].trim();
+                        const val5 = values[5] ? values[5].trim() : '';
+                        
+                        if (val4.length <= 2 && val5.match(/^\d{3}$/)) {
+                            typeIV = val4 + val5;
+                        } else {
+                            typeIV = val4;
+                        }
+                    }
                 }
                 
                 // Update the display
@@ -2348,5 +2371,6 @@ function parseMETAR(metar) {
     </script>
 </body>
 </html>
+
 
 
