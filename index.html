@@ -1600,26 +1600,27 @@ async function loadTruckData() {
             const truckId = values[0].trim();
             
             if (truckId === selectedTruck) {
-                // Parse the data using the same logic as batch import
-                // Column A = ID, B = Percent, C = Freeze Point, D = Type I, E = Type IV
+                // Parse the data
+                // A=ID, B=Percent, C=Freeze Point, D=Freeze Point F, E=LOUT C, F=Type I, G=Type IV, H=Status
+                // Index: 0    1         2              3               4          5         6          7
                 const percent = values[1] ? values[1].trim() + '%' : 'N/A';
                 const freeze = values[2] ? values[2].trim() + '°C' : 'N/A';
                 
-                // Type I is in column D (index 3)
-                let typeI = values[3] ? values[3].trim() : '0';
+                // Type I is in column F (index 5)
+                let typeI = values[5] ? values[5].trim() : '0';
                 
-                // Type IV is in column E (index 4)
-                let typeIV = values[4] ? values[4].trim() : '0';
+                // Type IV is in column G (index 6)
+                let typeIV = values[6] ? values[6].trim() : '0';
                 
                 // Handle comma-formatted numbers (e.g., "1,650" becomes "1" "650")
-                // If Type I value at index 3 is short (like just "1"), check if next value completes it
-                if (typeI.length <= 2 && values[4] && values[4].match(/^\d{3}/)) {
-                    typeI = typeI + values[4].substring(0, 3);
-                    // Now Type IV shifts to index 5
-                    typeIV = values[5] ? values[5].trim() : '0';
+                // If Type I value is short (like just "1"), check if next value completes it
+                if (typeI.length <= 2 && values[6] && values[6].match(/^\d{3}/)) {
+                    typeI = typeI + values[6].substring(0, 3);
+                    // Now Type IV shifts to index 7
+                    typeIV = values[7] ? values[7].trim() : '0';
                     // Check if Type IV also has comma formatting
-                    if (typeIV.length <= 2 && values[6] && values[6].match(/^\d{3}/)) {
-                        typeIV = typeIV + values[6].substring(0, 3);
+                    if (typeIV.length <= 2 && values[8] && values[8].match(/^\d{3}/)) {
+                        typeIV = typeIV + values[8].substring(0, 3);
                     }
                 }
                 
@@ -1644,7 +1645,6 @@ async function loadTruckData() {
         alert('Error loading truck data. Please try again.');
     }
 }
-
 
         function handleVolCurInput() {
             saveInput('volume', 'vol-cur', document.getElementById('vol-cur').value);
@@ -2347,6 +2347,7 @@ function parseMETAR(metar) {
     </script>
 </body>
 </html>
+
 
 
 
