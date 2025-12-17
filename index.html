@@ -912,13 +912,25 @@ lines.forEach((line, index) => {
     );
 });
             
-            displayBatchResults(results, wantedMixPct, wantVol);
-            
-            saveToHistory('Batch', {
-                trucksProcessed: trucks.length,
-                wantedMix: wantedMixPct.toFixed(1),
-                wantedVol: wantVol
-            });
+displayBatchResults(results, wantedMixPct, wantVol);
+
+// Save each successful truck to history individually
+results.forEach(result => {
+    if (result.success) {
+        saveToHistory('Batch', {
+            truckId: result.truckId,
+            curMix: result.currentMix.toFixed(1),
+            curVol: result.currentVolume.toFixed(0),
+            wantMix: result.wantedMix.toFixed(1),
+            wantVol: result.wantedVolume,
+            vol: Math.round(result.volumeToAdd),
+            pct: result.percentToAdd.toFixed(0),
+            water: Math.round(result.waterToAdd),
+            typeI: Math.round(result.typeIToAdd),
+            pumpOut: result.pumpOutAmount ? result.pumpOutAmount.toFixed(0) : 0
+        });
+    }
+});
         }
 
         function calculateTruckMix(truckId, curMix, curVol, wantMix, wantVol, pumpOutChecked = false) {
@@ -2007,8 +2019,7 @@ function parseMETAR(metar) {
                 else if(x.type==='Dec')det=`${x.data.c}% → ${x.data.d}% | Add ${x.data.w} gal water`;
                 else if(x.type==='Vol')det=`${x.data.curVol} → ${x.data.wantVol} gal | Add ${x.data.vol} gal at ${x.data.pct}% (${x.data.water} gal water + ${x.data.typeI} gal Type I)`;
                 else if(x.type==='Tote')det=`${x.data.tm}% + ${x.data.ttm}% = ${x.data.nm}%`;
-                else if(x.type==='Batch')det=`Processed ${x.data.trucksProcessed} trucks → ${x.data.wantedMix}% @ ${x.data.wantedVol} gal`;
-                return `<div style="padding:12px;background:#f0f9ff;border-radius:8px;margin-bottom:8px;">
+else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.wantVol} gal | Add ${x.data.vol} gal at ${x.data.pct}% (${x.data.water} gal water + ${x.data.typeI} gal Type I)${x.data.pumpOut > 0 ? ' | Pump out ' + x.data.pumpOut + ' gal first' : ''}`;                return `<div style="padding:12px;background:#f0f9ff;border-radius:8px;margin-bottom:8px;">
                     <div style="font-weight:600;color:#0369a1;">${x.type}</div>
                     <div style="font-size:13px;color:#6b7280;">${det}</div>
                     <div style="font-size:11px;color:#9ca3af;">${date}</div></div>`;
@@ -2352,6 +2363,7 @@ function parseMETAR(metar) {
     </script>
 </body>
 </html>
+
 
 
 
