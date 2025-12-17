@@ -1,11 +1,11 @@
-const CACHE_NAME = 'mixing-calc-v1.4.0';
+const CACHE_NAME = 'mixing-calc-v1.5.0';
 const urlsToCache = [
     './',
     './index.html'
 ];
 // Install event - cache files
 self.addEventListener('install', (event) => {
-    console.log('Service Worker v1.4.0 installing...');
+    console.log('Service Worker v1.5.0 installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
@@ -20,7 +20,7 @@ self.addEventListener('install', (event) => {
 });
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker v1.4.0 activating...');
+    console.log('Service Worker v1.5.0 activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
