@@ -2212,8 +2212,9 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
         let touchMoved = false;
         let touchStartTime = 0;
 
-        function handleTouchStart(e) {
-            const touch = e.touches[0];
+function handleTouchStart(e) {
+    if (menuLocked) return; // Don't start drag if locked
+    const touch = e.touches[0];
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
             touchMoved = false;
@@ -2221,8 +2222,8 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
             draggedElement = this;
         }
 
-        function handleTouchMove(e) {
-            if (!draggedElement) return;
+function handleTouchMove(e) {
+    if (menuLocked || !draggedElement) return; // Don't allow drag if locked
             
             const touch = e.touches[0];
             const deltaX = Math.abs(touch.clientX - touchStartX);
@@ -2295,9 +2296,10 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
             draggedElement = null;
         }
 
-        function handleDragStart(e) {
-            draggedElement = this;
-            isDragging = true;
+function handleDragStart(e) {
+    if (menuLocked) return; // Don't start drag if locked
+    draggedElement = this;
+    isDragging = true;
             this.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.innerHTML);
@@ -2476,6 +2478,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
