@@ -28,6 +28,28 @@
             font-size: 12px;
             font-weight: 600;
         }
+        .lock-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .lock-btn:hover {
+            background: #059669;
+        }
+        .lock-btn.locked {
+            background: #ef4444;
+        }
+        .lock-btn.locked:hover {
+            background: #dc2626;
+        }
         .update-btn:hover {
             background: #0284c7;
         }
@@ -366,9 +388,10 @@
 <body>
     <div class="version-badge">v1.5.0</div>
     <div class="container">
-        <div class="header">
+  <div class="header">
             <button class="update-btn" onclick="updateApp()" aria-label="Update application">🔄 Update</button>
             <h1>KPIT ICEMAN</h1>
+            <button class="lock-btn" id="lock-btn" onclick="toggleMenuLock()" aria-label="Toggle menu lock">🔒</button>
         </div>
         
         <div class="page active" id="menu">
@@ -2146,6 +2169,7 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
         let isDragging = false;
 
         function initDragAndDrop() {
+            initMenuLock();
             const menuGrid = document.getElementById('menu-grid');
             const cards = menuGrid.querySelectorAll('.menu-card');
             
@@ -2355,6 +2379,59 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
                 }
             });
         }
+        // Menu lock functionality
+        let menuLocked = true; // Start locked by default
+        
+        function toggleMenuLock() {
+            menuLocked = !menuLocked;
+            const lockBtn = document.getElementById('lock-btn');
+            const cards = document.querySelectorAll('.menu-card');
+            
+            if (menuLocked) {
+                // Lock menu
+                lockBtn.textContent = '🔒';
+                lockBtn.classList.add('locked');
+                lockBtn.setAttribute('aria-label', 'Menu locked - Click to unlock');
+                
+                // Disable dragging
+                cards.forEach(card => {
+                    card.setAttribute('draggable', 'false');
+                    card.style.cursor = 'pointer';
+                });
+            } else {
+                // Unlock menu
+                lockBtn.textContent = '🔓';
+                lockBtn.classList.remove('locked');
+                lockBtn.setAttribute('aria-label', 'Menu unlocked - Click to lock');
+                
+                // Enable dragging
+                cards.forEach(card => {
+                    card.setAttribute('draggable', 'true');
+                    card.style.cursor = 'grab';
+                });
+            }
+            
+            // Save lock state
+            localStorage.setItem('menuLocked', menuLocked);
+        }
+        
+        // Initialize lock state on page load
+        function initMenuLock() {
+            const savedLockState = localStorage.getItem('menuLocked');
+            if (savedLockState !== null) {
+                menuLocked = savedLockState === 'true';
+            }
+            
+            // Apply the lock state
+            if (!menuLocked) {
+                toggleMenuLock(); // This will set it to unlocked
+            } else {
+                // Just update the button appearance for locked state
+                const lockBtn = document.getElementById('lock-btn');
+                lockBtn.textContent = '🔒';
+                lockBtn.classList.add('locked');
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             initDragAndDrop();
@@ -2399,6 +2476,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
