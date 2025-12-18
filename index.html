@@ -712,14 +712,18 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
         // Google Sheets Configuration
         const SHEETS_ID = '141e9AEoD3aluTHDRsyoTrIJHekM9Q5JGGANWfoCr_pY';
         
-        function showPage(p) {
-            document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-            document.getElementById(p).classList.add('active');
-            if(p==='notes')loadNotes();if(p==='history')displayHistory();
-            if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
-if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();if(p==='truckboard-edit')loadTruckList();            
-            restorePageInputs(p);
-        }
+function showPage(p) {
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    document.getElementById(p).classList.add('active');
+    
+    // Save the current page
+    saveCurrentPage(p);
+    
+    if(p==='notes')loadNotes();if(p==='history')displayHistory();
+    if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
+    if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();if(p==='truckboard-edit')loadTruckList();            
+    restorePageInputs(p);
+}
 
         function saveInput(pageId, inputId, value) {
             const key = `input_${pageId}_${inputId}`;
@@ -2360,9 +2364,26 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
                 });
             });
         });
+// Save current page when navigating
+function saveCurrentPage(pageId) {
+    localStorage.setItem('currentPage', pageId);
+}
+
+// Restore last visited page on load
+function restoreLastPage() {
+    const lastPage = localStorage.getItem('currentPage');
+    if (lastPage && document.getElementById(lastPage)) {
+        showPage(lastPage);
+    }
+}
+
+// Call on page load
+window.addEventListener('load', restoreLastPage);
+        
     </script>
 </body>
 </html>
+
 
 
 
