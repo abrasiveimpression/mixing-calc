@@ -1776,10 +1776,11 @@ async function loadTruckData() {
                 document.getElementById('precip-box').style.display = 'none';
                 
                 const station = 'KPIT';
-                const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0`;
-                
+const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0&_=${Date.now()}`;                
                 try {
-                    const metarResponse = await fetch(metarURL);
+                    const metarResponse = await fetch(metarURL, {
+                        cache: 'no-store'
+                    });
                     const metarText = await metarResponse.text();
                     
                     if (metarText && metarText.trim() && !metarText.includes('error')) {
@@ -1791,7 +1792,9 @@ async function loadTruckData() {
                 }
                 
                 const proxyURL = `https://corsproxy.io/?${encodeURIComponent(metarURL)}`;
-                const proxyResponse = await fetch(proxyURL);
+                const proxyResponse = await fetch(proxyURL, {
+                    cache: 'no-store'
+                });
                 const metarText = await proxyResponse.text();
                 
                 if (metarText && metarText.trim()) {
@@ -2478,6 +2481,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
