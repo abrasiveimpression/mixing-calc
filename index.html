@@ -243,6 +243,30 @@
         .refresh-btn:hover {
             background: #0284c7;
         }
+
+.btn-mode {
+    background: white;
+    color: #0369a1;
+    border: 2px solid #e5e7eb;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+.btn-mode:hover {
+    border-color: #0ea5e9;
+    background: #f0f9ff;
+}
+.btn-mode.active {
+    background: #0ea5e9;
+    color: white;
+    border-color: #0ea5e9;
+}
+        
         .metar-box {
             background: white;
             padding: 16px;
@@ -478,33 +502,46 @@
             <div class="card">
                 <h2 style="margin-bottom: 16px;">Batch Trucks</h2>
                 
-                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
-                    <strong>Import from Google Sheets or enter manually below</strong><br>
-Imports: Truck ID (Col A) | Type I Gallons (Col F) | Freeze Point °C (Col C)
-                </div>
-                
-                <button class="btn-primary" onclick="importFromSheets()">📊 Import from Google Sheets</button>
-                
-                <div style="text-align: center; margin: 16px 0; color: #9ca3af; font-size: 14px;">
-                    OR
-                </div>
-                
-                <textarea id="batch-input" rows="8" placeholder="Enter truck data (one per line):
+                <!-- Mode Selection -->
+<div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+    <div style="font-weight: 600; margin-bottom: 8px; color: #0369a1;">Select Processing Mode:</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+        <button class="btn-mode" onclick="setBatchMode('increase-mix')">Increase Mix</button>
+        <button class="btn-mode" onclick="setBatchMode('decrease-mix')">Decrease Mix</button>
+        <button class="btn-mode active" onclick="setBatchMode('increase-volume')">Increase Volume</button>
+    </div>
+</div>
+
+<div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+    <strong>Import from Google Sheets or enter manually below</strong><br>
+    Imports: Truck ID (Col A) | Type I Gallons (Col F) | Freeze Point °C (Col C)
+</div>
+
+<button class="btn-primary" onclick="importFromSheets()">📊 Import from Google Sheets</button>
+
+<div style="text-align: center; margin: 16px 0; color: #9ca3af; font-size: 14px;">
+    OR
+</div>
+
+<textarea id="batch-input" rows="8" placeholder="Enter truck data (one per line):
 Truck 1, 500, -30
 Truck 2, 450, 45%
 Truck 3, 600, -25
 
 Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-family: 'Courier New', monospace; font-size: 13px;"></textarea>
-                
-                <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
-                    <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
-                </div>               
 
-                <input type="number" inputmode="decimal" id="batch-want-pct" placeholder="Wanted Mix %" aria-label="Wanted mix percentage" min="0" max="100">
-                <input type="number" id="batch-want-freeze" placeholder="OR Wanted Freeze Point (°C)" aria-label="Wanted freeze point in Celsius" max="0">
-                
-                <input type="number" inputmode="decimal" id="batch-want-vol" placeholder="Wanted Volume (gallons)" aria-label="Wanted volume in gallons" min="0">
-                
+<div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+    <strong>Wanted Mix:</strong> Enter either percentage OR freeze point
+</div>               
+
+<input type="number" inputmode="decimal" id="batch-want-pct" placeholder="Wanted Mix %" aria-label="Wanted mix percentage" min="0" max="100">
+<input type="number" id="batch-want-freeze" placeholder="OR Wanted Freeze Point (°C)" aria-label="Wanted freeze point in Celsius" max="0">
+
+<!-- This field is hidden for increase-mix and decrease-mix modes -->
+<div id="batch-volume-field">
+    <input type="number" inputmode="decimal" id="batch-want-vol" placeholder="Wanted Volume (gallons)" aria-label="Wanted volume in gallons" min="0">
+</div>
+
 <button class="btn-secondary" onclick="processBatch()">🚀 Process All Trucks</button>
 
 <div id="batch-sort-controls" style="display: none; margin-top: 20px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; padding: 16px; border: 2px solid #e5e7eb;">
@@ -734,6 +771,147 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
     <script>
         // Google Sheets Configuration
         const SHEETS_ID = '141e9AEoD3aluTHDRsyoTrIJHekM9Q5JGGANWfoCr_pY';
+
+// Batch mode tracking
+let currentBatchMode = 'increase-volume'; // default mode
+
+function setBatchMode(mode) {
+    currentBatchMode = mode;
+    
+    // Update button styling
+    document.querySelectorAll('.btn-mode').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show/hide wanted volume field
+    const volumeField = document.getElementById('batch-volume-field');
+    if (mode === 'increase-volume') {
+        volumeField.style.display = 'block';
+    } else {
+        volumeField.style.display = 'none';
+    }
+    
+    // Clear results when switching modes
+    document.getElementById('batch-results').innerHTML = '';
+    document.getElementById('batch-sort-controls').style.display = 'none';
+}
+
+// NEW: Calculate Increase Mix (keeps volume constant, adds only glycol)
+function calculateIncreaseMix(truckId, curMix, curVol, wantMix) {
+    try {
+        const validations = [
+            validateInput(curMix, 'Current mix', 0, 100),
+            validateInput(wantMix, 'Wanted mix', 0, 100),
+            validateInput(curVol, 'Current volume', 0.1)
+        ];
+        
+        for (let validation of validations) {
+            if (!validation.valid) {
+                return {
+                    truckId: truckId,
+                    success: false,
+                    error: validation.message
+                };
+            }
+        }
+        
+        if (wantMix <= curMix) {
+            return {
+                truckId: truckId,
+                success: false,
+                error: 'Wanted mix must be greater than current mix for Increase Mix mode'
+            };
+        }
+        
+        // Calculate glycol to add (standard increase mix formula)
+        const glycolToAdd = curVol * ((wantMix - curMix) / (100 - wantMix));
+        const newTotalVolume = curVol + glycolToAdd;
+        
+        return {
+            truckId: truckId,
+            success: true,
+            currentMix: curMix,
+            currentVolume: curVol,
+            wantedMix: wantMix,
+            wantedVolume: newTotalVolume,
+            percentToAdd: 100, // Pure glycol
+            volumeToAdd: glycolToAdd,
+            typeIToAdd: glycolToAdd,
+            waterToAdd: 0,
+            pumpOutAmount: 0,
+            pumpOutMode: null
+        };
+    } catch (error) {
+        return {
+            truckId: truckId,
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// NEW: Calculate Decrease Mix (keeps volume constant, adds only water)
+function calculateDecreaseMix(truckId, curMix, curVol, wantMix) {
+    try {
+        const validations = [
+            validateInput(curMix, 'Current mix', 0, 100),
+            validateInput(wantMix, 'Wanted mix', 0, 100),
+            validateInput(curVol, 'Current volume', 0.1)
+        ];
+        
+        for (let validation of validations) {
+            if (!validation.valid) {
+                return {
+                    truckId: truckId,
+                    success: false,
+                    error: validation.message
+                };
+            }
+        }
+        
+        if (wantMix >= curMix) {
+            return {
+                truckId: truckId,
+                success: false,
+                error: 'Wanted mix must be less than current mix for Decrease Mix mode'
+            };
+        }
+        
+        if (wantMix === 0) {
+            return {
+                truckId: truckId,
+                success: false,
+                error: 'Wanted mix cannot be zero'
+            };
+        }
+        
+        // Calculate water to add (standard decrease mix formula)
+        const waterToAdd = curVol * ((curMix - wantMix) / wantMix);
+        const newTotalVolume = curVol + waterToAdd;
+        
+        return {
+            truckId: truckId,
+            success: true,
+            currentMix: curMix,
+            currentVolume: curVol,
+            wantedMix: wantMix,
+            wantedVolume: newTotalVolume,
+            percentToAdd: 0, // Pure water
+            volumeToAdd: waterToAdd,
+            typeIToAdd: 0,
+            waterToAdd: waterToAdd,
+            pumpOutAmount: 0,
+            pumpOutMode: null
+        };
+    } catch (error) {
+        return {
+            truckId: truckId,
+            success: false,
+            error: error.message
+        };
+    }
+}
         
 function showPage(p) {
     document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
@@ -886,10 +1064,19 @@ function processBatch() {
                 return;
             }
             
-            if ((!wantPct && !wantFreeze) || !wantVol) {
-                resultsDiv.innerHTML = '<div class="error-message">Please enter wanted mix (percentage or freeze point) and wanted volume</div>';
-                return;
-            }
+if (!wantPct && !wantFreeze) {
+    resultsDiv.innerHTML = '<div class="error-message">Please enter wanted mix (percentage or freeze point)</div>';
+    return;
+}
+
+// For increase-volume mode, check for wanted volume
+if (currentBatchMode === 'increase-volume') {
+    const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
+    if (!wantVol) {
+        resultsDiv.innerHTML = '<div class="error-message">Please enter wanted volume for Increase Volume mode</div>';
+        return;
+    }
+}
             
             let wantedMixPct;
             if (wantPct) {
@@ -932,34 +1119,50 @@ lines.forEach((line, index) => {
                 return;
             }
             
-            const results = trucks.map(truck => {
-    return calculateTruckMix(
-        truck.id,
-        truck.currentMixPct,
-        truck.currentVolume,
-        wantedMixPct,
-        wantVol,
-        pumpOutChecked
-    );
-});
-            
-displayBatchResults(results, wantedMixPct, wantVol);
+let results;
 
+if (currentBatchMode === 'increase-mix') {
+    // Increase Mix mode - only add glycol
+    results = trucks.map(truck => {
+        return calculateIncreaseMix(truck.id, truck.currentMixPct, truck.currentVolume, wantedMixPct);
+    });
+} else if (currentBatchMode === 'decrease-mix') {
+    // Decrease Mix mode - only add water
+    results = trucks.map(truck => {
+        return calculateDecreaseMix(truck.id, truck.currentMixPct, truck.currentVolume, wantedMixPct);
+    });
+} else {
+    // Increase Volume mode - original behavior
+    const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
+    results = trucks.map(truck => {
+        return calculateTruckMix(
+            truck.id,
+            truck.currentMixPct,
+            truck.currentVolume,
+            wantedMixPct,
+            wantVol,
+            true // pumpOutChecked
+        );
+    });
+}
+            
+displayBatchResults(results, wantedMixPct, currentBatchMode === 'increase-volume' ? parseFloat(document.getElementById('batch-want-vol').value) : null);
 // Save each successful truck to history individually
 results.forEach(result => {
     if (result.success) {
         saveToHistory('Batch', {
-            truckId: result.truckId,
-            curMix: result.currentMix.toFixed(1),
-            curVol: result.currentVolume.toFixed(0),
-            wantMix: result.wantedMix.toFixed(1),
-            wantVol: result.wantedVolume,
-            vol: Math.round(result.volumeToAdd),
-            pct: result.percentToAdd.toFixed(0),
-            water: Math.round(result.waterToAdd),
-            typeI: Math.round(result.typeIToAdd),
-            pumpOut: result.pumpOutAmount ? result.pumpOutAmount.toFixed(0) : 0
-        });
+    truckId: result.truckId,
+    mode: currentBatchMode,
+    curMix: result.currentMix.toFixed(1),
+    curVol: result.currentVolume.toFixed(0),
+    wantMix: result.wantedMix.toFixed(1),
+    wantVol: result.wantedVolume || result.currentVolume,
+    vol: Math.round(result.volumeToAdd),
+    pct: result.percentToAdd ? result.percentToAdd.toFixed(0) : 'N/A',
+    water: Math.round(result.waterToAdd || 0),
+    typeI: Math.round(result.typeIToAdd || 0),
+    pumpOut: result.pumpOutAmount ? result.pumpOutAmount.toFixed(0) : 0
+});
     }
 });
         }
@@ -2481,6 +2684,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
