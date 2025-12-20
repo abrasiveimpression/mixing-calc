@@ -2395,15 +2395,18 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
 
 function attachCardEventListeners() {
     const menuGrid = document.getElementById('menu-grid');
+    
+    // Get all current cards
     const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
     
+    // Attach listeners directly to existing cards (no cloning needed)
     cards.forEach(card => {
-        // Remove old listeners by cloning and replacing
+        // Remove any existing click listener by cloning
         const newCard = card.cloneNode(true);
         card.parentNode.replaceChild(newCard, card);
     });
     
-    // Now attach fresh listeners to the NEW cards (need to re-query after replacement)
+    // NOW re-query to get the fresh cards we just replaced
     const freshCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
     
     freshCards.forEach(card => {
@@ -2416,12 +2419,9 @@ function attachCardEventListeners() {
             isDragging = false;
         });
         
-        // Drag handlers (only if not locked)
-        if (!menuLocked) {
-            card.addEventListener('dragstart', handleDragStart);
-            card.addEventListener('dragend', handleDragEnd);
-        }
-        
+        // Drag handlers
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
         card.addEventListener('dragover', handleDragOver);
         card.addEventListener('drop', handleDrop);
         card.addEventListener('dragenter', handleDragEnter);
@@ -2713,6 +2713,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
