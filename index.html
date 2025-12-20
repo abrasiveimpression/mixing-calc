@@ -2643,49 +2643,26 @@ function initMenuLock() {
 }
 
  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
-    initDragAndDrop();
-    
-    document.querySelectorAll('.menu-card').forEach(card => {
-        card.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.click();
-            }
-        });
+// Initialize immediately - DOM is already loaded since script is at bottom
+console.log('Initializing drag and drop...');
+initDragAndDrop();
+
+document.querySelectorAll('.menu-card').forEach(card => {
+    card.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.click();
+        }
     });
 });
 
-// Restore last visited page IMMEDIATELY (before page fully loads)
+// Restore last visited page
 (function() {
     const lastPage = localStorage.getItem('currentPage');
     if (lastPage && document.getElementById(lastPage)) {
         document.getElementById('menu').classList.remove('active');
         document.getElementById(lastPage).classList.add('active');
-    }
-})();
-
-// Then do full restoration after load (for any page-specific loading functions)
-window.addEventListener('DOMContentLoaded', function() {
-    console.log('Window DOMContentLoaded firing');
-    const lastPage = localStorage.getItem('currentPage');
-    if (lastPage) {
-        if(lastPage==='notes')loadNotes();
-        if(lastPage==='history')displayHistory();
-        if(lastPage==='dilution')loadDilution();
-        if(lastPage==='aircraft')loadAircraft();
-        if(lastPage==='airlines')loadAirlines();
-        if(lastPage==='pdfs')loadPdfs();
-        if(lastPage==='atis')loadATIS();
-        if(lastPage==='truckboard-edit')loadTruckList();
-        restorePageInputs(lastPage);
-    }
-});
-
-// Then do full restoration after load (for any page-specific loading functions)
-window.addEventListener('DOMContentLoaded', function() {
-    const lastPage = localStorage.getItem('currentPage');
-    if (lastPage) {
+        
         // Call page-specific load functions
         if(lastPage==='notes')loadNotes();
         if(lastPage==='history')displayHistory();
@@ -2697,11 +2674,12 @@ window.addEventListener('DOMContentLoaded', function() {
         if(lastPage==='truckboard-edit')loadTruckList();
         restorePageInputs(lastPage);
     }
-});
+})();
    
     </script>
 </body>
 </html>
+
 
 
 
