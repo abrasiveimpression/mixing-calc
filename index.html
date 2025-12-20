@@ -1402,11 +1402,6 @@ function renderBatchResults(results, wantedMix, wantedVol) {
                 } else if (result.pumpOutMode === 'glycol-only' && Math.round(result.waterToAdd) === 0) {
                     verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Type I glycol only needed</div>';
                 }
-                } else if (currentBatchMode === 'increase-mix' && Math.round(result.waterToAdd) === 0) {
-    verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Type I glycol only (Increase Mix mode)</div>';
-} else if (currentBatchMode === 'decrease-mix' && Math.round(result.typeIToAdd) === 0) {
-    verificationNote = '<div style="background: #d1fae5; color: #065f46; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Water only (Decrease Mix mode)</div>';
-}
             }
             
             html += `
