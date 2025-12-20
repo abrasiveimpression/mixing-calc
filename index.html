@@ -2640,23 +2640,28 @@ function reorderMenuCards() {
             localStorage.setItem('menuLocked', menuLocked);
         }
         
-        // Initialize lock state on page load
-        function initMenuLock() {
-            const savedLockState = localStorage.getItem('menuLocked');
-            if (savedLockState !== null) {
-                menuLocked = savedLockState === 'true';
-            }
-            
-            // Apply the lock state
-            if (!menuLocked) {
-                toggleMenuLock(); // This will set it to unlocked
-            } else {
-                // Just update the button appearance for locked state
-                const lockBtn = document.getElementById('lock-btn');
-                lockBtn.textContent = '🔒';
-                lockBtn.classList.add('locked');
-            }
-        }
+// Initialize lock state on page load
+function initMenuLock() {
+    const savedLockState = localStorage.getItem('menuLocked');
+    if (savedLockState !== null) {
+        menuLocked = savedLockState === 'true';
+    }
+    
+    const lockBtn = document.getElementById('lock-btn');
+    
+    // Apply the lock state
+    if (menuLocked) {
+        // Menu is locked
+        lockBtn.textContent = '🔒';
+        lockBtn.classList.add('locked');
+        lockBtn.setAttribute('aria-label', 'Menu locked - Click to unlock');
+    } else {
+        // Menu is unlocked
+        lockBtn.textContent = '🔓';
+        lockBtn.classList.remove('locked');
+        lockBtn.setAttribute('aria-label', 'Menu unlocked - Click to lock');
+    }
+}
 
         document.addEventListener('DOMContentLoaded', function() {
             initDragAndDrop();
@@ -2701,6 +2706,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
