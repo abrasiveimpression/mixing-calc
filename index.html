@@ -2374,7 +2374,7 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
         let menuOrder = [];
         let isDragging = false;
 
-      function initDragAndDrop() {
+function initDragAndDrop() {
     initMenuLock();
     const menuGrid = document.getElementById('menu-grid');
     
@@ -2389,7 +2389,7 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
         });
     }
     
-    // Add event listeners to all cards
+    // Add event listeners to all cards ONCE
     attachCardEventListeners();
 }
 
@@ -2608,8 +2608,8 @@ function reorderMenuCards() {
         }
     });
     
-    // Re-attach event listeners after reordering
-    attachCardEventListeners();
+    // DO NOT call attachCardEventListeners() here!
+    // The cards still have their event listeners from before
 }
         // Menu lock functionality
         let menuLocked = true; // Start locked by default
@@ -2713,6 +2713,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
