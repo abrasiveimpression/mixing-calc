@@ -28,28 +28,28 @@
             font-size: 12px;
             font-weight: 600;
         }
-       .lock-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: #0ea5e9;  /* Changed from #10b981 to blue */
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-}
-.lock-btn:hover {
-    background: #0284c7;  /* Changed from #059669 */
-}
-.lock-btn.locked {
-    background: #0ea5e9;
-}
-.lock-btn.locked:hover {
-    background: #0284c7;  /* Changed to match */
-}
+        .lock-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .lock-btn:hover {
+            background: #059669;
+        }
+        .lock-btn.locked {
+            background: #0ea5e9;
+        }
+        .lock-btn.locked:hover {
+            background: #0ea5e9;
+        }
         .update-btn:hover {
             background: #0284c7;
         }
@@ -248,10 +248,10 @@
     background: white;
     color: #0369a1;
     border: 2px solid #e5e7eb;
-    padding: 8px 12px;
+    padding: 12px 24px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     width: 100%;
     margin-bottom: 12px;
@@ -510,6 +510,11 @@
         <button class="btn-mode" onclick="setBatchMode('decrease-mix')">Decrease Mix</button>
         <button class="btn-mode active" onclick="setBatchMode('increase-volume')">Increase Volume</button>
     </div>
+</div>
+
+<div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+    <strong>Import from Google Sheets or enter manually below</strong><br>
+    Imports: Truck ID (Col A) | Type I Gallons (Col F) | Freeze Point °C (Col C)
 </div>
 
 <button class="btn-primary" onclick="importFromSheets()">📊 Import from Google Sheets</button>
@@ -2370,299 +2375,304 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
             });
         });
 
-let draggedElement = null;
-let menuOrder = [];
-let isDragging = false;
-let touchStartX = 0;
-let touchStartY = 0;
-let touchMoved = false;
-let touchStartTime = 0;
-let menuLocked = true; // Start locked by default
+        let draggedElement = null;
+        let menuOrder = [];
+        let isDragging = false;
 
-function initDragAndDrop() {
-    initMenuLock();
-    const menuGrid = document.getElementById('menu-grid');
-    
-    const savedOrder = localStorage.getItem('menuOrder');
-    if (savedOrder) {
-        menuOrder = JSON.parse(savedOrder);
-        reorderMenuCards();
-    } else {
-        const cards = menuGrid.querySelectorAll('.menu-card');
-        cards.forEach(card => {
-            menuOrder.push(card.dataset.menuId);
-        });
-    }
-    
-    // Add event listeners to all cards
-    attachCardEventListeners();
-}
-
-function attachCardEventListeners() {
-    console.log('attachCardEventListeners called');
-    const menuGrid = document.getElementById('menu-grid');
-    const cards = menuGrid.querySelectorAll('.menu-card');
-    
-    console.log('Found', cards.length, 'cards');
-    
-    cards.forEach((card, index) => {
-        console.log('Attaching listeners to card', index, card.dataset.menuId);
-        
-        // Click handler
-        card.addEventListener('click', function(e) {
-            console.log('Card clicked!', this.dataset.menuId, 'isDragging:', isDragging);
-            if (!isDragging) {
-                const pageId = this.dataset.menuId;
-                showPage(pageId);
+        function initDragAndDrop() {
+            initMenuLock();
+            const menuGrid = document.getElementById('menu-grid');
+            const cards = menuGrid.querySelectorAll('.menu-card');
+            
+            const savedOrder = localStorage.getItem('menuOrder');
+            if (savedOrder) {
+                menuOrder = JSON.parse(savedOrder);
+                reorderMenuCards();
+            } else {
+                cards.forEach(card => {
+                    menuOrder.push(card.dataset.menuId);
+                });
             }
-            isDragging = false;
-        });
-        
-        // Drag handlers
-        card.addEventListener('dragstart', handleDragStart);
-        card.addEventListener('dragend', handleDragEnd);
-        card.addEventListener('dragover', handleDragOver);
-        card.addEventListener('drop', handleDrop);
-        card.addEventListener('dragenter', handleDragEnter);
-        card.addEventListener('dragleave', handleDragLeave);
-        
-        // Touch handlers
-        card.addEventListener('touchstart', handleTouchStart, {passive: false});
-        card.addEventListener('touchmove', handleTouchMove, {passive: false});
-        card.addEventListener('touchend', handleTouchEnd, {passive: false});
-    });
-    
-    console.log('Finished attaching listeners');
-}
-
-function handleDragStart(e) {
-    if (menuLocked) return;
-    draggedElement = this;
-    isDragging = true;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-}
-
-function handleDragEnd(e) {
-    this.classList.remove('dragging');
-    setTimeout(() => { isDragging = false; }, 50);
-    document.querySelectorAll('.menu-card').forEach(card => {
-        card.classList.remove('drag-over');
-    });
-}
-
-function handleDragOver(e) {
-    if (e.preventDefault) e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    return false;
-}
-
-function handleDragEnter(e) {
-    if (this !== draggedElement) {
-        this.classList.add('drag-over');
-    }
-}
-
-function handleDragLeave(e) {
-    this.classList.remove('drag-over');
-}
-
-function handleDrop(e) {
-    if (e.stopPropagation) e.stopPropagation();
-    
-    if (draggedElement !== this) {
-        const menuGrid = document.getElementById('menu-grid');
-        const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
-        const draggedIndex = allCards.indexOf(draggedElement);
-        const droppedIndex = allCards.indexOf(this);
-        
-        if (draggedIndex < droppedIndex) {
-            this.parentNode.insertBefore(draggedElement, this.nextSibling);
-        } else {
-            this.parentNode.insertBefore(draggedElement, this);
+            
+            cards.forEach(card => {
+                card.removeAttribute('onclick');
+                
+                card.addEventListener('click', function(e) {
+                    if (!isDragging) {
+                        const pageId = this.dataset.menuId;
+                        showPage(pageId);
+                    }
+                    isDragging = false;
+                });
+                
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragenter', handleDragEnter);
+                card.addEventListener('dragleave', handleDragLeave);
+                
+                card.addEventListener('touchstart', handleTouchStart, {passive: false});
+                card.addEventListener('touchmove', handleTouchMove, {passive: false});
+                card.addEventListener('touchend', handleTouchEnd, {passive: false});
+            });
         }
-        
-        const draggedId = draggedElement.dataset.menuId;
-        menuOrder = menuOrder.filter(id => id !== draggedId);
-        const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
-            .findIndex(card => card === draggedElement);
-        menuOrder.splice(newIndex, 0, draggedId);
-        
-        localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
-    }
-    
-    return false;
-}
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchMoved = false;
+        let touchStartTime = 0;
 
 function handleTouchStart(e) {
-    if (menuLocked) return;
+    if (menuLocked) return; // Don't start drag if locked
     const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-    touchMoved = false;
-    touchStartTime = Date.now();
-    draggedElement = this;
-}
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchMoved = false;
+            touchStartTime = Date.now();
+            draggedElement = this;
+        }
 
 function handleTouchMove(e) {
-    if (menuLocked || !draggedElement) return;
-    
-    const touch = e.touches[0];
-    const deltaX = Math.abs(touch.clientX - touchStartX);
-    const deltaY = Math.abs(touch.clientY - touchStartY);
-    
-    if (deltaX > 10 || deltaY > 10) {
-        touchMoved = true;
-        isDragging = true;
-        e.preventDefault();
+    if (menuLocked || !draggedElement) return; // Don't allow drag if locked
+            
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+            const deltaY = Math.abs(touch.clientY - touchStartY);
+            
+            if (deltaX > 10 || deltaY > 10) {
+                touchMoved = true;
+                isDragging = true;
+                e.preventDefault();
+                
+                draggedElement.classList.add('dragging');
+                
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
+                
+                document.querySelectorAll('.menu-card').forEach(card => {
+                    card.classList.remove('drag-over');
+                });
+                
+                if (cardBelow && cardBelow !== draggedElement) {
+                    cardBelow.classList.add('drag-over');
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!draggedElement) return;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
+            
+            draggedElement.classList.remove('dragging');
+            
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+            
+            if (touchMoved && cardBelow && cardBelow !== draggedElement) {
+                const menuGrid = document.getElementById('menu-grid');
+                const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const droppedIndex = allCards.indexOf(cardBelow);
+                
+                if (draggedIndex < droppedIndex) {
+                    cardBelow.parentNode.insertBefore(draggedElement, cardBelow.nextSibling);
+                } else {
+                    cardBelow.parentNode.insertBefore(draggedElement, cardBelow);
+                }
+                
+                const draggedId = draggedElement.dataset.menuId;
+                menuOrder = menuOrder.filter(id => id !== draggedId);
+                const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
+                    .findIndex(card => card === draggedElement);
+                menuOrder.splice(newIndex, 0, draggedId);
+                
+                localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
+                
+                setTimeout(() => {
+                    isDragging = false;
+                    touchMoved = false;
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    isDragging = false;
+                    touchMoved = false;
+                }, 50);
+            }
+            
+            draggedElement = null;
+        }
+
+function handleDragStart(e) {
+    if (menuLocked) return; // Don't start drag if locked
+    draggedElement = this;
+    isDragging = true;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            
+            setTimeout(() => {
+                isDragging = false;
+            }, 50);
+            
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const menuGrid = document.getElementById('menu-grid');
+                const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const droppedIndex = allCards.indexOf(this);
+                
+                if (draggedIndex < droppedIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+                
+                const draggedId = draggedElement.dataset.menuId;
+                menuOrder = menuOrder.filter(id => id !== draggedId);
+                const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
+                    .findIndex(card => card === draggedElement);
+                menuOrder.splice(newIndex, 0, draggedId);
+                
+                localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
+            }
+            
+            return false;
+        }
+
+        function reorderMenuCards() {
+            const menuGrid = document.getElementById('menu-grid');
+            const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+            
+            const cardMap = {};
+            cards.forEach(card => {
+                cardMap[card.dataset.menuId] = card;
+            });
+            
+            cards.forEach(card => card.remove());
+            
+            menuOrder.forEach(menuId => {
+                if (cardMap[menuId]) {
+                    menuGrid.appendChild(cardMap[menuId]);
+                }
+            });
+        }
+        // Menu lock functionality
+        let menuLocked = true; // Start locked by default
         
-        draggedElement.classList.add('dragging');
+        function toggleMenuLock() {
+            menuLocked = !menuLocked;
+            const lockBtn = document.getElementById('lock-btn');
+            const cards = document.querySelectorAll('.menu-card');
+            
+            if (menuLocked) {
+                // Lock menu
+                lockBtn.textContent = '🔒';
+                lockBtn.classList.add('locked');
+                lockBtn.setAttribute('aria-label', 'Menu locked - Click to unlock');
+                
+                // Disable dragging
+                cards.forEach(card => {
+                    card.setAttribute('draggable', 'false');
+                    card.style.cursor = 'pointer';
+                });
+            } else {
+                // Unlock menu
+                lockBtn.textContent = '🔓';
+                lockBtn.classList.remove('locked');
+                lockBtn.setAttribute('aria-label', 'Menu unlocked - Click to lock');
+                
+                // Enable dragging
+                cards.forEach(card => {
+                    card.setAttribute('draggable', 'true');
+                    card.style.cursor = 'grab';
+                });
+            }
+            
+            // Save lock state
+            localStorage.setItem('menuLocked', menuLocked);
+        }
         
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
-        
-        document.querySelectorAll('.menu-card').forEach(card => {
-            card.classList.remove('drag-over');
+        // Initialize lock state on page load
+        function initMenuLock() {
+            const savedLockState = localStorage.getItem('menuLocked');
+            if (savedLockState !== null) {
+                menuLocked = savedLockState === 'true';
+            }
+            
+            // Apply the lock state
+            if (!menuLocked) {
+                toggleMenuLock(); // This will set it to unlocked
+            } else {
+                // Just update the button appearance for locked state
+                const lockBtn = document.getElementById('lock-btn');
+                lockBtn.textContent = '🔒';
+                lockBtn.classList.add('locked');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initDragAndDrop();
+            
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
         });
-        
-        if (cardBelow && cardBelow !== draggedElement) {
-            cardBelow.classList.add('drag-over');
-        }
-    }
-}
-
-function handleTouchEnd(e) {
-    if (!draggedElement) return;
-    
-    const touch = e.changedTouches[0];
-    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-    const cardBelow = elementBelow ? elementBelow.closest('.menu-card') : null;
-    
-    draggedElement.classList.remove('dragging');
-    
-    document.querySelectorAll('.menu-card').forEach(card => {
-        card.classList.remove('drag-over');
-    });
-    
-    if (touchMoved && cardBelow && cardBelow !== draggedElement) {
-        const menuGrid = document.getElementById('menu-grid');
-        const allCards = Array.from(menuGrid.querySelectorAll('.menu-card'));
-        const draggedIndex = allCards.indexOf(draggedElement);
-        const droppedIndex = allCards.indexOf(cardBelow);
-        
-        if (draggedIndex < droppedIndex) {
-            cardBelow.parentNode.insertBefore(draggedElement, cardBelow.nextSibling);
-        } else {
-            cardBelow.parentNode.insertBefore(draggedElement, cardBelow);
-        }
-        
-        const draggedId = draggedElement.dataset.menuId;
-        menuOrder = menuOrder.filter(id => id !== draggedId);
-        const newIndex = Array.from(menuGrid.querySelectorAll('.menu-card'))
-            .findIndex(card => card === draggedElement);
-        menuOrder.splice(newIndex, 0, draggedId);
-        
-        localStorage.setItem('menuOrder', JSON.stringify(menuOrder));
-        
-        setTimeout(() => {
-            isDragging = false;
-            touchMoved = false;
-        }, 300);
-    } else {
-        setTimeout(() => {
-            isDragging = false;
-            touchMoved = false;
-        }, 50);
-    }
-    
-    draggedElement = null;
-}
-
-function reorderMenuCards() {
-    const menuGrid = document.getElementById('menu-grid');
-    const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
-    
-    const cardMap = {};
-    cards.forEach(card => {
-        cardMap[card.dataset.menuId] = card;
-    });
-    
-    cards.forEach(card => card.remove());
-    
-    menuOrder.forEach(menuId => {
-        if (cardMap[menuId]) {
-            menuGrid.appendChild(cardMap[menuId]);
-        }
-    });
-}
-
-function toggleMenuLock() {
-    menuLocked = !menuLocked;
-    const lockBtn = document.getElementById('lock-btn');
-    const cards = document.querySelectorAll('.menu-card');
-    
-    if (menuLocked) {
-        lockBtn.textContent = '🔒';
-        lockBtn.classList.add('locked');
-        lockBtn.setAttribute('aria-label', 'Menu locked - Click to unlock');
-        cards.forEach(card => {
-            card.setAttribute('draggable', 'false');
-            card.style.cursor = 'pointer';
-        });
-    } else {
-        lockBtn.textContent = '🔓';
-        lockBtn.classList.remove('locked');
-        lockBtn.setAttribute('aria-label', 'Menu unlocked - Click to lock');
-        cards.forEach(card => {
-            card.setAttribute('draggable', 'true');
-            card.style.cursor = 'grab';
-        });
-    }
-    
-    localStorage.setItem('menuLocked', menuLocked);
-}
-
-function initMenuLock() {
-    const savedLockState = localStorage.getItem('menuLocked');
-    if (savedLockState !== null) {
-        menuLocked = savedLockState === 'true';
-    }
-    
-    const lockBtn = document.getElementById('lock-btn');
-    
-    if (menuLocked) {
-        lockBtn.textContent = '🔒';
-        lockBtn.classList.add('locked');
-        lockBtn.setAttribute('aria-label', 'Menu locked - Click to unlock');
-    } else {
-        lockBtn.textContent = '🔓';
-        lockBtn.classList.remove('locked');
-        lockBtn.setAttribute('aria-label', 'Menu unlocked - Click to lock');
-    }
-}
-
- document.addEventListener('DOMContentLoaded', function() {
-// Initialize immediately - DOM is already loaded since script is at bottom
-console.log('Initializing drag and drop...');
-initDragAndDrop();
-
-document.querySelectorAll('.menu-card').forEach(card => {
-    card.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            this.click();
-        }
-    });
-});
-
-// Restore last visited page
+// Restore last visited page IMMEDIATELY (before page fully loads)
 (function() {
     const lastPage = localStorage.getItem('currentPage');
     if (lastPage && document.getElementById(lastPage)) {
+        // Remove active from menu
         document.getElementById('menu').classList.remove('active');
+        // Add active to last page
         document.getElementById(lastPage).classList.add('active');
-        
+    }
+})();
+
+// Then do full restoration after load (for any page-specific loading functions)
+window.addEventListener('DOMContentLoaded', function() {
+    const lastPage = localStorage.getItem('currentPage');
+    if (lastPage) {
         // Call page-specific load functions
         if(lastPage==='notes')loadNotes();
         if(lastPage==='history')displayHistory();
@@ -2674,37 +2684,8 @@ document.querySelectorAll('.menu-card').forEach(card => {
         if(lastPage==='truckboard-edit')loadTruckList();
         restorePageInputs(lastPage);
     }
-})();
+});
    
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
