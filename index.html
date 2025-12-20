@@ -2399,12 +2399,18 @@ function initDragAndDrop() {
 }
 
 function attachCardEventListeners() {
+    console.log('attachCardEventListeners called');
     const menuGrid = document.getElementById('menu-grid');
     const cards = menuGrid.querySelectorAll('.menu-card');
     
-    cards.forEach(card => {
+    console.log('Found', cards.length, 'cards');
+    
+    cards.forEach((card, index) => {
+        console.log('Attaching listeners to card', index, card.dataset.menuId);
+        
         // Click handler
         card.addEventListener('click', function(e) {
+            console.log('Card clicked!', this.dataset.menuId, 'isDragging:', isDragging);
             if (!isDragging) {
                 const pageId = this.dataset.menuId;
                 showPage(pageId);
@@ -2425,6 +2431,8 @@ function attachCardEventListeners() {
         card.addEventListener('touchmove', handleTouchMove, {passive: false});
         card.addEventListener('touchend', handleTouchEnd, {passive: false});
     });
+    
+    console.log('Finished attaching listeners');
 }
 
 function handleDragStart(e) {
@@ -2677,6 +2685,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
