@@ -2374,44 +2374,58 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
         let menuOrder = [];
         let isDragging = false;
 
-        function initDragAndDrop() {
-            initMenuLock();
-            const menuGrid = document.getElementById('menu-grid');
-            const cards = menuGrid.querySelectorAll('.menu-card');
-            
-            const savedOrder = localStorage.getItem('menuOrder');
-            if (savedOrder) {
-                menuOrder = JSON.parse(savedOrder);
-                reorderMenuCards();
-            } else {
-                cards.forEach(card => {
-                    menuOrder.push(card.dataset.menuId);
-                });
+      function initDragAndDrop() {
+    initMenuLock();
+    const menuGrid = document.getElementById('menu-grid');
+    
+    const savedOrder = localStorage.getItem('menuOrder');
+    if (savedOrder) {
+        menuOrder = JSON.parse(savedOrder);
+        reorderMenuCards();
+    } else {
+        const cards = menuGrid.querySelectorAll('.menu-card');
+        cards.forEach(card => {
+            menuOrder.push(card.dataset.menuId);
+        });
+    }
+    
+    // Add event listeners to all cards
+    attachCardEventListeners();
+}
+
+function attachCardEventListeners() {
+    const menuGrid = document.getElementById('menu-grid');
+    const cards = menuGrid.querySelectorAll('.menu-card');
+    
+    cards.forEach(card => {
+        // Remove old listeners by cloning and replacing
+        const newCard = card.cloneNode(true);
+        card.parentNode.replaceChild(newCard, card);
+    });
+    
+    // Now attach fresh listeners to the new cards
+    const freshCards = menuGrid.querySelectorAll('.menu-card');
+    freshCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (!isDragging) {
+                const pageId = this.dataset.menuId;
+                showPage(pageId);
             }
-            
-            cards.forEach(card => {
-                card.removeAttribute('onclick');
-                
-                card.addEventListener('click', function(e) {
-                    if (!isDragging) {
-                        const pageId = this.dataset.menuId;
-                        showPage(pageId);
-                    }
-                    isDragging = false;
-                });
-                
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
-                card.addEventListener('dragover', handleDragOver);
-                card.addEventListener('drop', handleDrop);
-                card.addEventListener('dragenter', handleDragEnter);
-                card.addEventListener('dragleave', handleDragLeave);
-                
-                card.addEventListener('touchstart', handleTouchStart, {passive: false});
-                card.addEventListener('touchmove', handleTouchMove, {passive: false});
-                card.addEventListener('touchend', handleTouchEnd, {passive: false});
-            });
-        }
+            isDragging = false;
+        });
+        
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragenter', handleDragEnter);
+        card.addEventListener('dragleave', handleDragLeave);
+        
+        card.addEventListener('touchstart', handleTouchStart, {passive: false});
+        card.addEventListener('touchmove', handleTouchMove, {passive: false});
+        card.addEventListener('touchend', handleTouchEnd, {passive: false});
+    });
+}
 
         let touchStartX = 0;
         let touchStartY = 0;
@@ -2570,22 +2584,26 @@ function handleDragStart(e) {
             return false;
         }
 
-        function reorderMenuCards() {
-            const menuGrid = document.getElementById('menu-grid');
-            const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
-            
-            const cardMap = {};
-            cards.forEach(card => {
-                cardMap[card.dataset.menuId] = card;
-            });
-            
-            cards.forEach(card => card.remove());
-            
-            menuOrder.forEach(menuId => {
-                if (cardMap[menuId]) {
-                    menuGrid.appendChild(cardMap[menuId]);
-                }
-            });
+function reorderMenuCards() {
+    const menuGrid = document.getElementById('menu-grid');
+    const cards = Array.from(menuGrid.querySelectorAll('.menu-card'));
+    
+    const cardMap = {};
+    cards.forEach(card => {
+        cardMap[card.dataset.menuId] = card;
+    });
+    
+    cards.forEach(card => card.remove());
+    
+    menuOrder.forEach(menuId => {
+        if (cardMap[menuId]) {
+            menuGrid.appendChild(cardMap[menuId]);
+        }
+    });
+    
+    // Re-attach event listeners after reordering
+    attachCardEventListeners();
+}
         }
         // Menu lock functionality
         let menuLocked = true; // Start locked by default
@@ -2684,6 +2702,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 
 
 
