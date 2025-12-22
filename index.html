@@ -2804,6 +2804,8 @@ function handleDragStart(e) {
     }
 });
 // Restore last visited page IMMEDIATELY (before page fully loads)
+
+// Restore last visited page IMMEDIATELY (before page fully loads)
 (function() {
     const lastPage = localStorage.getItem('currentPage');
     if (lastPage && document.getElementById(lastPage)) {
@@ -2812,10 +2814,10 @@ function handleDragStart(e) {
         // Add active to last page
         document.getElementById(lastPage).classList.add('active');
     }
+})();  // ← ADD THIS LINE!
 
 // Then do full restoration after load (for any page-specific loading functions)
-window.addEventListener('DOMContentLoaded', function() {
-    const lastPage = localStorage.getItem('currentPage');
+window.addEventListener('DOMContentLoaded', function() {    const lastPage = localStorage.getItem('currentPage');
     if (lastPage) {
         // Call page-specific load functions
         if(lastPage==='notes')loadNotes();
