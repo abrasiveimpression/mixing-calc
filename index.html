@@ -794,10 +794,147 @@ function setBatchMode(mode) {
         volumeField.style.display = 'none';
     }
     
+    // *** NEW: Save the mode ***
+    localStorage.setItem('batchMode', mode);
+    
     // Clear results when switching modes
     document.getElementById('batch-results').innerHTML = '';
     document.getElementById('batch-sort-controls').style.display = 'none';
 }
+
+// ========== NEW BATCH PERSISTENCE FUNCTIONS ==========
+
+/**
+ * Save all batch input fields to localStorage
+ */
+function saveBatchInputs() {
+    const batchData = {
+        mode: currentBatchMode,
+        input: document.getElementById('batch-input').value,
+        wantPct: document.getElementById('batch-want-pct').value,
+        wantFreeze: document.getElementById('batch-want-freeze').value,
+        wantVol: document.getElementById('batch-want-vol').value
+    };
+    localStorage.setItem('batchInputs', JSON.stringify(batchData));
+}
+
+/**
+ * Save batch processing results to localStorage
+ */
+function saveBatchResults() {
+    if (batchResultsData && batchResultsData.length > 0) {
+        const resultsData = {
+            results: batchResultsData,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('batchResults', JSON.stringify(resultsData));
+    }
+}
+
+/**
+ * Restore batch page state from localStorage
+ */
+function restoreBatchPage() {
+    // Restore mode selection
+    const savedMode = localStorage.getItem('batchMode');
+    if (savedMode) {
+        currentBatchMode = savedMode;
+        
+        // Update mode buttons to match saved mode
+        document.querySelectorAll('.btn-mode').forEach(btn => {
+            btn.classList.remove('active');
+            const btnText = btn.textContent.toLowerCase();
+            const modeText = savedMode.replace('-', ' ');
+            if (btnText.includes(modeText)) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show/hide volume field based on mode
+        const volumeField = document.getElementById('batch-volume-field');
+        volumeField.style.display = savedMode === 'increase-volume' ? 'block' : 'none';
+    }
+    
+    // Restore input field values
+    const savedInputs = localStorage.getItem('batchInputs');
+    if (savedInputs) {
+        try {
+            const batchData = JSON.parse(savedInputs);
+            document.getElementById('batch-input').value = batchData.input || '';
+            document.getElementById('batch-want-pct').value = batchData.wantPct || '';
+            document.getElementById('batch-want-freeze').value = batchData.wantFreeze || '';
+            document.getElementById('batch-want-vol').value = batchData.wantVol || '';
+        } catch (e) {
+            console.error('Error restoring batch inputs:', e);
+        }
+    }
+    
+    // Restore previous results if they exist
+    const savedResults = localStorage.getItem('batchResults');
+    if (savedResults) {
+        try {
+            const resultsData = JSON.parse(savedResults);
+            batchResultsData = resultsData.results;
+            
+            if (batchResultsData && batchResultsData.length > 0) {
+                const wantedMix = batchResultsData[0]?.wantedMix || 0;
+                const wantedVol = batchResultsData[0]?.wantedVolume || null;
+                
+                // Display the restored results
+                displayBatchResults(batchResultsData, wantedMix, wantedVol);
+                
+                // Add timestamp footer to show when results were calculated
+                const timestamp = new Date(resultsData.timestamp);
+                const timeStr = timestamp.toLocaleString();
+                const resultsDiv = document.getElementById('batch-results');
+                const timestampDiv = document.createElement('div');
+                timestampDiv.style.cssText = 'text-align: center; color: #6b7280; font-size: 12px; margin-top: 16px; padding: 12px; background: rgba(156, 163, 175, 0.1); border-radius: 8px; font-style: italic;';
+                timestampDiv.innerHTML = `📅 Previous results from: ${timeStr}<br><span style="font-size: 11px; color: #9ca3af;">Process trucks again to update</span>`;
+                resultsDiv.appendChild(timestampDiv);
+            }
+        } catch (e) {
+            console.error('Error restoring batch results:', e);
+        }
+    }
+}
+
+/**
+ * Clear all saved batch data
+ */
+function clearBatchData() {
+    if (confirm('Clear all batch truck data and results?\n\nThis will erase:\n• Input data\n• Mode selection\n• Calculated results')) {
+        // Remove from localStorage
+        localStorage.removeItem('batchMode');
+        localStorage.removeItem('batchInputs');
+        localStorage.removeItem('batchResults');
+        
+        // Reset to defaults
+        currentBatchMode = 'increase-volume';
+        document.getElementById('batch-input').value = '';
+        document.getElementById('batch-want-pct').value = '';
+        document.getElementById('batch-want-freeze').value = '';
+        document.getElementById('batch-want-vol').value = '';
+        document.getElementById('batch-results').innerHTML = '';
+        document.getElementById('batch-sort-controls').style.display = 'none';
+        batchResultsData = [];
+        
+        // Reset mode buttons
+        document.querySelectorAll('.btn-mode').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector('.btn-mode').classList.add('active');
+        document.getElementById('batch-volume-field').style.display = 'block';
+        
+        // Show confirmation
+        document.getElementById('batch-results').innerHTML = '<div style="background: #d1fae5; color: #065f46; padding: 16px; border-radius: 8px; text-align: center; font-weight: 600;">✓ All batch data cleared</div>';
+    }
+}
+
+// ========== END NEW BATCH PERSISTENCE FUNCTIONS ==========
+
+// NEW: Calculate Increase Mix (keeps volume constant, adds only glycol)
+```
+
 
 // NEW: Calculate Increase Mix (keeps volume constant, adds only glycol)
 function calculateIncreaseMix(truckId, curMix, curVol, wantMix) {
@@ -924,9 +1061,13 @@ function showPage(p) {
     
     if(p==='notes')loadNotes();if(p==='history')displayHistory();
     if(p==='dilution')loadDilution();if(p==='aircraft')loadAircraft();if(p==='airlines')loadAirlines();
-    if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();if(p==='truckboard-edit')loadTruckList();            
+    if(p==='pdfs')loadPdfs();if(p==='atis')loadATIS();if(p==='truckboard-edit')loadTruckList();
+    if(p==='batch')restoreBatchPage(); // *** NEW: Restore batch page data ***
     restorePageInputs(p);
 }
+
+// Save current page when navigating
+function saveCurrentPage(pageId) {
 
 // Save current page when navigating
 function saveCurrentPage(pageId) {
@@ -1037,10 +1178,14 @@ dataLines.forEach(line => {
         // Column B (index 1) = Current Percent (use this directly, not freeze point)
         const currentPercent = values[1].trim();    // Column B: Percent
         
-        importedData += `${truckId}, ${totalVolume}, ${currentPercent}%\n`;
+importedData += `${truckId}, ${totalVolume}, ${currentPercent}%\n`;
     }
 });                
                 document.getElementById('batch-input').value = importedData.trim();
+                
+                // *** NEW: Save the imported data ***
+                saveBatchInputs();
+                
                 resultsDiv.innerHTML = '<div style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; text-align: center; font-weight: 600;">✓ Data imported successfully! Now enter wanted mix and volume, then click "Process All Trucks"</div>';
                 
             } catch (error) {
@@ -1149,6 +1294,11 @@ if (currentBatchMode === 'increase-mix') {
 }
             
 displayBatchResults(results, wantedMixPct, currentBatchMode === 'increase-volume' ? parseFloat(document.getElementById('batch-want-vol').value) : null);
+
+// *** NEW: Save inputs and results ***
+saveBatchInputs();
+saveBatchResults();
+
 // Save each successful truck to history individually
 results.forEach(result => {
     if (result.success) {
@@ -2361,7 +2511,9 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+       document.addEventListener('DOMContentLoaded', function() {
+            initDragAndDrop();
+            
             document.querySelectorAll('.menu-card').forEach(card => {
                 card.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -2370,7 +2522,17 @@ else if(x.type==='Batch')det=`${x.data.truckId}: ${x.data.curVol} → ${x.data.w
                     }
                 });
             });
+            
+            // *** NEW: Add auto-save batch input listeners ***
+            if (document.getElementById('batch-input')) {
+                document.getElementById('batch-input').addEventListener('input', saveBatchInputs);
+                document.getElementById('batch-want-pct').addEventListener('input', saveBatchInputs);
+                document.getElementById('batch-want-freeze').addEventListener('input', saveBatchInputs);
+                document.getElementById('batch-want-vol').addEventListener('input', saveBatchInputs);
+            }
         });
+// Restore last visited page IMMEDIATELY (before page fully loads)
+(function() {
 
         let draggedElement = null;
         let menuOrder = [];
@@ -2644,17 +2806,25 @@ function handleDragStart(e) {
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            initDragAndDrop();
-            
-            document.querySelectorAll('.menu-card').forEach(card => {
-                card.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        this.click();
-                    }
-                });
-            });
+    initDragAndDrop();  // ← ADD THIS LINE!
+    
+    document.querySelectorAll('.menu-card').forEach(card => {
+        card.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
         });
+    });
+    
+    // *** NEW: Add auto-save batch input listeners ***
+    if (document.getElementById('batch-input')) {
+        document.getElementById('batch-input').addEventListener('input', saveBatchInputs);
+        document.getElementById('batch-want-pct').addEventListener('input', saveBatchInputs);
+        document.getElementById('batch-want-freeze').addEventListener('input', saveBatchInputs);
+        document.getElementById('batch-want-vol').addEventListener('input', saveBatchInputs);
+    }
+});
 // Restore last visited page IMMEDIATELY (before page fully loads)
 (function() {
     const lastPage = localStorage.getItem('currentPage');
