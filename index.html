@@ -1564,7 +1564,7 @@ function renderBatchResults(results, wantedMix, wantedVol) {
                         </div>
                         <div class="truck-details-row">
                             <span class="truck-details-label">Target:</span>
-                            <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${result.wantedVolume} gal</span>
+                            <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${Math.round(result.wantedVolume)} gal</span>
                         </div>
                         <div class="truck-details-row">
                             <span class="truck-details-label">Mix to Add:</span>
@@ -2829,3 +2829,4 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
