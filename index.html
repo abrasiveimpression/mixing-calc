@@ -2093,6 +2093,66 @@ async function loadTruckData() {
     }
 }
 
+// NEW: Get truck status and comment data
+async function getTruckStatusData(truckId) {
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv`;
+        const response = await fetch(url);
+        const csvText = await response.text();
+        
+        const lines = csvText.trim().split('\n');
+        const header = lines[0].replace(/"/g, '').split(',');
+        const dataLines = lines.slice(1);
+        
+        // Find column indices
+        const statusColIndex = header.indexOf('Status');
+        const commentColIndex = header.indexOf('Comment');
+        
+        // Find the truck
+        for (let line of dataLines) {
+            const values = line.replace(/"/g, '').split(',');
+            const id = values[0].trim();
+            
+            if (id === truckId) {
+                return {
+                    status: statusColIndex !== -1 ? (values[statusColIndex] || '') : '',
+                    comment: commentColIndex !== -1 ? (values[commentColIndex] || '') : ''
+                };
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error getting truck status data:', error);
+        return null;
+    }
+}
+
+// NEW: Update status with comment (calls Google Apps Script)
+async function updateTruckStatusWithComment(truckId, status, comment) {
+    try {
+        // This calls the Google Apps Script web app
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbwLAeS6nUomVV8IwKqNZ76DwpRq1JFGHsG010-Z51blqkWmebGVAs8bm7B-MzlbPKkhbA/exec';
+        
+        const formData = new FormData();
+        formData.append('id', truckId);
+        formData.append('status', status);
+        formData.append('comment', comment);
+        
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.text();
+        return result;
+        
+    } catch (error) {
+        console.error('Error updating status:', error);
+        throw error;
+    }
+}
+
         function handleVolCurInput() {
             saveInput('volume', 'vol-cur', document.getElementById('vol-cur').value);
             calcVol();
@@ -2879,6 +2939,7 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
 
