@@ -1356,13 +1356,35 @@ if (pumpOutChecked) {
         }
     }
 }        
-        if (wantVol <= effectiveCurVol) {
-            return {
-                truckId: truckId,
-                success: false,
-                error: 'Wanted volume must be greater than current volume' + (pumpOutChecked ? ' after pump out' : '')
-            };
-        }
+// NEW: Handle same percentage case (volume increase only)
+if (curMix === wantMix) {
+    if (wantVol <= curVol) {
+        return {
+            truckId: truckId,
+            success: false,
+            error: 'Wanted volume must be greater than current volume'
+        };
+    }
+    
+    const volumeToAdd = wantVol - curVol;
+    const typeIToAdd = volumeToAdd * (curMix / 100);
+    const waterToAdd = volumeToAdd * ((100 - curMix) / 100);
+    
+    return {
+        truckId: truckId,
+        success: true,
+        currentMix: curMix,
+        currentVolume: curVol,
+        wantedMix: wantMix,
+        wantedVolume: wantVol,
+        percentToAdd: curMix,
+        volumeToAdd: volumeToAdd,
+        typeIToAdd: typeIToAdd,
+        waterToAdd: waterToAdd,
+        pumpOutAmount: 0,
+        pumpOutMode: null
+    };
+}
         
         const cm = curMix / 100;
         const wm = wantMix / 100;
@@ -1717,10 +1739,35 @@ function calcVol() {
         }
     }
     
-    if (curMix === wantMix) {
-        resultDiv.innerHTML = '<div class="error-message">Current and wanted mix are the same</div>';
+// NEW: Handle same percentage case (volume increase only)
+if (curMix === wantMix) {
+    if (wantVol <= curVol) {
+        resultDiv.innerHTML = '<div class="error-message">Wanted volume must be greater than current volume</div>';
         return;
     }
+    
+    // Calculate volume to add while maintaining same percentage
+    const volumeToAdd = wantVol - curVol;
+    const typeIToAdd = volumeToAdd * (curMix / 100);
+    const waterToAdd = volumeToAdd * ((100 - curMix) / 100);
+    
+    resultDiv.innerHTML = `
+        <div style="background: #10b981; color: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-weight: 600; text-align: center;">
+            Maintaining ${curMix.toFixed(1)}% Mix
+        </div>
+        <div class="result-item"><span>% to Add</span><span class="result-value">${curMix.toFixed(0)}%</span></div>
+        <div class="result-item"><span>Volume to Add</span><span class="result-value">${Math.round(volumeToAdd)} gal</span></div>
+        <div style="margin-top:16px;">
+            <div style="background:#3b82f6;color:white;padding:12px;border-radius:8px;margin-bottom:8px;font-weight:600;text-align:center;">
+                Water to Add: ${Math.round(waterToAdd)} gal
+            </div>
+            <div style="background:#f97316;color:white;padding:12px;border-radius:8px;font-weight:600;text-align:center;">
+                Type I to Add: ${Math.round(typeIToAdd)} gal
+            </div>
+        </div>`;
+    saveToHistory('Vol',{curMix,curVol,wantMix,wantVol,vol:Math.round(volumeToAdd),pct:curMix.toFixed(0),water:Math.round(waterToAdd),typeI:Math.round(typeIToAdd),pumpOut:0});
+    return;
+}
     
     let pumpOutAmount = 0;
     let pumpOutMode = null;
@@ -2829,4 +2876,5 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
