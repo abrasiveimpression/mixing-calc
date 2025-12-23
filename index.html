@@ -499,8 +499,11 @@
         <!-- NEW: Batch Trucks Page -->
         <div class="page" id="batch">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
-            <div class="card">
-                <h2 style="margin-bottom: 16px;">Batch Trucks</h2>
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="margin: 0;">Batch Trucks</h2>
+        <button onclick="clearBatchData()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Clear</button>
+    </div>
                 
                 <!-- Mode Selection -->
 <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
@@ -2876,5 +2879,6 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
