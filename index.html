@@ -2359,13 +2359,7 @@ compass.style.display = 'block';
 // Point INTO the wind (METAR direction is where wind is coming FROM)
 // SVG arrow points "North" by default, so subtract 90° to align headings.
 const arrowDirection = weatherData.windDirection - 90;
-// ATIS & Weather page: North is at the TOP.
-// Arrow already points north by default, so rotate directly to METAR direction.
-// METAR direction is where wind is coming FROM → arrow points INTO the wind.
-arrow.setAttribute(
-  'transform',
-  'rotate(' + deg + ' 110 110)'
-);
+arrow.setAttribute('transform', `rotate(${arrowDirection} 100 100)`);
 
 directionText.textContent = weatherData.windDirection;
 
@@ -3074,14 +3068,3 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
