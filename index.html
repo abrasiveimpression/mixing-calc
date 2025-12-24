@@ -662,6 +662,11 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                     <div class="info-box">
     <div class="info-label">Wind</div>
     <div class="info-value" id="wind">Loading...</div>
+                    </div>
+                    
+                    <div class="info-box">
+    <div class="info-label">Wind</div>
+    <div class="info-value" id="wind">Loading...</div>
     <div id="wind-compass" style="margin-top: 16px; display: none;">
         <svg width="200" height="200" viewBox="0 0 200 200" style="margin: 0 auto; display: block;">
             <!-- Compass circle -->
@@ -2243,11 +2248,11 @@ async function loadATIS() {
                 // Load ATIS info
                 const atisInfo = await getAtisInfo('KPIT');
                 
-                // Display ATIS letter if available
+// Display ATIS letter if available
                 const atisDisplay = document.getElementById('atis-letter');
                 if (atisDisplay) {
                     if (atisInfo.ok && atisInfo.code) {
-                        atisDisplay.textContent = `Information ${atisInfo.code}`;
+                        atisDisplay.textContent = atisInfo.code;
                         atisDisplay.parentElement.style.display = 'block';
                     } else {
                         atisDisplay.parentElement.style.display = 'none';
@@ -3046,6 +3051,7 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
 
