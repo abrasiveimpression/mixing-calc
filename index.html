@@ -545,7 +545,32 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
 <!-- This field is hidden for increase-mix and decrease-mix modes -->
 <div id="batch-volume-field">
     <input type="number" inputmode="decimal" id="batch-want-vol" placeholder="Wanted Volume (gallons)" aria-label="Wanted volume in gallons" min="0">
+
+    <!-- NEW: Auto target volume from max capacity minus gallons-from-top -->
+    <div style="margin-top: 10px; background: rgba(14,165,233,0.08); border: 2px solid rgba(186,230,253,0.8); padding: 12px; border-radius: 10px;">
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
+            <input type="checkbox" id="batch-use-topoff" style="width:auto; margin: 2px 0 0 0;" onchange="handleBatchTopOffToggle()">
+            <span style="font-size: 13px; color:#0369a1; line-height:1.4;">
+                <strong>Use gallons-from-top</strong> (auto target volume)<br>
+                Uses max capacity by truck ID:
+                <span style="color:#6b7280;">900–3026 = 1900 gal</span>,
+                <span style="color:#6b7280;">7000–7017 = 1850 gal</span>
+            </span>
+        </label>
+
+        <div id="batch-topoff-field" style="display:none; margin-top:10px;">
+            <input type="number" inputmode="decimal" id="batch-gallons-from-top"
+                   placeholder="Gallons from top (e.g., 200)"
+                   aria-label="Gallons from top"
+                   min="0" step="1"
+                   oninput="saveBatchInputs()">
+            <div style="font-size: 12px; color:#6b7280; margin-top:6px;">
+                Example: If gallons-from-top = 200, targets are 1700 (1900-cap) or 1650 (1850-cap)
+            </div>
+        </div>
+    </div>
 </div>
+
 
 <button class="btn-secondary" onclick="processBatch()">🚀 Process All Trucks</button>
 
@@ -829,7 +854,11 @@ function saveBatchInputs() {
         input: document.getElementById('batch-input').value,
         wantPct: document.getElementById('batch-want-pct').value,
         wantFreeze: document.getElementById('batch-want-freeze').value,
-        wantVol: document.getElementById('batch-want-vol').value
+        wantVol: document.getElementById('batch-want-vol').value,
+
+        // NEW
+        useTopOff: document.getElementById('batch-use-topoff')?.checked || false,
+        gallonsFromTop: document.getElementById('batch-gallons-from-top')?.value || ''
     };
     localStorage.setItem('batchInputs', JSON.stringify(batchData));
 }
@@ -880,10 +909,21 @@ function restoreBatchPage() {
             document.getElementById('batch-want-pct').value = batchData.wantPct || '';
             document.getElementById('batch-want-freeze').value = batchData.wantFreeze || '';
             document.getElementById('batch-want-vol').value = batchData.wantVol || '';
+            // NEW: Restore top-off fields
+const cb = document.getElementById('batch-use-topoff');
+const gft = document.getElementById('batch-gallons-from-top');
+
+if (cb) cb.checked = !!batchData.useTopOff;
+if (gft) gft.value = batchData.gallonsFromTop || '';
+
+// Apply UI state (show/hide + disable manual wanted volume)
+handleBatchTopOffToggle();
+
         } catch (e) {
             console.error('Error restoring batch inputs:', e);
         }
     }
+
     
     // Restore previous results if they exist
     const savedResults = localStorage.getItem('batchResults');
@@ -930,6 +970,14 @@ function clearBatchData() {
         document.getElementById('batch-want-pct').value = '';
         document.getElementById('batch-want-freeze').value = '';
         document.getElementById('batch-want-vol').value = '';
+   
+        // Reset top-off UI
+const cb = document.getElementById('batch-use-topoff');
+const gft = document.getElementById('batch-gallons-from-top');
+if (cb) cb.checked = false;
+if (gft) gft.value = '';
+handleBatchTopOffToggle();
+
         document.getElementById('batch-results').innerHTML = '';
         document.getElementById('batch-sort-controls').style.display = 'none';
         batchResultsData = [];
@@ -1208,6 +1256,43 @@ importedData += `${truckId}, ${totalVolume}, ${currentPercent}%\n`;
             }
         }
 
+// ===================== NEW: TOP-OFF / MAX-CAPACITY LOGIC =====================
+
+function getTruckMaxCapacity(truckId) {
+    // Extract first number sequence from the truck ID (e.g., "Truck 900" -> 900)
+    const match = String(truckId).match(/\d+/);
+    const n = match ? parseInt(match[0], 10) : NaN;
+
+    if (!isNaN(n)) {
+        if (n >= 900 && n <= 3026) return 1900;
+        if (n >= 7000 && n <= 7017) return 1850;
+    }
+
+    // Fallback default (safe default). Adjust if you want different behavior.
+    return 1900;
+}
+
+function handleBatchTopOffToggle() {
+    const cb = document.getElementById('batch-use-topoff');
+    const field = document.getElementById('batch-topoff-field');
+    const wantVolInput = document.getElementById('batch-want-vol');
+
+    if (!cb || !field) return;
+
+    const enabled = cb.checked;
+    field.style.display = enabled ? 'block' : 'none';
+
+    // If enabled, disable manual wanted volume to avoid conflicting inputs
+    if (wantVolInput) {
+        wantVolInput.disabled = enabled;
+        wantVolInput.style.opacity = enabled ? '0.6' : '1';
+    }
+
+    saveBatchInputs();
+}
+
+        
+        
 function processBatch() {
     const input = document.getElementById('batch-input').value.trim();
     const wantPct = document.getElementById('batch-want-pct').value;
@@ -1227,11 +1312,24 @@ if (!wantPct && !wantFreeze) {
 }
 
 // For increase-volume mode, check for wanted volume
+// For increase-volume mode, require either wanted volume OR top-off mode
 if (currentBatchMode === 'increase-volume') {
-    const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
-    if (!wantVol) {
-        resultsDiv.innerHTML = '<div class="error-message">Please enter wanted volume for Increase Volume mode</div>';
-        return;
+    const useTopOff = document.getElementById('batch-use-topoff')?.checked || false;
+
+    if (useTopOff) {
+        const gftRaw = document.getElementById('batch-gallons-from-top')?.value;
+        const gallonsFromTop = parseFloat(gftRaw);
+
+        if (gftRaw === '' || isNaN(gallonsFromTop) || gallonsFromTop < 0) {
+            resultsDiv.innerHTML = '<div class="error-message">Please enter a valid "Gallons from top" (0 or greater)</div>';
+            return;
+        }
+    } else {
+        const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
+        if (!wantVol) {
+            resultsDiv.innerHTML = '<div class="error-message">Please enter wanted volume for Increase Volume mode (or enable gallons-from-top)</div>';
+            return;
+        }
     }
 }
             
@@ -1289,21 +1387,50 @@ if (currentBatchMode === 'increase-mix') {
         return calculateDecreaseMix(truck.id, truck.currentMixPct, truck.currentVolume, wantedMixPct);
     });
 } else {
-    // Increase Volume mode - original behavior
-    const wantVol = parseFloat(document.getElementById('batch-want-vol').value);
+    // Increase Volume mode - target volume can be manual OR max-cap minus gallons-from-top
+    const useTopOff = document.getElementById('batch-use-topoff')?.checked || false;
+    const gallonsFromTop = useTopOff
+        ? parseFloat(document.getElementById('batch-gallons-from-top')?.value)
+        : null;
+
+    const manualWantVol = parseFloat(document.getElementById('batch-want-vol').value);
+
     results = trucks.map(truck => {
+        let targetVol = manualWantVol;
+
+        if (useTopOff) {
+            const maxCap = getTruckMaxCapacity(truck.id);
+            targetVol = maxCap - gallonsFromTop;
+        }
+
+        // Defensive: ensure target volume is valid and > current volume
+        if (!targetVol || isNaN(targetVol) || targetVol <= 0) {
+            return {
+                truckId: truck.id,
+                success: false,
+                error: `Invalid target volume calculated for ${truck.id}. Check gallons-from-top value.`
+            };
+        }
+
         return calculateTruckMix(
             truck.id,
             truck.currentMixPct,
             truck.currentVolume,
             wantedMixPct,
-            wantVol,
+            targetVol,
             true // pumpOutChecked
         );
     });
 }
             
-displayBatchResults(results, wantedMixPct, currentBatchMode === 'increase-volume' ? parseFloat(document.getElementById('batch-want-vol').value) : null);
+const useTopOff = document.getElementById('batch-use-topoff')?.checked || false;
+displayBatchResults(
+    results,
+    wantedMixPct,
+    (currentBatchMode === 'increase-volume' && !useTopOff)
+        ? parseFloat(document.getElementById('batch-want-vol').value)
+        : null
+);
 
 // *** NEW: Save inputs and results ***
 saveBatchInputs();
@@ -3034,6 +3161,10 @@ function handleDragStart(e) {
         document.getElementById('batch-want-pct').addEventListener('input', saveBatchInputs);
         document.getElementById('batch-want-freeze').addEventListener('input', saveBatchInputs);
         document.getElementById('batch-want-vol').addEventListener('input', saveBatchInputs);
+    // New from the top
+        document.getElementById('batch-use-topoff').addEventListener('change', saveBatchInputs);
+        document.getElementById('batch-gallons-from-top').addEventListener('input', saveBatchInputs);
+        
     }
 });
 // Restore last visited page IMMEDIATELY (before page fully loads)
@@ -3068,5 +3199,6 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
