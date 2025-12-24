@@ -2266,22 +2266,8 @@ async function loadATIS() {
                 
                 let metarText = null;
                 
-                // Try direct fetch first
-                try {
-                    const metarResponse = await fetch(metarURL, {
-                        cache: 'no-store',
-                        mode: 'cors'
-                    });
-                    if (metarResponse.ok) {
-                        metarText = await metarResponse.text();
-                        if (metarText && metarText.trim() && !metarText.includes('error')) {
-                            displayMETARData(metarText);
-                            return;
-                        }
-                    }
-                } catch (directError) {
-                    console.log('Direct fetch failed, trying proxies...');
-                }
+// Skip direct fetch and use proxies (GitHub Pages has CORS restrictions)
+                console.log('Using CORS proxy to fetch METAR data...');
                 
                 // Try each proxy
                 for (const proxyURL of proxies) {
@@ -3071,6 +3057,7 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
 
