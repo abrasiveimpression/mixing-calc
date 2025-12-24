@@ -687,12 +687,19 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
                                 <line x1="15.9" y1="59.9" x2="22.6" y2="66.6" stroke="#6b7280" stroke-width="1"/>
                                 <line x1="40.1" y1="25.9" x2="46.8" y2="32.6" stroke="#6b7280" stroke-width="1"/>
                                 
-                                <!-- Wind arrow (will be rotated by JavaScript) -->
                                 <g id="wind-arrow" transform="rotate(0 100 100)">
-                                    <line x1="100" y1="100" x2="100" y2="35" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
-                                    <polygon points="100,30 95,45 100,40 105,45" fill="#ef4444"/>
-                                    <circle cx="100" cy="100" r="8" fill="#ef4444"/>
-                                </g>
+    <!-- Shaft (longer & thicker) -->
+    <line x1="100" y1="100" x2="100" y2="20"
+          stroke="#ef4444" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Arrow head (bigger) -->
+    <polygon points="100,10 88,38 100,30 112,38"
+             fill="#ef4444"/>
+
+    <!-- Center hub -->
+    <circle cx="100" cy="100" r="10" fill="#ef4444"/>
+</g>
+
                             </svg>
                             <div style="text-align: center; margin-top: 8px; font-size: 14px; color: #0369a1; font-weight: 600;">
                                 Wind from <span id="wind-direction-text">---</span>°
@@ -2348,10 +2355,14 @@ async function loadATIS() {
         const directionText = document.getElementById('wind-direction-text');
         
 compass.style.display = 'block';
-// Add 180 degrees to show where wind is going TO (not FROM)
-const arrowDirection = (weatherData.windDirection + 180) % 360;
+
+// Point INTO the wind (METAR direction is where wind is coming FROM)
+// SVG arrow points "North" by default, so subtract 90° to align headings.
+const arrowDirection = weatherData.windDirection - 90;
 arrow.setAttribute('transform', `rotate(${arrowDirection} 100 100)`);
+
 directionText.textContent = weatherData.windDirection;
+
     } else {
         document.getElementById('wind-compass').style.display = 'none';
     }
@@ -3057,6 +3068,7 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
 
