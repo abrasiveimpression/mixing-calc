@@ -639,11 +639,17 @@ Format: Truck ID, Type I Gallons, Freeze Point (°C) OR Percentage" style="font-
 
         <div class="page" id="atis">
             <button class="back-button" onclick="showPage('menu')" aria-label="Back to menu">← Back</button>
-            <div class="card">
+<div class="card">
                 <h2>ATIS & Weather</h2>
                 <button class="refresh-btn" onclick="loadATIS()">🔄 Refresh Data</button>
                 
-                    <div class="info-box">
+                    <!-- ATIS Letter Display -->
+                    <div class="info-box" id="atis-info-box" style="display: none;">
+                        <div class="info-label">ATIS Information</div>
+                        <div class="info-value" id="atis-letter" style="font-size: 20px;">--</div>
+                    </div>
+                
+<div class="info-box">
                         <div class="info-label">Temperature (KPIT)</div>
                         <div class="info-value" id="temperature">Loading...</div>
                     </div>
@@ -2224,7 +2230,7 @@ async function updateTruckStatusWithComment(truckId, status, comment) {
             saveToHistory('Tote',{tm:(tm*100).toFixed(1),ttm:(ttm*100).toFixed(1),nm:(nm*100).toFixed(2)});
         }
 
-        async function loadATIS() {
+async function loadATIS() {
             try {
                 document.getElementById('temperature').textContent = 'Loading...';
                 document.getElementById('dewpoint').textContent = 'Loading...';
@@ -2233,6 +2239,20 @@ async function updateTruckStatusWithComment(truckId, status, comment) {
                 document.getElementById('metar-time').textContent = '--';
                 document.getElementById('metar-observed').textContent = '--';
                 document.getElementById('precip-box').style.display = 'none';
+                
+                // Load ATIS info
+                const atisInfo = await getAtisInfo('KPIT');
+                
+                // Display ATIS letter if available
+                const atisDisplay = document.getElementById('atis-letter');
+                if (atisDisplay) {
+                    if (atisInfo.ok && atisInfo.code) {
+                        atisDisplay.textContent = `Information ${atisInfo.code}`;
+                        atisDisplay.parentElement.style.display = 'block';
+                    } else {
+                        atisDisplay.parentElement.style.display = 'none';
+                    }
+                }
                 
                 const station = 'KPIT';
 const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0&_=${Date.now()}`;                
@@ -2338,6 +2358,84 @@ directionText.textContent = weatherData.windDirection;
             }
         }
 
+        /**
+         * Parse METAR "T-group" temp/dew in tenths of °C.
+         * Example: T00261009 => +2.6C / +0.9C
+         *          T10261020 => -2.6C / -2.0C
+         */
+        function parseMetarTGroup(metarRaw) {
+            if (!metarRaw) return null;
+            
+            const m = metarRaw.match(/\bT([01])(\d{3})([01])(\d{3})\b/);
+            if (!m) return null;
+            
+            const tSign = (m[1] === '1') ? -1 : 1;
+            const dSign = (m[3] === '1') ? -1 : 1;
+            
+            return {
+                tempC: tSign * (parseInt(m[2], 10) / 10),
+                dewC:  dSign * (parseInt(m[4], 10) / 10)
+            };
+        }
+
+        function formatC1(val) {
+            if (val === null || val === undefined || isNaN(Number(val))) return 'N/A';
+            return Number(val).toFixed(1) + '°C';
+        }
+
+        function formatF1(celsiusVal) {
+            if (celsiusVal === null || celsiusVal === undefined || isNaN(Number(celsiusVal))) return 'N/A';
+            const fahrenheit = (Number(celsiusVal) * 9/5) + 32;
+            return fahrenheit.toFixed(1) + '°F';
+        }
+
+        // ATIS fetch function
+        async function getAtisInfo(station) {
+            station = (station || "KPIT").toUpperCase().trim();
+            const url = "https://atis.info/api/" + encodeURIComponent(station);
+            
+            try {
+                const response = await fetch(url, {
+                    method: "get",
+                    cache: 'no-store'
+                });
+                
+                const httpCode = response.status;
+                if (httpCode !== 200) {
+                    return { ok: false, station: station, error: "HTTP " + httpCode };
+                }
+                
+                const arr = await response.json();
+                
+                // Pick whichever changed most recently by updatedAt
+                let pick = null;
+                if (Array.isArray(arr) && arr.length) {
+                    pick = arr.reduce(function(best, cur) {
+                        if (!cur) return best;
+                        const curT = cur.updatedAt ? Date.parse(cur.updatedAt) : 0;
+                        const bestT = (best && best.updatedAt) ? Date.parse(best.updatedAt) : 0;
+                        return (curT > bestT) ? cur : best;
+                    }, null);
+                }
+                
+                if (!pick) {
+                    return { ok: false, station: station, error: "No ATIS data returned" };
+                }
+                
+                return {
+                    ok: true,
+                    station: station,
+                    type: pick.type || "",       // arr/dep
+                    code: pick.code || "",       // ATIS letter
+                    updatedAt: pick.updatedAt || "",
+                    datis: pick.datis || ""      // full text (optional)
+                };
+            } catch (error) {
+                console.error('ATIS fetch error:', error);
+                return { ok: false, station: station, error: error.message };
+            }
+        }
+
         function extractMETARTime(metar) {
             const timeMatch = metar.match(/\s(\d{2})(\d{2})(\d{2})Z/);
             
@@ -2369,14 +2467,22 @@ directionText.textContent = weatherData.windDirection;
         }
 
 function parseMETAR(metar) {
-    const result = { temp: null, dewpoint: null, wind: null, windDirection: null, precipitation: null };
+            const result = { temp: null, dewpoint: null, wind: null, windDirection: null, precipitation: null };
 
-    // Parse temperature and dewpoint first
-    const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
-    
-    if (tempMatch) {
-        let temp = tempMatch[1];
-        let dewpoint = tempMatch[2];
+            // First try to parse decimal T-group
+            const tgrp = parseMetarTGroup(metar);
+            
+            if (tgrp) {
+                // Use decimal values
+                result.temp = `${formatC1(tgrp.tempC)} / ${formatF1(tgrp.tempC)}`;
+                result.dewpoint = `${formatC1(tgrp.dewC)} / ${formatF1(tgrp.dewC)}`;
+            } else {
+                // Fall back to integer temp/dew
+                const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
+                
+                if (tempMatch) {
+                    let temp = tempMatch[1];
+                    let dewpoint = tempMatch[2];
         
         if (temp.startsWith('M')) {
             temp = '-' + temp.substring(1);
@@ -2385,14 +2491,15 @@ function parseMETAR(metar) {
             dewpoint = '-' + dewpoint.substring(1);
         }
         
-        const tempC = parseInt(temp);
-        const dewC = parseInt(dewpoint);
-        const tempF = Math.round((tempC * 9/5) + 32);
-        const dewF = Math.round((dewC * 9/5) + 32);
-        
-        result.temp = `${tempC}°C / ${tempF}°F`;
-        result.dewpoint = `${dewC}°C / ${dewF}°F`;
-    }
+       const tempC = parseInt(temp);
+                    const dewC = parseInt(dewpoint);
+                    const tempF = Math.round((tempC * 9/5) + 32);
+                    const dewF = Math.round((dewC * 9/5) + 32);
+                    
+                    result.temp = `${tempC}°C / ${tempF}°F`;
+                    result.dewpoint = `${dewC}°C / ${dewF}°F`;
+                }
+            }
     
     // Parse wind
     const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
@@ -2939,6 +3046,7 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
 
