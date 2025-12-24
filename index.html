@@ -2248,7 +2248,7 @@ async function loadATIS() {
                 // Load ATIS info
                 const atisInfo = await getAtisInfo('KPIT');
                 
-// Display ATIS letter if available
+                // Display ATIS letter if available
                 const atisDisplay = document.getElementById('atis-letter');
                 if (atisDisplay) {
                     if (atisInfo.ok && atisInfo.code) {
@@ -2260,46 +2260,71 @@ async function loadATIS() {
                 }
                 
                 const station = 'KPIT';
-const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0&_=${Date.now()}`;                
+                const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0&_=${Date.now()}`;
+                
+                // Try multiple CORS proxies
+                const proxies = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(metarURL)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(metarURL)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(metarURL)}`
+                ];
+                
+                let metarText = null;
+                
+                // Try direct fetch first
                 try {
                     const metarResponse = await fetch(metarURL, {
-                        cache: 'no-store'
+                        cache: 'no-store',
+                        mode: 'cors'
                     });
-                    const metarText = await metarResponse.text();
-                    
-                    if (metarText && metarText.trim() && !metarText.includes('error')) {
-                        displayMETARData(metarText);
-                        return;
+                    if (metarResponse.ok) {
+                        metarText = await metarResponse.text();
+                        if (metarText && metarText.trim() && !metarText.includes('error')) {
+                            displayMETARData(metarText);
+                            return;
+                        }
                     }
                 } catch (directError) {
-                    console.log('Direct fetch failed, trying CORS proxy...');
+                    console.log('Direct fetch failed, trying proxies...');
                 }
                 
-                const proxyURL = `https://corsproxy.io/?${encodeURIComponent(metarURL)}`;
-                const proxyResponse = await fetch(proxyURL, {
-                    cache: 'no-store'
-                });
-                const metarText = await proxyResponse.text();
-                
-                if (metarText && metarText.trim()) {
-                    displayMETARData(metarText);
-                } else {
-                    throw new Error('No METAR data received');
+                // Try each proxy
+                for (const proxyURL of proxies) {
+                    try {
+                        console.log('Trying proxy:', proxyURL);
+                        const proxyResponse = await fetch(proxyURL, {
+                            cache: 'no-store'
+                        });
+                        
+                        if (proxyResponse.ok) {
+                            metarText = await proxyResponse.text();
+                            
+                            if (metarText && metarText.trim() && !metarText.includes('error') && metarText.includes('KPIT')) {
+                                displayMETARData(metarText);
+                                return;
+                            }
+                        }
+                    } catch (proxyError) {
+                        console.log('Proxy failed:', proxyError);
+                        continue;
+                    }
                 }
+                
+                throw new Error('All METAR fetch attempts failed');
                 
             } catch (error) {
                 console.error('Error loading METAR:', error);
-                document.getElementById('temperature').textContent = 'Error';
-                document.getElementById('dewpoint').textContent = 'Error';
-                document.getElementById('wind').textContent = 'Error';
+                document.getElementById('temperature').textContent = 'Unavailable';
+                document.getElementById('dewpoint').textContent = 'Unavailable';
+                document.getElementById('wind').textContent = 'Unavailable';
                 document.getElementById('metar-full').innerHTML = `
                     <div style="color: #dc2626;">
-                        Unable to load METAR data. This may be due to network restrictions.<br><br>
-                        Please use the "View Detailed Weather" button below to access current weather information.
+                        Unable to load METAR data due to network restrictions.<br><br>
+                        Please use the external weather links below for current conditions.
                     </div>
                 `;
-                document.getElementById('metar-time').textContent = 'Error';
-                document.getElementById('metar-observed').textContent = 'Error';
+                document.getElementById('metar-time').textContent = '--';
+                document.getElementById('metar-observed').textContent = '--';
             }
         }
 
@@ -3051,6 +3076,7 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
 
