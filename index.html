@@ -2358,7 +2358,7 @@ compass.style.display = 'block';
 
 // Point INTO the wind (METAR direction is where wind is coming FROM)
 // SVG arrow points "North" by default, so subtract 90° to align headings.
-const arrowDirection = weatherData.windDirection - 90;
+const arrowDirection = weatherData.windDirection + 90;
 arrow.setAttribute('transform', `rotate(${arrowDirection} 100 100)`);
 
 directionText.textContent = weatherData.windDirection;
@@ -3068,3 +3068,4 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
