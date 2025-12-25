@@ -1793,14 +1793,21 @@ function setupGaugeMatchDelegation() {
 
     const resultsDiv = document.getElementById('batch-results');
     if (!resultsDiv) return;
+// Toggle on/off
+resultsDiv.addEventListener('change', (e) => {
+    const el = e.target;
+    console.log('Change event detected on:', el); // DEBUG
+    if (!el || !el.classList || !el.classList.contains('gm-enable')) {
+        console.log('Not a gm-enable checkbox'); // DEBUG
+        return;
+    }
 
-    // Toggle on/off
-    resultsDiv.addEventListener('change', (e) => {
-        const el = e.target;
-        if (!el || !el.classList || !el.classList.contains('gm-enable')) return;
-
-        const card = el.closest('.truck-result');
-        if (!card) return;
+    console.log('Checkbox state:', el.checked); // DEBUG
+    const card = el.closest('.truck-result');
+    if (!card) {
+        console.log('No card found'); // DEBUG
+        return;
+    }
 
         const truckId = card.dataset.truckid;
         const body = card.querySelector('.gm-body');
@@ -3471,4 +3478,5 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
