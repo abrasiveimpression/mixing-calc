@@ -423,9 +423,32 @@
     margin-top:12px;
 }
 .gm-header{display:flex;align-items:center;justify-content:flex-start;margin-bottom:8px;}
-.gm-toggle-inline{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#92400e;cursor:pointer;user-select:none;}
-.gm-toggle-inline input{width:auto;margin:0;display:inline-block;flex:0 0 auto;}
-.gm-toggle-inline span{display:inline;line-height:1.2;}
+.gm-toggle-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #92400e;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+    padding: 0;
+}
+
+.gm-toggle-inline input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.gm-toggle-inline span {
+    display: inline;
+    line-height: 1.2;
+    flex: 1;
+}
 .gm-body{ margin-top:10px; }
 .gm-row{
     display:flex;
@@ -1986,20 +2009,15 @@ html += `
                     </div>
                     ${verificationNote}
 
-
 <div class="gauge-match-box">
-  <div class="gm-header">
-    <label class="gm-toggle-inline">
-      <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
-      <span>Gauge Gallons Offset</span>
-    </label>
-  </div>
+  <label class="gm-toggle-inline">
+    <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
+    <span>Gauge Gallons Offset</span>
+  </label>
   <div class="gm-body" style="${gmEnabled ? '' : 'display:none;'}">
     <input class="gm-input gm-now" inputmode="numeric"
            placeholder="Enter the gallons displayed on the gauge" value="">
   </div>
-</div>
-
                     <div class="fluid-add-box">
                         <div class="fluid-add-title">Fluid Breakdown:</div>
                         ${fluidRows}
@@ -3453,3 +3471,4 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
