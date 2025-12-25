@@ -2012,24 +2012,26 @@ html += `
                         <div class="truck-ref-item">
                             <span class="truck-ref-label">Total Add</span>
                             <span class="truck-ref-value">${Math.round(result.volumeToAdd)} gal</span>
-                        </div>
+</div>
                     </div>
                     ${verificationNote}
 
-<div class="gauge-match-box">
-  <label class="gm-toggle-inline">
-    <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
-    <span>Gauge Gallons Offset</span>
-  </label>
-  <div class="gm-body" style="${gmEnabled ? '' : 'display:none;'}">
-    <input class="gm-input gm-now" inputmode="numeric"
-           placeholder="Enter the gallons displayed on the gauge" value="">
-  </div>
+                    <div class="gauge-match-box">
+                        <label class="gm-toggle-inline">
+                            <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
+                            <span>Gauge Gallons Offset</span>
+                        </label>
+                        <div class="gm-body" style="${gmEnabled ? '' : 'display:none;'}">
+                            <input class="gm-input gm-now" inputmode="numeric"
+                                   placeholder="Enter the gallons displayed on the gauge" value="">
+                        </div>
+                    </div>
+                    
                     <div class="fluid-add-box">
                         <div class="fluid-add-title">Fluid Breakdown:</div>
                         ${fluidRows}
                     </div>
-                </div>
+                </div>  <!-- This closes .truck-result -->
             `;
         } else {
             html += `
@@ -3478,5 +3480,6 @@ window.addEventListener('DOMContentLoaded', function() {    const lastPage = loc
     </script>
 </body>
 </html>
+
 
 
