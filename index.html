@@ -366,6 +366,35 @@
             justify-content: space-between;
             padding: 4px 0;
         }
+
+        .truck-ref-box{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+            margin-top: 8px;
+            font-size: 12.5px;
+            line-height: 1.3;
+        }
+        .truck-ref-item{
+            display:flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 4px 6px;
+            background:#f8fafc;
+            border:1px solid #e5e7eb;
+            border-radius:8px;
+        }
+        .truck-ref-label{
+            color:#6b7280;
+            font-weight:700;
+            white-space:nowrap;
+        }
+        .truck-ref-value{
+            color:#111827;
+            font-weight:700;
+            text-align:right;
+            white-space:nowrap;
+        }
         .truck-details-label {
             color: #6b7280;
         }
@@ -393,18 +422,10 @@
     padding:12px;
     margin-top:12px;
 }
-.gm-toggle{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:13px;
-    font-weight:700;
-    color:#92400e;
-    cursor:pointer;
-    user-select:none;
-}
-.gm-toggle input{ width:auto; margin:0; display:inline-block; flex:0 0 auto; }
-.gm-toggle span{ display:inline; line-height:1.2; }
+.gm-header{display:flex;align-items:center;justify-content:flex-start;margin-bottom:8px;}
+.gm-toggle-inline{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#92400e;cursor:pointer;user-select:none;}
+.gm-toggle-inline input{width:auto;margin:0;display:inline-block;flex:0 0 auto;}
+.gm-toggle-inline span{display:inline;line-height:1.2;}
 .gm-body{ margin-top:10px; }
 .gm-row{
     display:flex;
@@ -1775,15 +1796,15 @@ function setupGaugeMatchDelegation() {
             const at = card.querySelector('.gm-after-type');
             const awTrue = roundGallons(card.dataset.afterwatertrue);
             const atTrue = roundGallons(card.dataset.aftertypetrue);
-            if (aw && Number.isFinite(awTrue)) aw.textContent = `${awTrue} total`;
-            if (at && Number.isFinite(atTrue)) at.textContent = `${atTrue} total`;
+            if (aw && Number.isFinite(awTrue)) aw.textContent = `Gallons after step: ${awTrue}`;
+            if (at && Number.isFinite(atTrue)) at.textContent = `Gallons after step: ${atTrue}`;
         }
 if (state.enabled && nowInput) {
             // Prefill gauge-now based on stored offset (if any)
             const trueCurrent = roundGallons(card.dataset.truecurrent);
             const offset = Number(state.offset) || 0;
             const prefill = roundGallons(trueCurrent + offset);
-            nowInput.value = Number.isFinite(prefill) ? String(prefill) : '';
+            nowInput.value = '';
             nowInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
@@ -1811,8 +1832,8 @@ if (state.enabled && nowInput) {
 
         if (!Number.isFinite(trueCurrent) || !Number.isFinite(gaugeNow) || !Number.isFinite(awTrue) || !Number.isFinite(atTrue)) {
             // If input is invalid, fall back to true totals
-            if (aw) aw.textContent = Number.isFinite(awTrue) ? `${awTrue} total` : '-- total';
-            if (at) at.textContent = Number.isFinite(atTrue) ? `${atTrue} total` : '-- total';
+            if (aw) aw.textContent = Number.isFinite(awTrue) ? `Gallons after step: ${awTrue}` : 'Gallons after step: --';
+            if (at) at.textContent = Number.isFinite(atTrue) ? `Gallons after step: ${atTrue}` : 'Gallons after step: --';
             return;
         }
 
@@ -1822,8 +1843,8 @@ if (state.enabled && nowInput) {
         saveGaugeMatch(truckId, { enabled: true, offset });
 
         // Update step totals shown in Fluid Breakdown
-        if (aw) aw.textContent = `${roundGallons(awTrue + offset)} total`;
-        if (at) at.textContent = `${roundGallons(atTrue + offset)} total`;
+        if (aw) aw.textContent = `Gallons after step: ${roundGallons(awTrue + offset)}`;
+        if (at) at.textContent = `Gallons after step: ${roundGallons(atTrue + offset)}`;
 });
 }
 
@@ -1887,8 +1908,6 @@ function renderBatchResults(results, wantedMix, wantedVol) {
             if (result.pumpOutMode) {
                 if (result.pumpOutMode === 'water-only' && Math.round(result.typeIToAdd) === 0) {
                     verificationNote = '<div style="background: #d1fae5; color: #065f46; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Water only needed</div>';
-                } else if (result.pumpOutMode === 'glycol-only' && Math.round(result.waterToAdd) === 0) {
-                    verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; text-align: center;">✓ Type I glycol only needed</div>';
                 }
             }
             
@@ -1918,7 +1937,30 @@ const afterWaterDisplay = gmEnabled ? roundGallons(afterWaterTrue + gmOffset) : 
 const afterTypeDisplay  = gmEnabled ? roundGallons(afterTypeTrue + gmOffset) : afterTypeTrue;
 
 // Prefill for "Gauge now" input when enabled
-const gmPrefillNow = gmEnabled ? String(roundGallons(trueCurrentVol + gmOffset)) : '';
+const gmPrefillNow = '';
+
+// Build Fluid Breakdown rows (show only what is needed, in step order)
+let fluidRows = '';
+if (waterAddRnd > 0) {
+  fluidRows += `
+    <div class="truck-details-row" style="margin-bottom: 6px;">
+      <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
+      <span style="font-weight: 700; color: #3b82f6;">Add ${waterAddRnd} gal</span>
+      <span class="gm-total gm-after-water" style="font-weight: 700; color: #111827;">Gallons after step: ${afterWaterDisplay}</span>
+    </div>`;
+}
+if (typeIAddRnd > 0) {
+  fluidRows += `
+    <div class="truck-details-row">
+      <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
+      <span style="font-weight: 700; color: #f97316;">Add ${typeIAddRnd} gal</span>
+      <span class="gm-total gm-after-type" style="font-weight: 700; color: #111827;">Gallons after step: ${afterTypeDisplay}</span>
+    </div>`;
+}
+if (!fluidRows) {
+  fluidRows = `<div style="font-size: 13px; color: #6b7280;">No fluid to add.</div>`;
+}
+
 html += `
                 <div class="truck-result" data-truckid="${result.truckId}" data-truecurrent="${trueCurrentVol}" data-truetarget="${trueTargetVol}" data-afterwatertrue="${afterWaterTrue}" data-aftertypetrue="${afterTypeTrue}">
                     <div class="truck-header">
@@ -1926,50 +1968,43 @@ html += `
                         <div class="truck-status status-success">✓ Success</div>
                     </div>
                     ${pumpOutSection}
-                    <div class="truck-details">
-                        <div class="truck-details-row">
-                            <span class="truck-details-label">Current:</span>
-                            <span class="truck-details-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
+                    <div class="truck-ref-box">
+                        <div class="truck-ref-item">
+                            <span class="truck-ref-label">Current</span>
+                            <span class="truck-ref-value">${...Mix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
                         </div>
-                        <div class="truck-details-row">
-                            <span class="truck-details-label">Target:</span>
-                            <span class="truck-details-value">${result.wantedMix.toFixed(1)}% @ ${Math.round(result.wantedVolume)} gal</span>
+                        <div class="truck-ref-item">
+                            <span class="truck-ref-label">Target</span>
+                            <span class="truck-ref-value">${...Mix.toFixed(1)}% @ ${Math.round(result.wantedVolume)} gal</span>
                         </div>
-                        <div class="truck-details-row">
-                            <span class="truck-details-label">Mix to Add:</span>
-                            <span class="truck-details-value">${result.percentToAdd.toFixed(0)}%</span>
+                        <div class="truck-ref-item">
+                            <span class="truck-ref-label">Mix Add</span>
+                            <span class="truck-ref-value">${result.percentToAdd.toFixed(0)}%</span>
                         </div>
-                        <div class="truck-details-row">
-                            <span class="truck-details-label">Total to Add:</span>
-                            <span class="truck-details-value">${Math.round(result.volumeToAdd)} gal</span>
+                        <div class="truck-ref-item">
+                            <span class="truck-ref-label">Total Add</span>
+                            <span class="truck-ref-value">${Math.round(result.volumeToAdd)} gal</span>
                         </div>
                     </div>
                     ${verificationNote}
 
+
 <div class="gauge-match-box">
-    <label class="gm-toggle">
-        <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
-        <span>Gauge Offset</span>
+  <div class="gm-header">
+    <label class="gm-toggle-inline">
+      <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
+      <span>Gauge Gallons Offset</span>
     </label>
-    <div class="gm-body" style="${gmEnabled ? '' : 'display:none;'}">
-        <div class="gm-row">
-            <span class="gm-label">Gauge now (station):</span>
-            <input class="gm-input gm-now" inputmode="numeric" placeholder="Enter gauge reading (gal)" value="${gmPrefillNow}">
-        </div>
-    </div>
+  </div>
+  <div class="gm-body" style="${gmEnabled ? '' : 'display:none;'}">
+    <input class="gm-input gm-now" inputmode="numeric"
+           placeholder="Enter the gallons displayed on the gauge" value="">
+  </div>
 </div>
+
                     <div class="fluid-add-box">
                         <div class="fluid-add-title">Fluid Breakdown:</div>
-                        <div class="truck-details-row" style="margin-bottom: 6px;">
-                            <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
-                            <span style="font-weight: 700; color: #3b82f6;">${waterAddRnd} gal</span>
-                            <span class="gm-total gm-after-water" style="font-weight: 700; color: #111827;">${afterWaterDisplay} total</span>
-                        </div>
-                        <div class="truck-details-row">
-                            <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
-                            <span style="font-weight: 700; color: #f97316;">${typeIAddRnd} gal</span>
-                            <span class="gm-total gm-after-type" style="font-weight: 700; color: #111827;">${afterTypeDisplay} total</span>
-                        </div>
+                        ${fluidRows}
                     </div>
                 </div>
             `;
@@ -2204,7 +2239,7 @@ if (curMix === wantMix) {
                 if (pumpOutMode === 'water-only' && Math.round(typeIToAdd) === 0) {
                     verificationNote = '<div style="background: #d1fae5; color: #065f46; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; text-align: center;">✓ Water only needed</div>';
                 } else if (pumpOutMode === 'glycol-only' && Math.round(waterToAdd) === 0) {
-                    verificationNote = '<div style="background: #fed7aa; color: #92400e; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; text-align: center;">✓ Type I glycol only needed</div>';
+                    verificationNote = '';
                 }
             }
             
