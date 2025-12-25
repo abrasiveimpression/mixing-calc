@@ -403,7 +403,8 @@
     cursor:pointer;
     user-select:none;
 }
-.gm-toggle input{ width:auto; margin:0; }
+.gm-toggle input{ width:auto; margin:0; display:inline-block; flex:0 0 auto; }
+.gm-toggle span{ display:inline; line-height:1.2; }
 .gm-body{ margin-top:10px; }
 .gm-row{
     display:flex;
@@ -1767,7 +1768,17 @@ function setupGaugeMatchDelegation() {
 
         if (body) body.style.display = state.enabled ? '' : 'none';
 
-        if (state.enabled && nowInput) {
+        
+        // If disabling, revert the displayed step totals back to true totals
+        if (!state.enabled) {
+            const aw = card.querySelector('.gm-after-water');
+            const at = card.querySelector('.gm-after-type');
+            const awTrue = roundGallons(card.dataset.afterwatertrue);
+            const atTrue = roundGallons(card.dataset.aftertypetrue);
+            if (aw && Number.isFinite(awTrue)) aw.textContent = `${awTrue} total`;
+            if (at && Number.isFinite(atTrue)) at.textContent = `${atTrue} total`;
+        }
+if (state.enabled && nowInput) {
             // Prefill gauge-now based on stored offset (if any)
             const trueCurrent = roundGallons(card.dataset.truecurrent);
             const offset = Number(state.offset) || 0;
@@ -1793,25 +1804,27 @@ function setupGaugeMatchDelegation() {
         const trueTarget = roundGallons(card.dataset.truetarget);
         const gaugeNow = roundGallons(el.value);
 
-        const offsetSpan = card.querySelector('.gm-offset');
-        const targetSpan = card.querySelector('.gm-target');
+        const aw = card.querySelector('.gm-after-water');
+        const at = card.querySelector('.gm-after-type');
+        const awTrue = roundGallons(card.dataset.afterwatertrue);
+        const atTrue = roundGallons(card.dataset.aftertypetrue);
 
-        if (!Number.isFinite(trueCurrent) || !Number.isFinite(trueTarget) || !Number.isFinite(gaugeNow)) {
-            if (offsetSpan) offsetSpan.textContent = '-- gal';
-            if (targetSpan) targetSpan.textContent = '-- gal';
+        if (!Number.isFinite(trueCurrent) || !Number.isFinite(gaugeNow) || !Number.isFinite(awTrue) || !Number.isFinite(atTrue)) {
+            // If input is invalid, fall back to true totals
+            if (aw) aw.textContent = Number.isFinite(awTrue) ? `${awTrue} total` : '-- total';
+            if (at) at.textContent = Number.isFinite(atTrue) ? `${atTrue} total` : '-- total';
             return;
         }
 
         const offset = gaugeNow - trueCurrent;
-        const stationTarget = trueTarget + offset;
 
         // Persist
         saveGaugeMatch(truckId, { enabled: true, offset });
 
-        // Update UI
-        if (offsetSpan) offsetSpan.textContent = `${formatSigned(offset)} gal`;
-        if (targetSpan) targetSpan.textContent = `${roundGallons(stationTarget)} gal`;
-    });
+        // Update step totals shown in Fluid Breakdown
+        if (aw) aw.textContent = `${roundGallons(awTrue + offset)} total`;
+        if (at) at.textContent = `${roundGallons(atTrue + offset)} total`;
+});
 }
 
 function renderBatchResults(results, wantedMix, wantedVol) {
@@ -1885,13 +1898,29 @@ function renderBatchResults(results, wantedMix, wantedVol) {
 const gmState = loadGaugeMatch(result.truckId);
 const gmEnabled = !!gmState.enabled;
 const gmOffset = Number(gmState.offset) || 0;
+
+// If there is a pump-out step, additions happen AFTER pump-out.
+const pumpOutAmt = (result.pumpOutAmount && Number(result.pumpOutAmount) > 0) ? Number(result.pumpOutAmount) : 0;
+
 const trueCurrentVol = Math.round(result.currentVolume);
+const trueBaseVol = Math.round(result.currentVolume - pumpOutAmt);
 const trueTargetVol = Math.round(result.wantedVolume);
+
+const waterAddRnd = Math.round(result.waterToAdd);
+const typeIAddRnd = Math.round(result.typeIToAdd);
+
+// Step totals (true / flat-ground math)
+const afterWaterTrue = Math.round(trueBaseVol + result.waterToAdd);
+const afterTypeTrue = trueTargetVol;
+
+// Step totals as the operator should see them on the fill-station gauge (offset mode)
+const afterWaterDisplay = gmEnabled ? roundGallons(afterWaterTrue + gmOffset) : afterWaterTrue;
+const afterTypeDisplay  = gmEnabled ? roundGallons(afterTypeTrue + gmOffset) : afterTypeTrue;
+
+// Prefill for "Gauge now" input when enabled
 const gmPrefillNow = gmEnabled ? String(roundGallons(trueCurrentVol + gmOffset)) : '';
-const gmPrefillOffset = gmEnabled ? `${formatSigned(gmOffset)} gal` : '-- gal';
-const gmPrefillTarget = gmEnabled ? `${roundGallons(trueTargetVol + gmOffset)} gal` : '-- gal';
-            html += `
-                <div class="truck-result" data-truckid="${result.truckId}" data-truecurrent="${trueCurrentVol}" data-truetarget="${trueTargetVol}">
+html += `
+                <div class="truck-result" data-truckid="${result.truckId}" data-truecurrent="${trueCurrentVol}" data-truetarget="${trueTargetVol}" data-afterwatertrue="${afterWaterTrue}" data-aftertypetrue="${afterTypeTrue}">
                     <div class="truck-header">
                         <div class="truck-id">${result.truckId}</div>
                         <div class="truck-status status-success">✓ Success</div>
@@ -1920,33 +1949,26 @@ const gmPrefillTarget = gmEnabled ? `${roundGallons(trueTargetVol + gmOffset)} g
 <div class="gauge-match-box">
     <label class="gm-toggle">
         <input type="checkbox" class="gm-enable" ${gmEnabled ? 'checked' : ''}>
-        <span>Match fill-station sight gauge</span>
+        <span>Gauge Offset</span>
     </label>
     <div class="gm-body" style="${gmEnabled ? '' : 'display:none;'}">
         <div class="gm-row">
             <span class="gm-label">Gauge now (station):</span>
             <input class="gm-input gm-now" inputmode="numeric" placeholder="Enter gauge reading (gal)" value="${gmPrefillNow}">
         </div>
-        <div class="gm-row gm-readout">
-            <span class="gm-label">Offset applied:</span>
-            <span class="gm-value gm-offset">${gmPrefillOffset}</span>
-        </div>
-        <div class="gm-row gm-readout">
-            <span class="gm-label">Gauge target (station):</span>
-            <span class="gm-value gm-target">${gmPrefillTarget}</span>
-        </div>
-        <div class="gm-hint">True gallons don’t change—this translates your target to what the sight gauge should show on uneven pavement.</div>
     </div>
 </div>
                     <div class="fluid-add-box">
                         <div class="fluid-add-title">Fluid Breakdown:</div>
                         <div class="truck-details-row" style="margin-bottom: 6px;">
                             <span style="color: #3b82f6; font-weight: 600;">💧 Water:</span>
-                            <span style="font-weight: 700; color: #3b82f6;">${Math.round(result.waterToAdd)} gal</span>
+                            <span style="font-weight: 700; color: #3b82f6;">${waterAddRnd} gal</span>
+                            <span class="gm-total gm-after-water" style="font-weight: 700; color: #111827;">${afterWaterDisplay} total</span>
                         </div>
                         <div class="truck-details-row">
                             <span style="color: #f97316; font-weight: 600;">🧪 Type I:</span>
-                            <span style="font-weight: 700; color: #f97316;">${Math.round(result.typeIToAdd)} gal</span>
+                            <span style="font-weight: 700; color: #f97316;">${typeIAddRnd} gal</span>
+                            <span class="gm-total gm-after-type" style="font-weight: 700; color: #111827;">${afterTypeDisplay} total</span>
                         </div>
                     </div>
                 </div>
