@@ -1674,15 +1674,15 @@ Format: Truck ID, Total Gallons, Freeze Point (°C) OR Percentage"
         if(waterAddRnd > 0){
           fluidRows += `
             <div class="truck-ref-item" style="grid-column: 1 / -1;">
-              <span style="color:#3b82f6;font-weight:800;">💧 Water: Add ${waterAddRnd} gal</span>
-              <span class="gm-after-water" style="font-weight:800;color:#111827;">Gallons after step: ${afterWaterDisplay}</span>
+              <span style="color:#3b82f6;font-weight:800;">Water: ${waterAddRnd} gal</span>
+              <span class="gm-after-water" style="font-weight:800;color:#111827;">Gallons after: ${afterWaterDisplay}</span>
             </div>`;
         }
         if(typeIAddRnd > 0){
           fluidRows += `
             <div class="truck-ref-item" style="grid-column: 1 / -1;">
-              <span style="color:#f97316;font-weight:800;">🧪 Type I: Add ${typeIAddRnd} gal</span>
-              <span class="gm-after-type" style="font-weight:800;color:#111827;">Gallons after step: ${afterTypeDisplay}</span>
+              <span style="color:#f97316;font-weight:800;">Type I: ${typeIAddRnd} gal</span>
+              <span class="gm-after-type" style="font-weight:800;color:#111827;">Gallons after: ${afterTypeDisplay}</span>
             </div>`;
         }
         if(!fluidRows){
@@ -2622,5 +2622,6 @@ html += `
   </script>
 </body>
 </html>
+
 
 
