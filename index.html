@@ -1680,38 +1680,40 @@ Format: Truck ID, Total Gallons, Freeze Point (°C) OR Percentage"
           fluidRows = `<div style="font-size:13px;color:#6b7280;">No fluid to add.</div>`;
         }
 
-        html += `
-          <div class="truck-result"
-               data-truckid="${result.truckId}"
-               data-truecurrent="${trueCurrentVol}"
-               data-truetarget="${trueTargetVol}"
-               data-afterwatertrue="${afterWaterTrue}"
-               data-aftertypetrue="${afterTypeTrue}">
-            <div class="truck-header">
-              <div class="truck-id">${result.truckId}</div>
-              <div class="truck-status status-success">✓ Success</div>
-            </div>
+html += `
+  <div class="truck-result"
+       data-truckid="${result.truckId}"
+       data-truecurrent="${trueCurrentVol}"
+       data-truetarget="${trueTargetVol}"
+       data-afterwatertrue="${afterWaterTrue}"
+       data-aftertypetrue="${afterTypeTrue}">
+    <div class="truck-header">
+      <div class="truck-id">${result.truckId}</div>
+      <div class="truck-status status-success">✓ Success</div>
+    </div>
 
-            ${pumpOutSection}
+    <!-- 🔼 MOVED UP: Reference summary -->
+    <div class="truck-ref-box">
+      <div class="truck-ref-item">
+        <span class="truck-ref-label">Current</span>
+        <span class="truck-ref-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
+      </div>
+      <div class="truck-ref-item">
+        <span class="truck-ref-label">Target</span>
+        <span class="truck-ref-value">${result.wantedMix.toFixed(1)}% @ ${Math.round(result.wantedVolume)} gal</span>
+      </div>
+      <div class="truck-ref-item">
+        <span class="truck-ref-label">Mix Add</span>
+        <span class="truck-ref-value">${Number(result.percentToAdd).toFixed(0)}%</span>
+      </div>
+      <div class="truck-ref-item">
+        <span class="truck-ref-label">Total Add</span>
+        <span class="truck-ref-value">${Math.round(result.volumeToAdd)} gal</span>
+      </div>
+    </div>
 
-            <div class="truck-ref-box">
-              <div class="truck-ref-item">
-                <span class="truck-ref-label">Current</span>
-                <span class="truck-ref-value">${result.currentMix.toFixed(1)}% @ ${result.currentVolume.toFixed(0)} gal</span>
-              </div>
-              <div class="truck-ref-item">
-                <span class="truck-ref-label">Target</span>
-                <span class="truck-ref-value">${result.wantedMix.toFixed(1)}% @ ${Math.round(result.wantedVolume)} gal</span>
-              </div>
-              <div class="truck-ref-item">
-                <span class="truck-ref-label">Mix Add</span>
-                <span class="truck-ref-value">${Number(result.percentToAdd).toFixed(0)}%</span>
-              </div>
-              <div class="truck-ref-item">
-                <span class="truck-ref-label">Total Add</span>
-                <span class="truck-ref-value">${Math.round(result.volumeToAdd)} gal</span>
-              </div>
-            </div>
+    <!-- 🔽 Pump out now appears AFTER summary -->
+    ${pumpOutSection}
 
             <div class="gauge-match-box">
               <label class="gm-toggle-inline">
@@ -2611,3 +2613,4 @@ Format: Truck ID, Total Gallons, Freeze Point (°C) OR Percentage"
   </script>
 </body>
 </html>
+
