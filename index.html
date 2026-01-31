@@ -2117,6 +2117,7 @@ async function loadATIS(){
     document.getElementById('metar-observed').textContent='--';
     document.getElementById('precip-box').style.display='none';
 
+    // Get ATIS info
     const atisInfo = await getAtisInfo('KPIT');
     const atisBox = document.getElementById('atis-info-box');
     const atisLetter = document.getElementById('atis-letter');
@@ -2127,35 +2128,25 @@ async function loadATIS(){
       atisBox.style.display = 'none';
     }
 
+    // Fetch METAR using Aviation Weather Center API directly
     const station='KPIT';
-    const metarURL=`https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0&_=${Date.now()}`;
+    const metarURL=`https://aviationweather.gov/api/data/metar?ids=${station}&format=json`;
 
-    const proxies=[
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(metarURL)}`,
-      `https://corsproxy.io/?${encodeURIComponent(metarURL)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(metarURL)}`
-    ];
-
-    // Try all proxies simultaneously and use the first successful one
-    const proxyPromises = proxies.map(async (proxyURL) => {
-      const r = await fetch(proxyURL, {
-        cache: 'no-store',
-        signal: AbortSignal.timeout(10000) // 10 second timeout per request
-      });
-      
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      
-      const metarText = await r.text();
-      
-      if (metarText && metarText.trim() && !metarText.includes('error') && metarText.includes('KPIT')) {
-        return metarText;
-      }
-      
-      throw new Error('Invalid METAR response');
-    });
-
-    // Race all proxies - use whichever responds first
-    const metarText = await Promise.race(proxyPromises);
+    const response = await fetch(metarURL);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      throw new Error('No METAR data available');
+    }
+    
+    const metarData = data[0];
+    const metarText = metarData.rawOb || 'METAR data unavailable';
+    
     displayMETARData(metarText);
 
   }catch(error){
@@ -2165,8 +2156,7 @@ async function loadATIS(){
     document.getElementById('wind').textContent='Unavailable';
     document.getElementById('metar-full').innerHTML=`
       <div style="color:#dc2626;">
-        Unable to load METAR data due to network restrictions.<br><br>
-        Please use the external weather links below for current conditions.
+        Unable to load METAR data. Please try refreshing or use the external weather links below.
       </div>`;
     document.getElementById('metar-time').textContent='--';
     document.getElementById('metar-observed').textContent='--';
@@ -2627,6 +2617,7 @@ async function loadATIS(){
   </script>
 </body>
 </html>
+
 
 
 
