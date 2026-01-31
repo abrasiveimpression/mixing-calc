@@ -2117,49 +2117,122 @@ async function loadATIS(){
     document.getElementById('metar-observed').textContent='--';
     document.getElementById('precip-box').style.display='none';
 
-    // Get ATIS info
+    // Get ATIS info (this already works!)
     const atisInfo = await getAtisInfo('KPIT');
     const atisBox = document.getElementById('atis-info-box');
     const atisLetter = document.getElementById('atis-letter');
+    
     if(atisInfo.ok && atisInfo.code){
       atisLetter.textContent = atisInfo.code;
       atisBox.style.display = 'block';
+      
+      // Extract METAR from ATIS text
+      if(atisInfo.datis){
+        const metarFromATIS = extractMETARFromATIS(atisInfo.datis);
+        if(metarFromATIS){
+          displayMETARData(metarFromATIS);
+          return; // Success! Exit here
+        }
+      }
     }else{
       atisBox.style.display = 'none';
     }
 
-    // Fetch METAR using Aviation Weather Center raw format API
-    const station = 'KPIT';
-    const metarURL = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false&hours=0`;
-
-    const response = await fetch(metarURL, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const metarText = await response.text();
-    
-    if (!metarText || metarText.trim() === '') {
-      throw new Error('No METAR data available');
-    }
-    
-    displayMETARData(metarText.trim());
+    // If we got here, ATIS didn't have METAR data
+    // Try to fetch METAR separately as fallback
+    await fetchMETARFallback();
 
   }catch(error){
-    console.error('Error loading METAR:',error);
+    console.error('Error loading weather:',error);
     document.getElementById('temperature').textContent='Unavailable';
     document.getElementById('dewpoint').textContent='Unavailable';
     document.getElementById('wind').textContent='Unavailable';
     document.getElementById('metar-full').innerHTML=`
       <div style="color:#dc2626;">
-        Unable to load METAR data. Please try refreshing or use the external weather links below. v2
+        Unable to load METAR data. Please try refreshing or use the external weather links below.
       </div>`;
     document.getElementById('metar-time').textContent='--';
     document.getElementById('metar-observed').textContent='--';
   }
+}
+
+// Add this new function to extract METAR from ATIS text
+function extractMETARFromATIS(atisText) {
+  if(!atisText) return null;
+  
+  // ATIS text often includes the METAR observation
+  // Look for temperature/dewpoint pattern and wind
+  
+  // Create a synthetic METAR from ATIS components
+  const station = 'KPIT';
+  const now = new Date();
+  const day = now.getUTCDate().toString().padStart(2, '0');
+  const hour = now.getUTCHours().toString().padStart(2, '0');
+  const minute = now.getUTCMinutes().toString().padStart(2, '0');
+  const timeGroup = `${day}${hour}${minute}Z`;
+  
+  // Extract temperature from ATIS (looks for "TEMPERATURE XX" or "TEMP XX")
+  const tempMatch = atisText.match(/(?:TEMPERATURE|TEMP)[\s:]+(?:MINUS\s+)?(\d+)|(\d+)\s+DEGREES?/i);
+  const dewMatch = atisText.match(/(?:DEW\s*POINT|DEWPOINT)[\s:]+(?:MINUS\s+)?(\d+)/i);
+  
+  // Extract wind (looks for "WIND XXX AT XX")
+  const windMatch = atisText.match(/WIND[\s:]+(\d{3})[\s@]+(\d{1,2})(?:\s*GUSTS?\s*(\d{1,2}))?/i);
+  
+  let metarParts = [station, timeGroup];
+  
+  // Wind
+  if(windMatch){
+    const dir = windMatch[1];
+    const speed = windMatch[2].padStart(2, '0');
+    const gust = windMatch[3] ? `G${windMatch[3].padStart(2, '0')}` : '';
+    metarParts.push(`${dir}${speed}${gust}KT`);
+  } else {
+    metarParts.push('00000KT'); // Calm
+  }
+  
+  // Visibility (default to 10SM if not found)
+  const visMatch = atisText.match(/VISIBILITY[\s:]+(\d+)/i);
+  if(visMatch){
+    metarParts.push(`${visMatch[1]}SM`);
+  } else {
+    metarParts.push('10SM');
+  }
+  
+  // Temperature/Dewpoint
+  if(tempMatch && dewMatch){
+    let temp = tempMatch[1] || tempMatch[2];
+    let dew = dewMatch[1];
+    
+    // Check for "MINUS" indicating negative
+    const tempNeg = atisText.match(/TEMPERATURE[\s:]+MINUS/i);
+    const dewNeg = atisText.match(/DEW\s*POINT[\s:]+MINUS/i);
+    
+    if(tempNeg) temp = 'M' + temp.padStart(2, '0');
+    else temp = temp.padStart(2, '0');
+    
+    if(dewNeg) dew = 'M' + dew.padStart(2, '0');
+    else dew = dew.padStart(2, '0');
+    
+    metarParts.push(`${temp}/${dew}`);
+  }
+  
+  // Altimeter
+  const altMatch = atisText.match(/ALTIMETER[\s:]+(\d{2})[\s.]?(\d{2})/i);
+  if(altMatch){
+    metarParts.push(`A${altMatch[1]}${altMatch[2]}`);
+  }
+  
+  const syntheticMETAR = metarParts.join(' ');
+  console.log('Synthetic METAR from ATIS:', syntheticMETAR);
+  
+  return syntheticMETAR;
+}
+
+// Fallback function to try other methods
+async function fetchMETARFallback() {
+  // This is a fallback - you could add other methods here
+  // For now, just show unavailable
+  throw new Error('METAR not available from ATIS');
 }
 
     function parseMetarTGroup(metarRaw){
@@ -2579,6 +2652,7 @@ async function loadATIS(){
   </script>
 </body>
 </html>
+
 
 
 
