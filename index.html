@@ -2106,249 +2106,230 @@ html += `
       }
     }
 
-    // ========== ATIS / METAR ==========
+// ========== ATIS / METAR ==========
 async function loadATIS(){
   try{
-    document.getElementById('temperature').textContent='Loading...';
-    document.getElementById('dewpoint').textContent='Loading...';
-    document.getElementById('wind').textContent='Loading...';
-    document.getElementById('metar-full').textContent='Loading...';
-    document.getElementById('metar-time').textContent='--';
-    document.getElementById('metar-observed').textContent='--';
-    document.getElementById('precip-box').style.display='none';
+    document.getElementById('temperature').textContent = 'Loading...';
+    document.getElementById('dewpoint').textContent = 'Loading...';
+    document.getElementById('wind').textContent = 'Loading...';
+    document.getElementById('metar-full').textContent = 'Loading...';
+    document.getElementById('metar-time').textContent = '--';
+    document.getElementById('metar-observed').textContent = '--';
+    document.getElementById('precip-box').style.display = 'none';
+    document.getElementById('wind-compass').style.display = 'none';
 
-    // Get ATIS info (this already works!)
-    const atisInfo = await getAtisInfo('KPIT');
-    const atisBox = document.getElementById('atis-info-box');
-    const atisLetter = document.getElementById('atis-letter');
-    
-    if(atisInfo.ok && atisInfo.code){
-      atisLetter.textContent = atisInfo.code;
-      atisBox.style.display = 'block';
-      
-      // Extract METAR from ATIS text
-      if(atisInfo.datis){
-        const metarFromATIS = extractMETARFromATIS(atisInfo.datis);
-        if(metarFromATIS){
-          displayMETARData(metarFromATIS);
-          return; // Success! Exit here
-        }
-      }
-    }else{
-      atisBox.style.display = 'none';
+    // Fetch real METAR from your Cloudflare Worker
+    const metarUrl = 'https://kpit-weather-proxy.kpiticeman.workers.dev/metar?ids=KPIT';
+    const metarResp = await fetch(metarUrl, { cache: 'no-store' });
+
+    if (!metarResp.ok) {
+      throw new Error(`Proxy request failed (${metarResp.status})`);
     }
 
-    // If we got here, ATIS didn't have METAR data
-    // Try to fetch METAR separately as fallback
-    await fetchMETARFallback();
+    const metarArr = await metarResp.json();
 
-  }catch(error){
-    console.error('Error loading weather:',error);
-    document.getElementById('temperature').textContent='Unavailable';
-    document.getElementById('dewpoint').textContent='Unavailable';
-    document.getElementById('wind').textContent='Unavailable';
-    document.getElementById('metar-full').innerHTML=`
+    if (!Array.isArray(metarArr) || !metarArr.length) {
+      throw new Error('No METAR data returned');
+    }
+
+    const m = metarArr[0];
+    const rawMetar = m.rawOb || '';
+
+    document.getElementById('metar-full').textContent = rawMetar || 'No raw METAR available';
+
+    if (m.obsTime) {
+      const obsDate = new Date(m.obsTime * 1000);
+      document.getElementById('metar-observed').textContent = obsDate.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'America/New_York',
+        timeZoneName: 'short'
+      });
+    }
+
+    document.getElementById('metar-time').textContent = new Date().toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+
+    if (typeof m.temp === 'number') {
+      const tempF = ((m.temp * 9 / 5) + 32).toFixed(1);
+      document.getElementById('temperature').textContent = `${m.temp.toFixed(1)}°C / ${tempF}°F`;
+    } else {
+      document.getElementById('temperature').textContent = 'N/A';
+    }
+
+    if (typeof m.dewp === 'number') {
+      const dewF = ((m.dewp * 9 / 5) + 32).toFixed(1);
+      document.getElementById('dewpoint').textContent = `${m.dewp.toFixed(1)}°C / ${dewF}°F`;
+    } else {
+      document.getElementById('dewpoint').textContent = 'N/A';
+    }
+
+    const windEl = document.getElementById('wind');
+    const compassEl = document.getElementById('wind-compass');
+
+    if (typeof m.wspd === 'number') {
+      const speed = m.wspd;
+      const dir = m.wdir;
+      const gust = m.wgst;
+
+      if (speed === 0) {
+        windEl.textContent = 'Calm';
+        compassEl.style.display = 'none';
+      } else if (dir === 'VRB' || dir === null || dir === undefined) {
+        windEl.textContent = `Variable at ${speed} kts${gust ? ` gusting ${gust} kts` : ''}`;
+        compassEl.style.display = 'none';
+      } else {
+        const dirNum = parseInt(dir, 10);
+        windEl.textContent = `${String(dirNum).padStart(3, '0')}° at ${speed} kts${gust ? ` gusting ${gust} kts` : ''}`;
+
+        compassEl.style.display = 'block';
+        document.getElementById('wind-arrow').setAttribute('transform', `rotate(${dirNum} 100 100)`);
+        document.getElementById('wind-direction-text').textContent = String(dirNum).padStart(3, '0');
+      }
+    } else {
+      windEl.textContent = 'N/A';
+      compassEl.style.display = 'none';
+    }
+
+    const parsedWeather = parseMETARWeather(rawMetar);
+    if (parsedWeather) {
+      document.getElementById('precipitation').textContent = parsedWeather;
+      document.getElementById('precip-box').style.display = 'block';
+    }
+
+    // Keep ATIS letter as a separate best-effort item
+    try {
+      const atisInfo = await getAtisInfo('KPIT');
+      const atisBox = document.getElementById('atis-info-box');
+      const atisLetter = document.getElementById('atis-letter');
+
+      if (atisInfo.ok && atisInfo.code) {
+        atisLetter.textContent = atisInfo.code;
+        atisBox.style.display = 'block';
+      } else {
+        atisBox.style.display = 'none';
+      }
+    } catch (e) {
+      document.getElementById('atis-info-box').style.display = 'none';
+    }
+
+  } catch (error) {
+    console.error('Error loading weather:', error);
+    document.getElementById('temperature').textContent = 'Unavailable';
+    document.getElementById('dewpoint').textContent = 'Unavailable';
+    document.getElementById('wind').textContent = 'Unavailable';
+    document.getElementById('wind-compass').style.display = 'none';
+    document.getElementById('metar-full').innerHTML = `
       <div style="color:#dc2626;">
-        Unable to load METAR data. Please try refreshing or use the external weather links below.
+        Unable to load METAR data. Please try refreshing or use the external weather links below.<br>
+        <small style="color:#9ca3af;">Error: ${error.message}</small>
       </div>`;
-    document.getElementById('metar-time').textContent='--';
-    document.getElementById('metar-observed').textContent='--';
+    document.getElementById('metar-time').textContent = '--';
+    document.getElementById('metar-observed').textContent = '--';
   }
 }
 
-// Add this new function to extract METAR from ATIS text
-function extractMETARFromATIS(atisText) {
-  if(!atisText) return null;
-  
-  // ATIS text often includes the METAR observation
-  // Look for temperature/dewpoint pattern and wind
-  
-  // Create a synthetic METAR from ATIS components
-  const station = 'KPIT';
-  const now = new Date();
-  const day = now.getUTCDate().toString().padStart(2, '0');
-  const hour = now.getUTCHours().toString().padStart(2, '0');
-  const minute = now.getUTCMinutes().toString().padStart(2, '0');
-  const timeGroup = `${day}${hour}${minute}Z`;
-  
-  // Extract temperature from ATIS (looks for "TEMPERATURE XX" or "TEMP XX")
-  const tempMatch = atisText.match(/(?:TEMPERATURE|TEMP)[\s:]+(?:MINUS\s+)?(\d+)|(\d+)\s+DEGREES?/i);
-  const dewMatch = atisText.match(/(?:DEW\s*POINT|DEWPOINT)[\s:]+(?:MINUS\s+)?(\d+)/i);
-  
-  // Extract wind (looks for "WIND XXX AT XX")
-  const windMatch = atisText.match(/WIND[\s:]+(\d{3})[\s@]+(\d{1,2})(?:\s*GUSTS?\s*(\d{1,2}))?/i);
-  
-  let metarParts = [station, timeGroup];
-  
-  // Wind
-  if(windMatch){
-    const dir = windMatch[1];
-    const speed = windMatch[2].padStart(2, '0');
-    const gust = windMatch[3] ? `G${windMatch[3].padStart(2, '0')}` : '';
-    metarParts.push(`${dir}${speed}${gust}KT`);
-  } else {
-    metarParts.push('00000KT'); // Calm
-  }
-  
-  // Visibility (default to 10SM if not found)
-  const visMatch = atisText.match(/VISIBILITY[\s:]+(\d+)/i);
-  if(visMatch){
-    metarParts.push(`${visMatch[1]}SM`);
-  } else {
-    metarParts.push('10SM');
-  }
-  
-  // Temperature/Dewpoint
-  if(tempMatch && dewMatch){
-    let temp = tempMatch[1] || tempMatch[2];
-    let dew = dewMatch[1];
-    
-    // Check for "MINUS" indicating negative
-    const tempNeg = atisText.match(/TEMPERATURE[\s:]+MINUS/i);
-    const dewNeg = atisText.match(/DEW\s*POINT[\s:]+MINUS/i);
-    
-    if(tempNeg) temp = 'M' + temp.padStart(2, '0');
-    else temp = temp.padStart(2, '0');
-    
-    if(dewNeg) dew = 'M' + dew.padStart(2, '0');
-    else dew = dew.padStart(2, '0');
-    
-    metarParts.push(`${temp}/${dew}`);
-  }
-  
-  // Altimeter
-  const altMatch = atisText.match(/ALTIMETER[\s:]+(\d{2})[\s.]?(\d{2})/i);
-  if(altMatch){
-    metarParts.push(`A${altMatch[1]}${altMatch[2]}`);
-  }
-  
-  const syntheticMETAR = metarParts.join(' ');
-  console.log('Synthetic METAR from ATIS:', syntheticMETAR);
-  
-  return syntheticMETAR;
+function parseMETARWeather(metar){
+  if(!metar) return null;
+
+  const weatherCodes = {
+    'RA':'Rain',
+    'SN':'Snow',
+    'DZ':'Drizzle',
+    'FG':'Fog',
+    'BR':'Mist',
+    'HZ':'Haze',
+    'FU':'Smoke',
+    'VA':'Volcanic Ash',
+    'DU':'Dust',
+    'SA':'Sand',
+    'TS':'Thunderstorm',
+    'SH':'Shower',
+    'FZ':'Freezing',
+    'GR':'Hail',
+    'GS':'Small Hail',
+    'PL':'Ice Pellets',
+    'SG':'Snow Grains',
+    'IC':'Ice Crystals',
+    'UP':'Unknown Precipitation',
+    'SQ':'Squalls',
+    'FC':'Funnel Cloud',
+    'SS':'Sandstorm',
+    'DS':'Duststorm'
+  };
+
+  const weatherMatch = metar.match(/\s([-+])?(VC|MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)/g);
+  if(!weatherMatch) return null;
+
+  const phenomena = [];
+
+  weatherMatch.forEach(wx => {
+    wx = wx.trim();
+    let desc = '';
+
+    if (wx.startsWith('-')) {
+      desc = 'Light ';
+      wx = wx.substring(1);
+    } else if (wx.startsWith('+')) {
+      desc = 'Heavy ';
+      wx = wx.substring(1);
+    }
+
+    let matched = false;
+    for (const code in weatherCodes) {
+      if (wx.includes(code)) {
+        desc += weatherCodes[code] + ' ';
+        matched = true;
+      }
+    }
+
+    if (matched) phenomena.push(desc.trim());
+  });
+
+  return phenomena.length ? phenomena.join(', ') : null;
 }
 
-// Fallback function to try other methods
-async function fetchMETARFallback() {
-  // This is a fallback - you could add other methods here
-  // For now, just show unavailable
-  throw new Error('METAR not available from ATIS');
+async function getAtisInfo(station){
+  station = (station || "KPIT").toUpperCase().trim();
+  const url = "https://atis.info/api/" + encodeURIComponent(station);
+
+  try{
+    const response = await fetch(url, { method:'get', cache:'no-store' });
+    if(response.status !== 200) return { ok:false, station, error:"HTTP " + response.status };
+
+    const arr = await response.json();
+    let pick = null;
+
+    if(Array.isArray(arr) && arr.length){
+      pick = arr.reduce((best, cur) => {
+        const curT = cur?.updatedAt ? Date.parse(cur.updatedAt) : 0;
+        const bestT = best?.updatedAt ? Date.parse(best.updatedAt) : 0;
+        return (curT > bestT) ? cur : best;
+      }, null);
+    }
+
+    if(!pick) return { ok:false, station, error:"No ATIS data returned" };
+
+    return {
+      ok:true,
+      station,
+      type:pick.type || "",
+      code:pick.code || "",
+      updatedAt:pick.updatedAt || "",
+      datis:pick.datis || ""
+    };
+  } catch(e){
+    console.error('ATIS fetch error:', e);
+    return { ok:false, station, error:e.message };
+  }
 }
-
-    function parseMetarTGroup(metarRaw){
-      if(!metarRaw) return null;
-      const m = metarRaw.match(/\bT([01])(\d{3})([01])(\d{3})\b/);
-      if(!m) return null;
-      const tSign = (m[1]==='1') ? -1 : 1;
-      const dSign = (m[3]==='1') ? -1 : 1;
-      return { tempC: tSign*(parseInt(m[2],10)/10), dewC: dSign*(parseInt(m[4],10)/10) };
-    }
-
-    function formatC1(val){ if(val===null||val===undefined||isNaN(Number(val))) return 'N/A'; return Number(val).toFixed(1)+'°C'; }
-    function formatF1(c){ if(c===null||c===undefined||isNaN(Number(c))) return 'N/A'; return ((Number(c)*9/5)+32).toFixed(1)+'°F'; }
-
-    async function getAtisInfo(station){
-      station=(station||"KPIT").toUpperCase().trim();
-      const url="https://atis.info/api/"+encodeURIComponent(station);
-      try{
-        const response = await fetch(url,{method:'get',cache:'no-store'});
-        if(response.status!==200) return { ok:false, station, error:"HTTP "+response.status };
-        const arr = await response.json();
-        let pick=null;
-        if(Array.isArray(arr) && arr.length){
-          pick = arr.reduce((best,cur)=>{
-            const curT = cur?.updatedAt ? Date.parse(cur.updatedAt) : 0;
-            const bestT = best?.updatedAt ? Date.parse(best.updatedAt) : 0;
-            return (curT>bestT) ? cur : best;
-          }, null);
-        }
-        if(!pick) return { ok:false, station, error:"No ATIS data returned" };
-        return { ok:true, station, type:pick.type||"", code:pick.code||"", updatedAt:pick.updatedAt||"", datis:pick.datis||"" };
-      }catch(e){
-        console.error('ATIS fetch error:',e);
-        return { ok:false, station, error:e.message };
-      }
-    }
-
-    function extractMETARTime(metar){
-      const timeMatch = metar.match(/\s(\d{2})(\d{2})(\d{2})Z/);
-      if(timeMatch){
-        const day=timeMatch[1], hour=timeMatch[2], minute=timeMatch[3];
-        const now=new Date();
-        const metarDate=new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), parseInt(day), parseInt(hour), parseInt(minute)));
-        return metarDate.toLocaleString('en-US',{
-          month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false,
-          timeZone:'America/New_York',timeZoneName:'short'
-        });
-      }
-      return 'Unknown';
-    }
-
-    function parseMETAR(metar){
-      const result={ temp:null, dewpoint:null, wind:null, windDirection:null, precipitation:null };
-
-      const tgrp = parseMetarTGroup(metar);
-      if(tgrp){
-        result.temp = `${formatC1(tgrp.tempC)} / ${formatF1(tgrp.tempC)}`;
-        result.dewpoint = `${formatC1(tgrp.dewC)} / ${formatF1(tgrp.dewC)}`;
-      }else{
-        const tempMatch = metar.match(/\s(M?\d{2})\/(M?\d{2})\s/);
-        if(tempMatch){
-          let t=tempMatch[1], d=tempMatch[2];
-          if(t.startsWith('M')) t='-'+t.substring(1);
-          if(d.startsWith('M')) d='-'+d.substring(1);
-          const tempC=parseInt(t,10), dewC=parseInt(d,10);
-          const tempF=Math.round((tempC*9/5)+32), dewF=Math.round((dewC*9/5)+32);
-          result.temp = `${tempC}°C / ${tempF}°F`;
-          result.dewpoint = `${dewC}°C / ${dewF}°F`;
-        }
-      }
-
-      const windMatch = metar.match(/\s(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT/);
-      if(windMatch){
-        const direction=windMatch[1];
-        const speed=parseInt(windMatch[2],10);
-        const gust=windMatch[4] ? parseInt(windMatch[4],10) : null;
-
-        if(direction!=='VRB' && speed>0) result.windDirection=parseInt(direction,10);
-        else if(direction==='VRB') result.windDirection='VRB';
-        else result.windDirection='CALM';
-
-        if(speed===0) result.wind='Calm';
-        else{
-          let wtxt = (direction==='VRB') ? `Variable at ${speed} kts` : `${direction}° at ${speed} kts`;
-          if(gust) wtxt += ` gusting ${gust} kts`;
-          result.wind = wtxt;
-        }
-      }
-
-      const weatherCodes={
-        'RA':'Rain','SN':'Snow','DZ':'Drizzle','FG':'Fog','BR':'Mist','HZ':'Haze','FU':'Smoke','VA':'Volcanic Ash',
-        'DU':'Dust','SA':'Sand','TS':'Thunderstorm','SH':'Shower','FZ':'Freezing','GR':'Hail','GS':'Small Hail',
-        'PL':'Ice Pellets','SG':'Snow Grains','IC':'Ice Crystals','UP':'Unknown Precipitation','SQ':'Squalls',
-        'FC':'Funnel Cloud','SS':'Sandstorm','DS':'Duststorm'
-      };
-
-      const weatherMatch = metar.match(/\s([-+])?(VC|MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)/g);
-      if(weatherMatch){
-        const phenomena=[];
-        weatherMatch.forEach(wx=>{
-          wx=wx.trim();
-          let desc='';
-          if(wx.startsWith('-')){ desc='Light '; wx=wx.substring(1); }
-          else if(wx.startsWith('+')){ desc='Heavy '; wx=wx.substring(1); }
-
-          let matched=false;
-          for(const code in weatherCodes){
-            if(wx.includes(code)){ desc += weatherCodes[code]+' '; matched=true; }
-          }
-          if(matched) phenomena.push(desc.trim());
-        });
-        if(phenomena.length) result.precipitation = phenomena.join(', ');
-      }
-
-      return result;
-    }
 
     // ========== HISTORY / NOTES ==========
     function saveToHistory(t,d){
