@@ -675,10 +675,13 @@ Format: Truck ID, Total Gallons, Freeze Point (°C) OR Percentage"
         <h2>ATIS & Weather</h2>
         <button class="refresh-btn" onclick="loadATIS()">🔄 Refresh Data</button>
 
-        <div class="info-box" id="atis-info-box" style="display:none;">
-          <div class="info-label">ATIS Information</div>
-          <div class="info-value" id="atis-letter" style="font-size:20px;">--</div>
-        </div>
+<div class="info-box" id="atis-info-box" style="display:none;">
+  <div class="info-label">ATIS Information</div>
+  <div class="info-value" id="atis-letter" style="font-size:20px;">--</div>
+
+  <!-- NEW LINE -->
+  <div id="atis-condition" style="margin-top:6px;font-size:14px;color:#0369a1;font-weight:600;">--</div>
+</div>
 
         <div class="info-box">
           <div class="info-label">Temperature (KPIT)</div>
@@ -2108,6 +2111,7 @@ html += `
 // ========== ATIS / METAR ==========
 async function loadATIS(){
   try{
+    document.getElementById('atis-condition').textContent = '--';
     document.getElementById('temperature').textContent = 'Loading...';
     document.getElementById('dewpoint').textContent = 'Loading...';
     document.getElementById('wind').textContent = 'Loading...';
@@ -2117,7 +2121,6 @@ async function loadATIS(){
     document.getElementById('precip-box').style.display = 'none';
     document.getElementById('wind-compass').style.display = 'none';
 
-    // ATIS letter
     try {
       const atisInfo = await getAtisInfo('KPIT');
       const atisBox = document.getElementById('atis-info-box');
@@ -2131,9 +2134,9 @@ async function loadATIS(){
       }
     } catch (e) {
       document.getElementById('atis-info-box').style.display = 'none';
+      document.getElementById('atis-condition').textContent = '--';
     }
 
-    // Real METAR from your Cloudflare Worker
     const metarResp = await fetch('https://kpit-weather-proxy.kpiticeman.workers.dev/metar?ids=KPIT', {
       cache: 'no-store'
     });
@@ -2149,6 +2152,9 @@ async function loadATIS(){
 
     const m = metarArr[0];
     const rawMetar = m.rawOb || '';
+
+    const atisPhrase = buildAtisConditionPhrase(m, rawMetar);
+    document.getElementById('atis-condition').textContent = atisPhrase;
 
     document.getElementById('metar-full').textContent = rawMetar || 'No raw METAR available';
 
@@ -2225,6 +2231,7 @@ async function loadATIS(){
     document.getElementById('dewpoint').textContent = 'Unavailable';
     document.getElementById('wind').textContent = 'Unavailable';
     document.getElementById('wind-compass').style.display = 'none';
+    document.getElementById('atis-condition').textContent = '--';
     document.getElementById('metar-full').innerHTML = `
       <div style="color:#dc2626;">
         Unable to load METAR data.<br>
@@ -2237,26 +2244,158 @@ async function loadATIS(){
 
 function parseMETARWeather(metar){
   if(!metar) return null;
+
   const weatherCodes = {
-    'RA':'Rain','SN':'Snow','DZ':'Drizzle','FG':'Fog','BR':'Mist','HZ':'Haze','FU':'Smoke',
-    'TS':'Thunderstorm','GR':'Hail','GS':'Small Hail','PL':'Ice Pellets',
-    'SG':'Snow Grains','IC':'Ice Crystals','UP':'Unknown Precipitation'
+    'RA':'Rain',
+    'SN':'Snow',
+    'DZ':'Drizzle',
+    'FG':'Fog',
+    'BR':'Mist',
+    'HZ':'Haze',
+    'FU':'Smoke',
+    'TS':'Thunderstorm',
+    'GR':'Hail',
+    'GS':'Small Hail',
+    'PL':'Ice Pellets',
+    'SG':'Snow Grains',
+    'IC':'Ice Crystals',
+    'UP':'Unknown Precipitation'
   };
+
   const wxMatch = metar.match(/\s([-+])?(VC|MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)/g);
   if(!wxMatch) return null;
+
   const phenomena = [];
+
   wxMatch.forEach(wx => {
     wx = wx.trim();
     let desc = '';
-    if (wx.startsWith('-')) { desc = 'Light '; wx = wx.substring(1); }
-    else if (wx.startsWith('+')) { desc = 'Heavy '; wx = wx.substring(1); }
+
+    if (wx.startsWith('-')) {
+      desc = 'Light ';
+      wx = wx.substring(1);
+    } else if (wx.startsWith('+')) {
+      desc = 'Heavy ';
+      wx = wx.substring(1);
+    }
+
     let matched = false;
     for (const code in weatherCodes) {
-      if (wx.includes(code)) { desc += weatherCodes[code] + ' '; matched = true; }
+      if (wx.includes(code)) {
+        desc += weatherCodes[code] + ' ';
+        matched = true;
+      }
     }
+
     if (matched) phenomena.push(desc.trim());
   });
+
   return phenomena.length ? phenomena.join(', ') : null;
+}
+
+function buildAtisConditionPhrase(m, rawMetar){
+  const parts = [];
+
+  const wxPhrases = [];
+  const weatherRegex = /\s([+-])?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)\b/g;
+
+  const intensityMap = {
+    '-': 'light',
+    '+': 'heavy'
+  };
+
+  const descriptorMap = {
+    VC: 'in the vicinity',
+    MI: 'shallow',
+    PR: 'partial',
+    BC: 'patches of',
+    DR: 'low drifting',
+    BL: 'blowing',
+    SH: 'showers of',
+    TS: 'thunderstorm with',
+    FZ: 'freezing'
+  };
+
+  const phenomenaMap = {
+    DZ: 'drizzle',
+    RA: 'rain',
+    SN: 'snow',
+    SG: 'snow grains',
+    IC: 'ice crystals',
+    PL: 'ice pellets',
+    GR: 'hail',
+    GS: 'small hail',
+    UP: 'unknown precipitation',
+    BR: 'mist',
+    FG: 'fog',
+    FU: 'smoke',
+    VA: 'volcanic ash',
+    DU: 'widespread dust',
+    SA: 'sand',
+    HZ: 'haze',
+    PO: 'dust whirls',
+    SQ: 'squalls',
+    FC: 'funnel cloud',
+    SS: 'sandstorm',
+    DS: 'duststorm'
+  };
+
+  if (rawMetar) {
+    let match;
+    while ((match = weatherRegex.exec(rawMetar)) !== null) {
+      const intensity = match[1] ? intensityMap[match[1]] + ' ' : '';
+      const vicinity = match[2] ? descriptorMap[match[2]] + ' ' : '';
+      const descriptor = match[3] ? descriptorMap[match[3]] + ' ' : '';
+      const phenomenon = match[4] ? phenomenaMap[match[4]] : '';
+
+      const phrase = `${intensity}${vicinity}${descriptor}${phenomenon}`.trim().replace(/\s+/g, ' ');
+      if (phrase && !wxPhrases.includes(phrase)) wxPhrases.push(phrase);
+    }
+  }
+
+  if (wxPhrases.length) {
+    parts.push(wxPhrases.join(', '));
+  }
+
+  if (Array.isArray(m.clouds) && m.clouds.length) {
+    const ceilingLayers = m.clouds.filter(c => c.cover === 'BKN' || c.cover === 'OVC' || c.cover === 'VV');
+
+    if (ceilingLayers.length) {
+      const lowestCeiling = ceilingLayers.reduce((a, b) => (a.base < b.base ? a : b));
+      const ceilingFeet = lowestCeiling.base;
+      parts.push(`ceiling ${ceilingFeet.toLocaleString()} ${coverToWord(lowestCeiling.cover)}`);
+    } else {
+      const sig = m.clouds[0];
+      if (sig && sig.cover && sig.base) {
+        parts.push(`${coverToWord(sig.cover)} ${sig.base.toLocaleString()}`);
+      }
+    }
+  } else if (rawMetar && /\bCLR\b|\bSKC\b/.test(rawMetar)) {
+    parts.push('clear');
+  }
+
+  if (m.visib && m.visib !== '10+' && m.visib !== '10') {
+    parts.push(`visibility ${m.visib} miles`);
+  }
+
+  if (!parts.length) return 'Clear';
+  return capitalizeAtis(parts.join(', '));
+}
+
+function coverToWord(code){
+  const map = {
+    FEW: 'few',
+    SCT: 'scattered',
+    BKN: 'broken',
+    OVC: 'overcast',
+    VV: 'indefinite'
+  };
+  return map[code] || String(code).toLowerCase();
+}
+
+function capitalizeAtis(text){
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 async function getAtisInfo(station){
