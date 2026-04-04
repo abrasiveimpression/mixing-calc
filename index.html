@@ -2160,23 +2160,37 @@ async function loadATIS(){
       document.getElementById('dewpoint').textContent = 'N/A';
     }
 
-    // Wind
-    const windDir = props.windDirection?.value;
-    const windSpeedMps = props.windSpeed?.value;       // m/s
-    const windGustMps  = props.windGust?.value;
-    const windSpeedKts = windSpeedMps !== null && windSpeedMps !== undefined
-      ? Math.round(windSpeedMps * 1.94384) : null;
-    const windGustKts  = windGustMps !== null && windGustMps !== undefined
-      ? Math.round(windGustMps * 1.94384) : null;
+// 🔹 WIND - parse directly from raw METAR (authoritative)
+const windEl = document.getElementById('wind');
+const compassEl = document.getElementById('wind-compass');
 
-    if(windSpeedKts !== null){
-      if(windSpeedKts === 0){
-        document.getElementById('wind').textContent = 'Calm';
-      } else if(windDir !== null && windDir !== undefined){
-        const dirStr = String(Math.round(windDir)).padStart(3,'0');
-        let windTxt = `${dirStr}° at ${windSpeedKts} kts`;
-        if(windGustKts) windTxt += ` gusting ${windGustKts} kts`;
-        document.getElementById('wind').textContent = windTxt;
+const windMatch = rawMetar.match(/\b(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT\b/);
+
+if (windMatch) {
+  const dir = windMatch[1];
+  const speed = parseInt(windMatch[2], 10);
+  const gust = windMatch[4] ? parseInt(windMatch[4], 10) : null;
+
+  if (speed === 0) {
+    windEl.textContent = 'Calm';
+    compassEl.style.display = 'none';
+  } else if (dir === 'VRB') {
+    windEl.textContent = `Variable at ${speed} kts${gust ? ` gusting ${gust} kts` : ''}`;
+    compassEl.style.display = 'none';
+  } else {
+    const dirNum = parseInt(dir, 10);
+    windEl.textContent = `${String(dirNum).padStart(3, '0')}° at ${speed} kts${gust ? ` gusting ${gust} kts` : ''}`;
+
+    compassEl.style.display = 'block';
+    document.getElementById('wind-arrow')
+      .setAttribute('transform', `rotate(${dirNum} 100 100)`);
+    document.getElementById('wind-direction-text').textContent =
+      String(dirNum).padStart(3, '0');
+  }
+} else {
+  windEl.textContent = 'N/A';
+  compassEl.style.display = 'none';
+}
 
         // Compass
         document.getElementById('wind-compass').style.display = 'block';
