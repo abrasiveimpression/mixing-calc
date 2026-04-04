@@ -2118,7 +2118,23 @@ async function loadATIS(){
     document.getElementById('precip-box').style.display = 'none';
     document.getElementById('wind-compass').style.display = 'none';
 
-    // Fetch real METAR from your Cloudflare Worker
+    // Keep ATIS Letter
+    try {
+      const atisInfo = await getAtisInfo('KPIT');
+      const atisBox = document.getElementById('atis-info-box');
+      const atisLetter = document.getElementById('atis-letter');
+
+      if (atisInfo.ok && atisInfo.code) {
+        atisLetter.textContent = atisInfo.code;
+        atisBox.style.display = 'block';
+      } else {
+        atisBox.style.display = 'none';
+      }
+    } catch (e) {
+      document.getElementById('atis-info-box').style.display = 'none';
+    }
+
+    // Real METAR from your Cloudflare Worker
     const metarUrl = 'https://kpit-weather-proxy.kpiticeman.workers.dev/metar?ids=KPIT';
     const metarResp = await fetch(metarUrl, { cache: 'no-store' });
 
@@ -2188,7 +2204,6 @@ async function loadATIS(){
       } else {
         const dirNum = parseInt(dir, 10);
         windEl.textContent = `${String(dirNum).padStart(3, '0')}° at ${speed} kts${gust ? ` gusting ${gust} kts` : ''}`;
-
         compassEl.style.display = 'block';
         document.getElementById('wind-arrow').setAttribute('transform', `rotate(${dirNum} 100 100)`);
         document.getElementById('wind-direction-text').textContent = String(dirNum).padStart(3, '0');
@@ -2204,22 +2219,6 @@ async function loadATIS(){
       document.getElementById('precip-box').style.display = 'block';
     }
 
-    // Keep ATIS letter as a separate best-effort item
-    try {
-      const atisInfo = await getAtisInfo('KPIT');
-      const atisBox = document.getElementById('atis-info-box');
-      const atisLetter = document.getElementById('atis-letter');
-
-      if (atisInfo.ok && atisInfo.code) {
-        atisLetter.textContent = atisInfo.code;
-        atisBox.style.display = 'block';
-      } else {
-        atisBox.style.display = 'none';
-      }
-    } catch (e) {
-      document.getElementById('atis-info-box').style.display = 'none';
-    }
-
   } catch (error) {
     console.error('Error loading weather:', error);
     document.getElementById('temperature').textContent = 'Unavailable';
@@ -2233,101 +2232,6 @@ async function loadATIS(){
       </div>`;
     document.getElementById('metar-time').textContent = '--';
     document.getElementById('metar-observed').textContent = '--';
-  }
-}
-
-function parseMETARWeather(metar){
-  if(!metar) return null;
-
-  const weatherCodes = {
-    'RA':'Rain',
-    'SN':'Snow',
-    'DZ':'Drizzle',
-    'FG':'Fog',
-    'BR':'Mist',
-    'HZ':'Haze',
-    'FU':'Smoke',
-    'VA':'Volcanic Ash',
-    'DU':'Dust',
-    'SA':'Sand',
-    'TS':'Thunderstorm',
-    'SH':'Shower',
-    'FZ':'Freezing',
-    'GR':'Hail',
-    'GS':'Small Hail',
-    'PL':'Ice Pellets',
-    'SG':'Snow Grains',
-    'IC':'Ice Crystals',
-    'UP':'Unknown Precipitation',
-    'SQ':'Squalls',
-    'FC':'Funnel Cloud',
-    'SS':'Sandstorm',
-    'DS':'Duststorm'
-  };
-
-  const weatherMatch = metar.match(/\s([-+])?(VC|MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)/g);
-  if(!weatherMatch) return null;
-
-  const phenomena = [];
-
-  weatherMatch.forEach(wx => {
-    wx = wx.trim();
-    let desc = '';
-
-    if (wx.startsWith('-')) {
-      desc = 'Light ';
-      wx = wx.substring(1);
-    } else if (wx.startsWith('+')) {
-      desc = 'Heavy ';
-      wx = wx.substring(1);
-    }
-
-    let matched = false;
-    for (const code in weatherCodes) {
-      if (wx.includes(code)) {
-        desc += weatherCodes[code] + ' ';
-        matched = true;
-      }
-    }
-
-    if (matched) phenomena.push(desc.trim());
-  });
-
-  return phenomena.length ? phenomena.join(', ') : null;
-}
-
-async function getAtisInfo(station){
-  station = (station || "KPIT").toUpperCase().trim();
-  const url = "https://atis.info/api/" + encodeURIComponent(station);
-
-  try{
-    const response = await fetch(url, { method:'get', cache:'no-store' });
-    if(response.status !== 200) return { ok:false, station, error:"HTTP " + response.status };
-
-    const arr = await response.json();
-    let pick = null;
-
-    if(Array.isArray(arr) && arr.length){
-      pick = arr.reduce((best, cur) => {
-        const curT = cur?.updatedAt ? Date.parse(cur.updatedAt) : 0;
-        const bestT = best?.updatedAt ? Date.parse(best.updatedAt) : 0;
-        return (curT > bestT) ? cur : best;
-      }, null);
-    }
-
-    if(!pick) return { ok:false, station, error:"No ATIS data returned" };
-
-    return {
-      ok:true,
-      station,
-      type:pick.type || "",
-      code:pick.code || "",
-      updatedAt:pick.updatedAt || "",
-      datis:pick.datis || ""
-    };
-  } catch(e){
-    console.error('ATIS fetch error:', e);
-    return { ok:false, station, error:e.message };
   }
 }
 
