@@ -694,21 +694,25 @@ Format: Truck ID, Total Gallons, Freeze Point (°C) OR Percentage"
           <div class="info-label">Wind</div>
           <div class="info-value" id="wind">Loading...</div>
 
-          <div id="wind-compass" style="margin-top:16px;display:none;">
-            <svg width="200" height="200" viewBox="0 0 200 200" style="margin:0 auto;display:block;">
-              <circle cx="100" cy="100" r="90" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
-              <text x="100" y="28" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">N</text>
-              <text x="175" y="105" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">E</text>
-              <text x="100" y="185" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">S</text>
-              <text x="25" y="105" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">W</text>
+<svg id="wind-compass" width="200" height="200" viewBox="0 0 200 200" style="display:none; margin:auto;">
 
-              <g id="wind-arrow" transform="rotate(0 100 100)">
-                <line x1="100" y1="100" x2="100" y2="20" stroke="#ef4444" stroke-width="6" stroke-linecap="round"/>
-                <polygon points="100,10 88,38 100,30 112,38" fill="#ef4444"/>
-                <circle cx="100" cy="100" r="10" fill="#ef4444"/>
-              </g>
-            </svg>
+  <!-- Outer Circle -->
+  <circle cx="100" cy="100" r="80" stroke="#0284c7" stroke-width="3" fill="none"/>
 
+  <!-- Cardinal Directions -->
+  <text x="100" y="25" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="#0c4a6e">N</text>
+  <text x="175" y="100" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="#0c4a6e">E</text>
+  <text x="100" y="175" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="#0c4a6e">S</text>
+  <text x="25"  y="100" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="#0c4a6e">W</text>
+
+  <!-- Wind Arrow -->
+  <g id="wind-arrow" transform="rotate(0 100 100)">
+    <line x1="100" y1="100" x2="100" y2="40" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="100" cy="100" r="6" fill="#ef4444"/>
+    <polygon points="100,30 94,42 106,42" fill="#ef4444"/>
+  </g>
+
+</svg>
             <div style="text-align:center;margin-top:8px;font-size:14px;color:#0369a1;font-weight:700;">
               Wind from <span id="wind-direction-text">---</span>°
             </div>
