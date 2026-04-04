@@ -2192,17 +2192,6 @@ if (windMatch) {
   compassEl.style.display = 'none';
 }
 
-        // Compass
-        document.getElementById('wind-compass').style.display = 'block';
-        document.getElementById('wind-arrow').setAttribute('transform',`rotate(${Math.round(windDir)} 100 100)`);
-        document.getElementById('wind-direction-text').textContent = Math.round(windDir);
-      } else {
-        document.getElementById('wind').textContent = `Variable at ${windSpeedKts} kts`;
-      }
-    } else {
-      document.getElementById('wind').textContent = 'N/A';
-    }
-
     // Precipitation / present weather from raw METAR
     const parsedWeather = parseMETARWeather(rawMetar);
     if(parsedWeather){
